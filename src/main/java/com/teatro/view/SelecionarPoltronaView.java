@@ -2,6 +2,8 @@ package com.teatro.view;
 
 import com.teatro.model.*;
 import com.teatro.controller.SessaoController;
+import com.teatro.view.CompraIngressoViewModerna;
+import com.teatro.view.ImpressaoIngressoViewModerna;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
@@ -120,7 +122,7 @@ public class SelecionarPoltronaView {
             -fx-background-radius: 5;
             """);
         voltarButton.setOnAction(e -> {
-            new CompraIngressoView(teatro, usuario, stage, sessao).show();
+            new CompraIngressoViewModerna(teatro, usuario, stage, sessao).show();
         });
 
         Button confirmarButton = new Button("Confirmar");
@@ -175,8 +177,87 @@ public class SelecionarPoltronaView {
     private void processarCompra() {
         if (poltronaSelecionada != null) {
             teatro.comprarIngresso(usuario.getCpf(), null, sessao, area, poltronaSelecionada);
+            
+            // Buscar o ingresso recém-criado
+            Ingresso ingresso = buscarIngressoRecente();
+            if (ingresso != null) {
+                // Converter para IngressoModerno
+                List<IngressoModerno> ingressosModernos = converterParaIngressoModerno(List.of(ingresso));
+                new ImpressaoIngressoViewModerna(teatro, usuario, stage, ingressosModernos).show();
+                return;
+            }
         }
         
-        new ImpressaoIngressoView(teatro, usuario, stage).show();
+        // Se algo der errado, voltar para a tela de seleção de área
+        new CompraIngressoViewModerna(teatro, usuario, stage, sessao).show();
+    }
+    
+    private Ingresso buscarIngressoRecente() {
+        // Busca os ingressos do usuário pelo CPF
+        try {
+            List<Ingresso> ingressos = teatro.buscarIngressosPorCpf(usuario.getCpf());
+            if (!ingressos.isEmpty()) {
+                // Ordena por data de compra para pegar o mais recente primeiro
+                ingressos.sort((i1, i2) -> i2.getDataCompra().compareTo(i1.getDataCompra()));
+                return ingressos.get(0); // Retorna o ingresso mais recente
+            }
+        } catch (Exception e) {
+            System.err.println("Erro ao buscar ingresso recente: " + e.getMessage());
+            e.printStackTrace();
+        }
+        return null;
+    }
+    
+    private List<IngressoModerno> converterParaIngressoModerno(List<Ingresso> ingressos) {
+        List<IngressoModerno> ingressosModernos = new ArrayList<>();
+        
+        for (Ingresso ingresso : ingressos) {
+            try {
+                // Criar objetos básicos necessários para o IngressoModerno
+                Usuario usuarioObj = new Usuario();
+                usuarioObj.setId(ingresso.getUsuarioId());
+                usuarioObj.setNome(usuario.getNome());
+                
+                Sessao sessaoObj = new Sessao(ingresso.getHorario());
+                sessaoObj.setId(ingresso.getSessaoId());
+                sessaoObj.setNome(ingresso.getEventoNome());
+                
+                // Converter o ID da área para o formato esperado
+                String areaId = converterIdArea(ingresso.getAreaId());
+                Area areaObj = new Area(areaId, ingresso.getAreaNome(), ingresso.getValor(), 0);
+                
+                Poltrona poltronaObj = new Poltrona(ingresso.getNumeroPoltrona());
+                
+                // Criar o ingresso moderno
+                IngressoModerno ingressoModerno = new IngressoModerno(sessaoObj, areaObj, poltronaObj, usuarioObj);
+                ingressoModerno.setId(ingresso.getId());
+                ingressoModerno.setValor(ingresso.getValor());
+                ingressoModerno.setDataCompra(ingresso.getDataCompra());
+                
+                // Gerar um código único para o ingresso
+                String codigo = "ING" + (ingresso.getId() != null ? ingresso.getId() : "") + "-" + System.currentTimeMillis();
+                ingressoModerno.setCodigo(codigo);
+                
+                ingressosModernos.add(ingressoModerno);
+            } catch (Exception e) {
+                System.err.println("Erro ao converter ingresso: " + e.getMessage());
+                e.printStackTrace();
+            }
+        }
+        
+        return ingressosModernos;
+    }
+    
+    private String converterIdArea(Long areaId) {
+        if (areaId == null) return "";
+        return switch (areaId.intValue()) {
+            case 1 -> "PA";
+            case 2 -> "PB";
+            case 3 -> "PC";
+            case 4 -> "CM01";
+            case 5 -> "CM02";
+            case 6 -> "CM03";
+            default -> "AREA" + areaId;
+        };
     }
 } 

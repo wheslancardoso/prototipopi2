@@ -107,7 +107,7 @@ public class CompraIngressoView {
             """);
         escolherPoltronaButton.setOnAction(e -> {
             if (areaSelecionada != null) {
-                new SelecionarPoltronaView(teatro, usuario, stage, sessao, areaSelecionada).show();
+                new SelecionarPoltronaViewModerna(teatro, usuario, stage, sessao, areaSelecionada).show();
             } else {
                 Alert alert = new Alert(Alert.AlertType.WARNING);
                 alert.setTitle("Atenção");
