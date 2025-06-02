@@ -2,6 +2,7 @@ package com.teatro.view;
 
 import com.teatro.model.*;
 import javafx.geometry.Insets;
+import com.teatro.view.SessoesViewModerna;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
@@ -92,7 +93,7 @@ public class CompraIngressoView {
             -fx-background-radius: 5;
             """);
         voltarButton.setOnAction(e -> {
-            new SessoesView(teatro, usuario, stage).show();
+            new SessoesViewModerna(teatro, usuario, stage).show();
         });
 
         Button escolherPoltronaButton = new Button("Escolher Poltrona");

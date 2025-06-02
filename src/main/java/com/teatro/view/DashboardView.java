@@ -2,6 +2,9 @@ package com.teatro.view;
 
 import com.teatro.model.*;
 import com.teatro.dao.IngressoDAO;
+import com.teatro.view.ImpressaoIngressoViewModerna;
+import com.teatro.view.LoginViewModerna;
+import com.teatro.view.SessoesViewModerna;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
@@ -85,7 +88,7 @@ public class DashboardView {
         btnComprar.setOnAction(e -> mostrarTelaCompra());
         btnImprimir.setOnAction(e -> mostrarTelaImpressao());
         btnSair.setOnAction(e -> {
-            new LoginView(teatro, stage).show();
+            new LoginViewModerna(stage).show();
         });
 
         return menu;
@@ -323,10 +326,10 @@ public class DashboardView {
     }
 
     private void mostrarTelaCompra() {
-        new SessoesView(teatro, usuarioLogado, stage).show();
+        new SessoesViewModerna(teatro, usuarioLogado, stage).show();
     }
 
     private void mostrarTelaImpressao() {
-        new ImpressaoIngressoView(teatro, usuarioLogado, stage).show();
+        new ImpressaoIngressoViewModerna(teatro, usuarioLogado, stage, List.of()).show();
     }
 } 
