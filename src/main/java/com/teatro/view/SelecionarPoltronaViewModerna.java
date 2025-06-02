@@ -230,7 +230,7 @@ public class SelecionarPoltronaViewModerna {
         qtdBox.setAlignment(Pos.CENTER_LEFT);
         Label qtdLabel = new Label("Quantidade de ingressos:");
         qtdLabel.setFont(Font.font("System", FontWeight.BOLD, 14));
-        Label qtdValor = new Label("0");
+        qtdValor = new Label("0");
         qtdValor.setFont(Font.font("System", 14));
         qtdBox.getChildren().addAll(qtdLabel, qtdValor);
         
@@ -248,7 +248,7 @@ public class SelecionarPoltronaViewModerna {
         valorTotalBox.setAlignment(Pos.CENTER_LEFT);
         Label valorTotalLabel = new Label("Valor total:");
         valorTotalLabel.setFont(Font.font("System", FontWeight.BOLD, 14));
-        Label valorTotalValor = new Label("R$ 0,00");
+        valorTotalValor = new Label("R$ 0,00");
         valorTotalValor.setFont(Font.font("System", FontWeight.BOLD, 16));
         valorTotalValor.setTextFill(Color.web(SECONDARY_COLOR));
         valorTotalBox.getChildren().addAll(valorTotalLabel, valorTotalValor);
@@ -265,7 +265,7 @@ public class SelecionarPoltronaViewModerna {
             new CompraIngressoViewModerna(teatro, usuario, stage, sessao).show();
         });
         
-        Button confirmarButton = new Button("Confirmar Compra");
+        confirmarButton = new Button("Confirmar Compra");
         confirmarButton.setStyle("-fx-background-color: " + SECONDARY_COLOR + "; -fx-text-fill: white; -fx-padding: 10 20; -fx-font-size: 14; -fx-cursor: hand; -fx-background-radius: 4; -fx-font-weight: bold;");
         confirmarButton.setDisable(true);
         
@@ -277,15 +277,30 @@ public class SelecionarPoltronaViewModerna {
                 ingressosModernos.add(ingresso);
             }
             
-            // Adiciona os ingressos ao usuário
-            usuario.adicionarIngressos(ingressosModernos);
+            // Cria o callback para quando o pagamento for concluído
+            Runnable onPagamentoConcluido = () -> {
+                // Adiciona os ingressos ao usuário
+                usuario.adicionarIngressos(ingressosModernos);
+                
+                // Atualiza o faturamento da sessão
+                double valorTotal = poltronasSelecionadas.size() * area.getPreco();
+                sessao.adicionarFaturamento(valorTotal);
+                
+                // Mostra a tela de impressão de ingressos
+                new ImpressaoIngressoViewModerna(teatro, usuario, stage, ingressosModernos).show();
+            };
             
-            // Atualiza o faturamento da sessão
-            double valorTotal = poltronasSelecionadas.size() * area.getPreco();
-            sessao.adicionarFaturamento(valorTotal);
+            // Abre a tela de seleção de método de pagamento
+            SelecionarMetodoPagamentoView metodoPagamentoView = new SelecionarMetodoPagamentoView(
+                stage,
+                usuario,
+                ingressosModernos,
+                onPagamentoConcluido
+            );
             
-            // Mostra a tela de impressão de ingressos
-            new ImpressaoIngressoViewModerna(teatro, usuario, stage, ingressosModernos).show();
+            // Cria uma nova cena com a tela de seleção de método de pagamento
+            Scene cenaPagamento = new Scene(metodoPagamentoView, WINDOW_WIDTH, WINDOW_HEIGHT);
+            stage.setScene(cenaPagamento);
         });
         
         botoesBox.getChildren().addAll(voltarButton, confirmarButton);
@@ -300,10 +315,7 @@ public class SelecionarPoltronaViewModerna {
         stage.setScene(scene);
         
         // Atualiza o resumo inicial
-        qtdValor.setText(String.valueOf(poltronasSelecionadas.size()));
-        double valorTotal = poltronasSelecionadas.size() * area.getPreco();
-        valorTotalValor.setText("R$ " + String.format("%.2f", valorTotal));
-        confirmarButton.setDisable(poltronasSelecionadas.isEmpty());
+        atualizarResumo();
     }
     
     private HBox createTopBar() {
@@ -352,9 +364,20 @@ public class SelecionarPoltronaViewModerna {
         return topBar;
     }
     
+    // Referências para os componentes da UI que precisam ser atualizados
+    private Label qtdValor;
+    private Label valorTotalValor;
+    private Button confirmarButton;
+    
     private void atualizarResumo() {
-        // Este método é um placeholder para a funcionalidade de atualização do resumo
-        // A implementação real está inline no método show() para acesso direto às variáveis locais
-        // Este método é mantido para compatibilidade com possíveis chamadas externas
+        // Atualiza a quantidade de ingressos
+        qtdValor.setText(String.valueOf(poltronasSelecionadas.size()));
+        
+        // Calcula e atualiza o valor total
+        double valorTotal = poltronasSelecionadas.size() * area.getPreco();
+        valorTotalValor.setText(String.format("R$ %.2f", valorTotal));
+        
+        // Habilita/desabilita o botão de confirmar com base na seleção
+        confirmarButton.setDisable(poltronasSelecionadas.isEmpty());
     }
 }
