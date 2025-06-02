@@ -184,8 +184,8 @@ public class SelecionarPoltronaViewModerna {
                 poltrona.setPrefSize(50, 50);
                 poltrona.setFont(Font.font("System", FontWeight.BOLD, 14));
                 
-                // Verifica se a poltrona está ocupada
-                boolean ocupada = Math.random() < 0.3; // Simulação de ocupação
+                // Verifica se a poltrona está ocupada no banco de dados
+                boolean ocupada = teatro.isPoltronaOcupada(sessao.getId(), area.getId(), numero);
                 
                 if (ocupada) {
                     poltrona.setStyle("-fx-background-color: " + POLTRONA_OCUPADA + "; -fx-text-fill: white; -fx-background-radius: 5;");

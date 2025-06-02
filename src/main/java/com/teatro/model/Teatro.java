@@ -121,6 +121,54 @@ public class Teatro {
     public List<Evento> getEventos() {
         return eventos;
     }
+    
+    /**
+     * Verifica se uma poltrona específica está ocupada em uma determinada sessão e área.
+     * @param sessaoId ID da sessão
+     * @param areaId ID da área
+     * @param numeroPoltrona Número da poltrona
+     * @return true se a poltrona estiver ocupada, false caso contrário
+     */
+    public boolean isPoltronaOcupada(Long sessaoId, String areaId, int numeroPoltrona) {
+        // Encontra a sessão pelo ID
+        for (Evento evento : eventos) {
+            for (Sessao sessao : evento.getSessoes()) {
+                if (sessao.getId().equals(sessaoId)) {
+                    // Encontra a área na sessão
+                    for (Area area : sessao.getAreas()) {
+                        if (area.getId().equals(areaId)) {
+                            // Verifica se a poltrona está ocupada
+                            List<Integer> poltronasOcupadas = ingressoDAO.buscarPoltronasOcupadas(sessaoId, 
+                                getAreaIdAsLong(areaId));
+                            return poltronasOcupadas.contains(numeroPoltrona);
+                        }
+                    }
+                }
+            }
+        }
+        return false;
+    }
+    
+    /**
+     * Converte o ID da área para o formato numérico usado no banco de dados.
+     * @param areaId ID da área no formato String
+     * @return ID da área no formato numérico
+     */
+    private long getAreaIdAsLong(String areaId) {
+        if (areaId.startsWith("PA")) {
+            return 1; // Plateia A
+        } else if (areaId.startsWith("PB")) {
+            return 2; // Plateia B
+        } else if (areaId.startsWith("CM")) {
+            int num = Integer.parseInt(areaId.substring(2));
+            return 2 + num;
+        } else if (areaId.startsWith("FR")) {
+            int num = Integer.parseInt(areaId.substring(2));
+            return 7 + num;
+        } else {
+            return 13; // Balcão Nobre
+        }
+    }
 
     public Optional<Ingresso> comprarIngresso(String cpf, Evento evento, Sessao sessao, Area area, int numeroPoltrona) {
         Optional<Usuario> usuario = usuarioDAO.buscarPorCpf(cpf);
