@@ -3,16 +3,16 @@ package com.teatro.view;
 import com.teatro.model.*;
 import com.teatro.dao.IngressoDAO;
 import com.teatro.view.ImpressaoIngressoViewModerna;
-import com.teatro.view.LoginViewModerna;
 import com.teatro.view.SessoesViewModerna;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.layout.*;
 import javafx.stage.Stage;
-import java.util.Map;
-import java.util.List;
 
 public class DashboardView {
     private Teatro teatro;
@@ -329,7 +329,63 @@ public class DashboardView {
         new SessoesViewModerna(teatro, usuarioLogado, stage).show();
     }
 
+    private List<IngressoModerno> converterParaIngressoModerno(List<Ingresso> ingressos) {
+        List<IngressoModerno> ingressosModernos = new ArrayList<>();
+        
+        for (Ingresso ingresso : ingressos) {
+            try {
+                // Criar objetos básicos necessários para o IngressoModerno
+                Usuario usuario = new Usuario();
+                usuario.setId(ingresso.getUsuarioId());
+                usuario.setNome(usuarioLogado.getNome()); // Usar o nome do usuário logado
+                
+                Sessao sessao = new Sessao(ingresso.getHorario());
+                sessao.setId(ingresso.getSessaoId());
+                sessao.setNome(ingresso.getEventoNome());
+                
+                // Converter o ID da área para o formato esperado
+                String areaId = converterIdArea(ingresso.getAreaId());
+                Area area = new Area(areaId, ingresso.getAreaNome(), ingresso.getValor(), 0);
+                
+                Poltrona poltrona = new Poltrona(ingresso.getNumeroPoltrona());
+                
+                // Criar o ingresso moderno
+                IngressoModerno ingressoModerno = new IngressoModerno(sessao, area, poltrona, usuario);
+                ingressoModerno.setId(ingresso.getId());
+                ingressoModerno.setValor(ingresso.getValor());
+                ingressoModerno.setDataCompra(ingresso.getDataCompra());
+                
+                // Gerar um código único para o ingresso
+                String codigo = "ING" + (ingresso.getId() != null ? ingresso.getId() : "") + "-" + System.currentTimeMillis();
+                ingressoModerno.setCodigo(codigo);
+                
+                ingressosModernos.add(ingressoModerno);
+            } catch (Exception e) {
+                System.err.println("Erro ao converter ingresso: " + e.getMessage());
+                e.printStackTrace();
+            }
+        }
+        
+        return ingressosModernos;
+    }
+    
+    private String converterIdArea(Long areaId) {
+        if (areaId == null) return "";
+        
+        // Mapeia o ID numérico para o formato de string esperado
+        if (areaId == 1) return "PA";
+        if (areaId == 2) return "PB";
+        if (areaId == 13) return "BN"; // Balcão Nobre
+        if (areaId >= 3 && areaId <= 7) return "CM" + String.format("%02d", areaId - 2); // Camarotes
+        if (areaId >= 8 && areaId <= 13) return "FR" + String.format("%02d", areaId - 7); // Frisas
+        
+        return "";
+    }
+    
     private void mostrarTelaImpressao() {
-        new ImpressaoIngressoViewModerna(teatro, usuarioLogado, stage, List.of()).show();
+        // Buscar os ingressos do usuário logado
+        List<Ingresso> ingressos = ingressoDAO.buscarPorUsuarioId(usuarioLogado.getId());
+        List<IngressoModerno> ingressosModernos = converterParaIngressoModerno(ingressos);
+        new ImpressaoIngressoViewModerna(teatro, usuarioLogado, stage, ingressosModernos).show();
     }
 } 
