@@ -151,6 +151,7 @@ public class DashboardView {
         return item;
     }
 
+    @SuppressWarnings("unchecked")
     private VBox criarAreaPrincipalAdmin() {
         VBox area = new VBox(20);
         area.setPadding(new Insets(10));
@@ -256,6 +257,7 @@ public class DashboardView {
         return grid;
     }
 
+    @SuppressWarnings("unchecked")
     private TableView<Map<String, String>> criarTabelaLucroMedio(List<Map<String, Object>> dados) {
         TableView<Map<String, String>> tabela = new TableView<>();
         tabela.setStyle("""
@@ -288,6 +290,7 @@ public class DashboardView {
         return tabela;
     }
 
+    @SuppressWarnings("unchecked")
     private String formatarEstatistica(Map<String, Object> estatisticas, String chave) {
         if (estatisticas == null || !estatisticas.containsKey(chave)) {
             return "Dados não disponíveis";

@@ -69,7 +69,7 @@ public class SelecionarMetodoPagamentoView extends VBox {
                 double valorTotal = ingressos.stream()
                     .mapToDouble(IngressoModerno::getValor)
                     .sum();
-                mostrarQRCodePix(stage, valorTotal);
+                mostrarQRCodePix(stage, valorTotal, onPagamentoConcluido);
             } catch (Exception ex) {
                 ex.printStackTrace();
                 Alert alert = new Alert(Alert.AlertType.ERROR);
@@ -207,7 +207,7 @@ public class SelecionarMetodoPagamentoView extends VBox {
         dialog.showAndWait();
     }
     
-    private void mostrarQRCodePix(Stage stage, double valorTotal) {
+    private void mostrarQRCodePix(Stage stage, double valorTotal, Runnable onPagamentoConcluido) {
         try {
             // Cria um novo estágio para mostrar o QR Code
             Stage qrStage = new Stage();
@@ -285,13 +285,14 @@ public class SelecionarMetodoPagamentoView extends VBox {
                             progressIndicator.setVisible(false);
                             fecharBtn.setDisable(false);
                             
-                            // Fecha a janela após 3 segundos
+                            // Fecha a janela do QR code e chama o callback após 3 segundos
                             new Thread(() -> {
                                 try {
                                     Thread.sleep(3000);
                                     Platform.runLater(() -> {
                                         qrStage.close();
-                                        stage.close();
+                                        // Executa o callback para mostrar a tela de confirmação
+                                        onPagamentoConcluido.run();
                                     });
                                 } catch (InterruptedException e) {
                                     e.printStackTrace();
