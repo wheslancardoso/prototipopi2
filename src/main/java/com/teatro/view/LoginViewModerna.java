@@ -91,13 +91,13 @@ public class LoginViewModerna {
         VBox loginForm = new VBox(15);
         loginForm.setAlignment(Pos.CENTER);
         
-        // Campo de CPF
+        // Campo de CPF/E-mail
         VBox cpfBox = new VBox(5);
-        Label cpfLabel = new Label("CPF");
+        Label cpfLabel = new Label("CPF ou E-mail");
         cpfLabel.setFont(Font.font("System", FontWeight.BOLD, 14));
         
         TextField cpfField = new TextField();
-        cpfField.setPromptText("Digite seu CPF");
+        cpfField.setPromptText("Digite seu CPF ou e-mail");
         cpfField.setPrefHeight(40);
         cpfField.setStyle("""
             -fx-background-color: white;

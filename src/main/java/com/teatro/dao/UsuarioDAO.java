@@ -34,36 +34,60 @@ public class UsuarioDAO {
         String sql = "SELECT * FROM usuarios WHERE cpf = ?";
         System.out.println("Buscando usuário com CPF: " + cpf);
         
-        try {
-            Connection conn = DatabaseConnection.getConnection();
-            PreparedStatement stmt = conn.prepareStatement(sql);
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            
             stmt.setString(1, cpf);
             ResultSet rs = stmt.executeQuery();
             
             if (rs.next()) {
-                Usuario usuario = new Usuario();
-                usuario.setId(rs.getLong("id"));
-                usuario.setNome(rs.getString("nome"));
-                usuario.setCpf(rs.getString("cpf"));
-                usuario.setEndereco(rs.getString("endereco"));
-                usuario.setTelefone(rs.getString("telefone"));
-                usuario.setEmail(rs.getString("email"));
-                usuario.setSenha(rs.getString("senha"));
-                usuario.setTipoUsuario(rs.getString("tipo_usuario"));
-                System.out.println("Usuário encontrado: " + usuario.getNome() + " (CPF: " + usuario.getCpf() + ")");
-                rs.close();
-                stmt.close();
-                return Optional.of(usuario);
+                return criarUsuarioAPartirResultSet(rs);
             } else {
                 System.out.println("Nenhum usuário encontrado com o CPF: " + cpf);
             }
             rs.close();
-            stmt.close();
         } catch (SQLException e) {
-            System.out.println("Erro ao buscar usuário: " + e.getMessage());
+            System.out.println("Erro ao buscar usuário por CPF: " + e.getMessage());
             e.printStackTrace();
         }
         return Optional.empty();
+    }
+    
+    public Optional<Usuario> buscarPorEmail(String email) {
+        String sql = "SELECT * FROM usuarios WHERE email = ?";
+        System.out.println("Buscando usuário com e-mail: " + email);
+        
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            
+            stmt.setString(1, email);
+            ResultSet rs = stmt.executeQuery();
+            
+            if (rs.next()) {
+                return criarUsuarioAPartirResultSet(rs);
+            } else {
+                System.out.println("Nenhum usuário encontrado com o e-mail: " + email);
+            }
+            rs.close();
+        } catch (SQLException e) {
+            System.out.println("Erro ao buscar usuário por e-mail: " + e.getMessage());
+            e.printStackTrace();
+        }
+        return Optional.empty();
+    }
+    
+    private Optional<Usuario> criarUsuarioAPartirResultSet(ResultSet rs) throws SQLException {
+        Usuario usuario = new Usuario();
+        usuario.setId(rs.getLong("id"));
+        usuario.setNome(rs.getString("nome"));
+        usuario.setCpf(rs.getString("cpf"));
+        usuario.setEndereco(rs.getString("endereco"));
+        usuario.setTelefone(rs.getString("telefone"));
+        usuario.setEmail(rs.getString("email"));
+        usuario.setSenha(rs.getString("senha"));
+        usuario.setTipoUsuario(rs.getString("tipo_usuario"));
+        System.out.println("Usuário encontrado: " + usuario.getNome() + " (CPF: " + usuario.getCpf() + ", Email: " + usuario.getEmail() + ")");
+        return Optional.of(usuario);
     }
     
     public List<Usuario> listarTodos() {

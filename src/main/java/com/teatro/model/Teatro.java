@@ -166,22 +166,31 @@ public class Teatro {
         return usuarioDAO.cadastrar(usuario);
     }
 
-    public Optional<Usuario> autenticarUsuario(String cpf, String senha) {
-        System.out.println("Tentando autenticar usuário com CPF: " + cpf);
-        Optional<Usuario> usuarioOpt = usuarioDAO.buscarPorCpf(cpf);
+    public Optional<Usuario> autenticarUsuario(String login, String senha) {
+        System.out.println("Tentando autenticar usuário com login: " + login);
+        
+        // Primeiro tenta buscar por CPF
+        Optional<Usuario> usuarioOpt = usuarioDAO.buscarPorCpf(login);
+        
+        // Se não encontrou por CPF, tenta buscar por e-mail
+        if (usuarioOpt.isEmpty()) {
+            System.out.println("Usuário não encontrado por CPF, tentando por e-mail...");
+            usuarioOpt = usuarioDAO.buscarPorEmail(login);
+        }
         
         if (usuarioOpt.isPresent()) {
             Usuario usuario = usuarioOpt.get();
             System.out.println("Senha fornecida: " + senha);
-            System.out.println("Senha armazenada: " + usuario.getSenha());
-            if (usuario.getSenha().equals(senha)) {
+            System.out.println("Senha armazenada: " + (usuario.getSenha() != null ? "[PROTEGIDA]" : "nula"));
+            
+            if (usuario.getSenha() != null && usuario.getSenha().equals(senha)) {
                 System.out.println("Autenticação bem-sucedida!");
                 return Optional.of(usuario);
             } else {
                 System.out.println("Senha incorreta!");
             }
         } else {
-            System.out.println("Usuário não encontrado!");
+            System.out.println("Usuário não encontrado com o login fornecido!");
         }
         return Optional.empty();
     }
