@@ -27,22 +27,115 @@ public class Area implements Comparable<Area> {
     }
 
     public Area(String id, String nome, double preco, int capacidadeTotal, Long sessaoId) {
-        this(id, nome, preco, capacidadeTotal);
+        this.id = id;
+        this.nome = nome;
+        this.preco = preco;
+        this.capacidadeTotal = capacidadeTotal;
+        this.poltronas = new ArrayList<>(capacidadeTotal);
+        this.faturamento = 0.0;
         this.sessaoId = sessaoId;
+        
+        // Inicializa todas as poltronas como disponíveis
+        for (int i = 0; i < capacidadeTotal; i++) {
+            poltronas.add(false);
+        }
+    }
+    
+    /**
+     * Construtor de cópia para criar uma nova instância de Area com base em outra
+     * @param outra Área a ser copiada
+     * @param novoSessaoId Novo ID de sessão para a cópia
+     */
+    public Area(Area outra, Long novoSessaoId) {
+        this.id = outra.id;
+        this.nome = outra.nome;
+        this.preco = outra.preco;
+        this.capacidadeTotal = outra.capacidadeTotal;
+        this.faturamento = 0.0; // Inicia com faturamento zerado
+        this.sessaoId = novoSessaoId;
+        
+        // Cria uma nova lista de poltronas
+        this.poltronas = new ArrayList<>(outra.capacidadeTotal);
+        
+        // Inicializa todas as poltronas como disponíveis
+        for (int i = 0; i < capacidadeTotal; i++) {
+            this.poltronas.add(false);
+        }
     }
 
+    /**
+     * Carrega as poltronas ocupadas para esta área específica
+     * @param poltronasOcupadas Lista de números de poltronas ocupadas
+     */
     public void carregarPoltronasOcupadas(List<Integer> poltronasOcupadas) {
-        // Reseta todas as poltronas para disponíveis
-        for (int i = 0; i < poltronas.size(); i++) {
-            poltronas.set(i, false);
+        // Garante que a lista de poltronas está inicializada
+        if (poltronas == null) {
+            poltronas = new ArrayList<>(capacidadeTotal);
+        }
+        
+        // Limpa a lista de poltronas e garante que tem o tamanho correto
+        poltronas.clear();
+        for (int i = 0; i < capacidadeTotal; i++) {
+            poltronas.add(false);
         }
         
         // Marca as poltronas ocupadas
-        for (Integer numeroPoltrona : poltronasOcupadas) {
-            if (numeroPoltrona > 0 && numeroPoltrona <= poltronas.size()) {
-                poltronas.set(numeroPoltrona - 1, true);
+        if (poltronasOcupadas != null && !poltronasOcupadas.isEmpty()) {
+            for (Integer numeroPoltrona : poltronasOcupadas) {
+                if (numeroPoltrona != null && numeroPoltrona > 0 && numeroPoltrona <= capacidadeTotal) {
+                    poltronas.set(numeroPoltrona - 1, true);
+                }
             }
+            
+            // Atualiza o contador de poltronas ocupadas para o faturamento
+            int ocupadas = 0;
+            for (Boolean ocupada : poltronas) {
+                if (ocupada) ocupadas++;
+            }
+            this.faturamento = ocupadas * preco;
+        } else {
+            this.faturamento = 0.0;
         }
+    }
+    
+    /**
+     * Carrega as poltronas ocupadas para esta área específica, considerando o horário específico
+     * @param poltronasOcupadas Lista de números de poltronas ocupadas
+     * @param horarioEspecificoId ID do horário específico
+     */
+    public void carregarPoltronasOcupadas(List<Integer> poltronasOcupadas, Long horarioEspecificoId) {
+        // Garante que a lista de poltronas está inicializada
+        if (poltronas == null) {
+            poltronas = new ArrayList<>(capacidadeTotal);
+        }
+        
+        // Limpa a lista de poltronas e garante que tem o tamanho correto
+        poltronas.clear();
+        for (int i = 0; i < capacidadeTotal; i++) {
+            poltronas.add(false);
+        }
+        
+        // Marca as poltronas ocupadas apenas se a lista não for vazia
+        if (poltronasOcupadas != null && !poltronasOcupadas.isEmpty()) {
+            for (Integer numeroPoltrona : poltronasOcupadas) {
+                if (numeroPoltrona != null && numeroPoltrona > 0 && numeroPoltrona <= capacidadeTotal) {
+                    poltronas.set(numeroPoltrona - 1, true);
+                }
+            }
+            
+            // Atualiza o contador de poltronas ocupadas para o faturamento
+            int ocupadas = 0;
+            for (Boolean ocupada : poltronas) {
+                if (ocupada) ocupadas++;
+            }
+            this.faturamento = ocupadas * preco;
+        } else {
+            this.faturamento = 0.0;
+        }
+        
+        System.out.println("Carregando poltronas ocupadas para área " + this.nome + ", horário ID: " + horarioEspecificoId + 
+                           ", total ocupadas: " + (poltronasOcupadas != null ? poltronasOcupadas.size() : 0) + 
+                           ", disponíveis: " + getPoltronasDisponiveis());
     }
 
     public String getId() {

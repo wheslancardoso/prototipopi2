@@ -176,15 +176,36 @@ public class SelecionarPoltronaView {
 
     private void processarCompra() {
         if (poltronaSelecionada != null) {
-            teatro.comprarIngresso(usuario.getCpf(), null, sessao, area, poltronaSelecionada);
+            // Verificar se a sessão tem um horário específico definido
+            if (sessao.getHorarioEspecifico() == null) {
+                System.err.println("AVISO: Sessão sem horário específico definido.");
+            }
             
-            // Buscar o ingresso recém-criado
-            Ingresso ingresso = buscarIngressoRecente();
-            if (ingresso != null) {
+            // Comprar o ingresso passando a sessão atual (que contém o horário específico)
+            var ingressoOpt = teatro.comprarIngresso(usuario.getCpf(), null, sessao, area, poltronaSelecionada);
+            
+            if (ingressoOpt.isPresent()) {
+                Ingresso ingresso = ingressoOpt.get();
+                
+                // Garantir que o ingresso contenha o horário específico correto
+                if (sessao.getHorarioEspecifico() != null) {
+                    ingresso.setHorarioEspecificoId(sessao.getHorarioEspecifico().getId());
+                    ingresso.setHorario(sessao.getHorarioCompleto());
+                }
+                
                 // Converter para IngressoModerno
                 List<IngressoModerno> ingressosModernos = converterParaIngressoModerno(List.of(ingresso));
                 new ImpressaoIngressoViewModerna(teatro, usuario, stage, ingressosModernos).show();
                 return;
+            } else {
+                // Se falhar na compra, buscar o ingresso mais recente
+                Ingresso ingresso = buscarIngressoRecente();
+                if (ingresso != null) {
+                    // Converter para IngressoModerno
+                    List<IngressoModerno> ingressosModernos = converterParaIngressoModerno(List.of(ingresso));
+                    new ImpressaoIngressoViewModerna(teatro, usuario, stage, ingressosModernos).show();
+                    return;
+                }
             }
         }
         
@@ -218,9 +239,15 @@ public class SelecionarPoltronaView {
                 usuarioObj.setId(ingresso.getUsuarioId());
                 usuarioObj.setNome(usuario.getNome());
                 
-                Sessao sessaoObj = new Sessao(ingresso.getHorario());
-                sessaoObj.setId(ingresso.getSessaoId());
-                sessaoObj.setNome(ingresso.getEventoNome());
+                // Usar a sessão atual em vez de criar uma nova
+                Sessao sessaoObj = this.sessao; // Usar a sessão da view
+                
+                // Se a sessão for nula, criar uma nova com as informações do ingresso
+                if (sessaoObj == null) {
+                    sessaoObj = new Sessao(ingresso.getHorario());
+                    sessaoObj.setId(ingresso.getSessaoId());
+                    sessaoObj.setNome(ingresso.getEventoNome());
+                }
                 
                 // Converter o ID da área para o formato esperado
                 String areaId = converterIdArea(ingresso.getAreaId());

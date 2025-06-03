@@ -254,7 +254,14 @@ public class ImpressaoIngressoViewModerna {
         sb.append("========================================\n\n");
         sb.append("Evento: ").append(ingresso.getSessao().getNome()).append("\n");
         sb.append("Data: ").append(ingresso.getSessao().getDataFormatada()).append("\n");
-        sb.append("Horário: ").append(ingresso.getSessao().getHorarioCompleto()).append("\n");
+        
+        // Adiciona o horário específico da sessão
+        String horarioCompleto = ingresso.getSessao().getHorario();
+        if (ingresso.getSessao().getHorarioEspecifico() != null) {
+            horarioCompleto += " - " + ingresso.getSessao().getHorarioEspecifico().getHorarioFormatado();
+        }
+        sb.append("Horário: ").append(horarioCompleto).append("\n");
+        
         sb.append("Área: ").append(ingresso.getArea().getNome()).append("\n");
         sb.append("Poltrona: ").append(ingresso.getPoltrona().getNumero()).append("\n");
         sb.append("Valor: R$ ").append(String.format("%.2f", ingresso.getArea().getPreco())).append("\n\n");

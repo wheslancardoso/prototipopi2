@@ -10,6 +10,7 @@ public class Ingresso {
     private int numeroPoltrona;
     private double valor;
     private Timestamp dataCompra;
+    private Long horarioEspecificoId; // ID do horário específico (14:00, 15:30, etc.)
     
     // Campos para exibição
     private String eventoNome;
@@ -25,6 +26,16 @@ public class Ingresso {
         this.areaId = areaId;
         this.numeroPoltrona = numeroPoltrona;
         this.valor = valor;
+        this.horarioEspecificoId = null;
+    }
+    
+    public Ingresso(Long usuarioId, Long sessaoId, Long areaId, int numeroPoltrona, double valor, Long horarioEspecificoId) {
+        this.usuarioId = usuarioId;
+        this.sessaoId = sessaoId;
+        this.areaId = areaId;
+        this.numeroPoltrona = numeroPoltrona;
+        this.valor = valor;
+        this.horarioEspecificoId = horarioEspecificoId;
     }
 
     public Long getId() {
@@ -105,6 +116,14 @@ public class Ingresso {
 
     public void setAreaNome(String areaNome) {
         this.areaNome = areaNome;
+    }
+
+    public Long getHorarioEspecificoId() {
+        return horarioEspecificoId;
+    }
+
+    public void setHorarioEspecificoId(Long horarioEspecificoId) {
+        this.horarioEspecificoId = horarioEspecificoId;
     }
 
     @Override

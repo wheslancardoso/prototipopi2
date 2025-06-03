@@ -64,9 +64,11 @@ CREATE TABLE IF NOT EXISTS ingressos (
     numero_poltrona INT NOT NULL,
     valor DECIMAL(10,2) NOT NULL,
     data_compra TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    horario_especifico_id BIGINT DEFAULT 0,
     FOREIGN KEY (usuario_id) REFERENCES usuarios(id),
     FOREIGN KEY (sessao_id) REFERENCES sessoes(id),
-    FOREIGN KEY (area_id) REFERENCES areas(id)
+    FOREIGN KEY (area_id) REFERENCES areas(id),
+    FOREIGN KEY (horario_especifico_id) REFERENCES horarios_disponiveis(id)
 );
 
 -- Inserir usuário administrador

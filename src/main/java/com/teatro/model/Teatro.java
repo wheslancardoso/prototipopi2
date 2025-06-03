@@ -2,6 +2,8 @@ package com.teatro.model;
 
 import com.teatro.dao.UsuarioDAO;
 import com.teatro.dao.IngressoDAO;
+import java.time.LocalDate;
+import java.time.LocalTime;
 import java.util.*;
 
 public class Teatro {
@@ -46,52 +48,118 @@ public class Teatro {
     }
 
     private void inicializarEventos() {
+        // Limpa a lista de eventos existentes
+        eventos.clear();
+        
         String[] nomesEventos = {"The Batman", "Kill Bill: Volume 1", "Django Livre"};
         String[] horariosSessoes = {"Manhã", "Tarde", "Noite"};
         long sessaoId = 1; // Contador para IDs das sessões
-
+        
+        // Inicializa o DAO se necessário
+        if (ingressoDAO == null) {
+            ingressoDAO = new IngressoDAO();
+        }
+        
+        // Cria eventos e sessões
         for (String nomeEvento : nomesEventos) {
             Evento evento = new Evento(nomeEvento);
             
             for (String horario : horariosSessoes) {
+                // Para cada horario generico, criar uma sessao
                 Sessao sessao = new Sessao(horario);
+                sessao.setId(sessaoId);
                 sessao.setNome(nomeEvento);
-                sessao.setId(sessaoId); // Define um ID único para cada sessão
                 
-                // Adiciona todas as áreas à sessão
-                for (Area area : areas.values()) {
-                    Area areaClone = new Area(area.getId(), area.getNome(), area.getPreco(), area.getCapacidadeTotal(), sessaoId);
+                // Define uma data para a sessão (data atual como padrão)
+                sessao.setDataSessao(LocalDate.now());
+                
+                // Obtém o horário específico para a sessão (manhã, tarde, noite)
+                HorarioDisponivel horarioEspecifico = obterHorarioEspecifico(horario);
+                sessao.setHorarioEspecifico(horarioEspecifico);
+                
+                // Adiciona cada uma das áreas do teatro à sessão (com instâncias independentes)
+                for (Map.Entry<String, Area> entry : areas.entrySet()) {
+                    Area areaOriginal = entry.getValue();
+                    Area areaCopia = new Area(
+                        areaOriginal.getId(),
+                        areaOriginal.getNome(),
+                        areaOriginal.getPreco(),
+                        areaOriginal.getCapacidadeTotal()
+                    );
                     
-                    // Carrega as poltronas ocupadas do banco de dados
-                    long areaIdLong;
-                    String areaId = area.getId();
-                    
-                    if (areaId.startsWith("PA")) {
-                        areaIdLong = 1;
-                    } else if (areaId.startsWith("PB")) {
-                        areaIdLong = 2;
-                    } else if (areaId.startsWith("CM")) {
-                        int num = Integer.parseInt(areaId.substring(2));
-                        areaIdLong = 2 + num;
-                    } else if (areaId.startsWith("FR")) {
-                        int num = Integer.parseInt(areaId.substring(2));
-                        areaIdLong = 7 + num;
-                    } else {
-                        areaIdLong = 13; // Balcão Nobre
+                    try {
+                        // Converte a data da sessão para o formato esperado pelo DAO
+                        String dataSessaoFormatada = sessao.getDataSessao() != null ? 
+                                                   sessao.getDataSessao().toString() : null; // Formato YYYY-MM-DD
+                        
+                        // Inicializa a lista de poltronas ocupadas
+                        List<Integer> poltronasOcupadas = new ArrayList<>();
+                        
+                        // Obtém o ID do horário específico
+                        Long horarioEspecificoId = horarioEspecifico != null ? horarioEspecifico.getId() : null;
+                        
+                        // Converte o ID da área para o formato numérico usado no banco
+                        long areaIdLong = getAreaIdAsLong(areaCopia.getId());
+                        
+                        // Busca poltronas ocupadas com o filtro de data
+                        if (dataSessaoFormatada != null) {
+                            try {
+                                poltronasOcupadas = ingressoDAO.buscarPoltronasOcupadas(
+                                        sessao.getId(), areaIdLong, horarioEspecificoId, dataSessaoFormatada);
+                            } catch (Exception e) {
+                                System.err.println("Erro ao buscar poltronas com data para área " + 
+                                                   areaCopia.getNome() + ": " + e.getMessage());
+                                // Tentativa de fallback para busca sem data
+                                poltronasOcupadas = ingressoDAO.buscarPoltronasOcupadas(
+                                        sessao.getId(), areaIdLong, horarioEspecificoId);
+                            }
+                        } else {
+                            // Busca sem data
+                            poltronasOcupadas = ingressoDAO.buscarPoltronasOcupadas(
+                                    sessao.getId(), areaIdLong, horarioEspecificoId);
+                        }
+                        
+                        // Garante que a lista de poltronas ocupadas não seja nula
+                        if (poltronasOcupadas == null) poltronasOcupadas = new ArrayList<>();
+                        
+                        // Marca as poltronas como ocupadas no modelo usando o método correto
+                        areaCopia.carregarPoltronasOcupadas(poltronasOcupadas);
+                        
+                        // Registra informações de debugging
+                        System.out.println("Inicializando sessão: " + sessao.getNome() + 
+                                         " Horário: " + sessao.getHorario() + 
+                                         " Data: " + (dataSessaoFormatada != null ? dataSessaoFormatada : "N/A") + 
+                                         " Área " + areaCopia.getNome() + ": " + poltronasOcupadas.size() + 
+                                         " poltronas ocupadas, " + areaCopia.getPoltronasDisponiveis() + 
+                                         " disponíveis");
+                        
+                    } catch (Exception e) {
+                        // Em caso de erro, exibe mensagem de erro
+                        System.err.println("Erro ao inicializar área " + areaCopia.getNome() + 
+                                         " para sessão " + sessao.getNome() + ": " + e.getMessage());
+                        e.printStackTrace();
                     }
                     
-                    List<Integer> poltronasOcupadas = ingressoDAO.buscarPoltronasOcupadas(sessaoId, areaIdLong);
-                    areaClone.carregarPoltronasOcupadas(poltronasOcupadas);
-                    
-                    sessao.addArea(areaClone);
+                    // Adiciona a área à sessão
+                    sessao.addArea(areaCopia);
                 }
                 
+                // Adiciona a sessão ao evento
                 evento.addSessao(sessao);
-                sessaoId++; // Incrementa o ID para a próxima sessão
+                
+                sessaoId++;
             }
             
+            // Adiciona o evento à lista de eventos
             eventos.add(evento);
+            
+            System.out.println("Evento '" + evento.getNome() + "' inicializado com " + 
+                evento.getSessoes().size() + " sessões");
         }
+        
+        System.out.println("\n--- Inicialização concluída ---");
+        System.out.println("Total de eventos: " + eventos.size());
+        System.out.println("Total de sessões: " + (sessaoId - 1));
     }
 
     public boolean cadastrarUsuario(Usuario usuario) {
@@ -130,16 +198,27 @@ public class Teatro {
      * @return true se a poltrona estiver ocupada, false caso contrário
      */
     public boolean isPoltronaOcupada(Long sessaoId, String areaId, int numeroPoltrona) {
+        return isPoltronaOcupada(sessaoId, areaId, numeroPoltrona, null);
+    }
+    
+    /**
+     * Verifica se uma poltrona específica está ocupada em uma determinada sessão, área e horário específico.
+     * @param sessaoId ID da sessão
+     * @param areaId ID da área
+     * @param numeroPoltrona Número da poltrona
+     * @param horarioEspecificoId ID do horário específico
+     * @return true se a poltrona estiver ocupada, false caso contrário
+     */
+    public boolean isPoltronaOcupada(Long sessaoId, String areaId, int numeroPoltrona, Long horarioEspecificoId) {
         // Encontra a sessão pelo ID
         for (Evento evento : eventos) {
             for (Sessao sessao : evento.getSessoes()) {
                 if (sessao.getId().equals(sessaoId)) {
-                    // Encontra a área na sessão
                     for (Area area : sessao.getAreas()) {
                         if (area.getId().equals(areaId)) {
                             // Verifica se a poltrona está ocupada
                             List<Integer> poltronasOcupadas = ingressoDAO.buscarPoltronasOcupadas(sessaoId, 
-                                getAreaIdAsLong(areaId));
+                                getAreaIdAsLong(areaId), horarioEspecificoId);
                             return poltronasOcupadas.contains(numeroPoltrona);
                         }
                     }
@@ -154,7 +233,7 @@ public class Teatro {
      * @param areaId ID da área no formato String
      * @return ID da área no formato numérico
      */
-    private long getAreaIdAsLong(String areaId) {
+    public long getAreaIdAsLong(String areaId) {
         if (areaId.startsWith("PA")) {
             return 1; // Plateia A
         } else if (areaId.startsWith("PB")) {
@@ -169,48 +248,75 @@ public class Teatro {
             return 13; // Balcão Nobre
         }
     }
+    
+    /**
+     * Retorna um horário específico baseado no tipo de sessão
+     * @param tipoSessao Tipo de sessão (Manhã, Tarde ou Noite)
+     * @return HorarioDisponivel correspondente ao tipo de sessão
+     */
+    private HorarioDisponivel obterHorarioEspecifico(String tipoSessao) {
+        switch (tipoSessao) {
+            case "Manhã":
+                return new HorarioDisponivel(1L, tipoSessao, LocalTime.of(10, 0), 1);
+            case "Tarde":
+                return new HorarioDisponivel(2L, tipoSessao, LocalTime.of(15, 0), 2);
+            case "Noite":
+                return new HorarioDisponivel(3L, tipoSessao, LocalTime.of(19, 0), 3);
+            default:
+                return new HorarioDisponivel(0L, "Indefinido", LocalTime.of(0, 0), 0);
+        }
+    }
+    
+    /**
+     * Retorna o DAO de ingressos para operações específicas
+     * @return IngressoDAO utilizado pelo teatro
+     */
+    public IngressoDAO getIngressoDAO() {
+        return this.ingressoDAO;
+    }
 
     public Optional<Ingresso> comprarIngresso(String cpf, Evento evento, Sessao sessao, Area area, int numeroPoltrona) {
+        // Verifica se o usuário existe
         Optional<Usuario> usuario = usuarioDAO.buscarPorCpf(cpf);
         if (usuario.isEmpty()) {
             return Optional.empty();
         }
 
-        // Verifica se a poltrona está disponível
+        // Encontra a área correspondente na sessão
         Optional<Area> areaEvento = sessao.getAreas().stream()
-                .filter(a -> a.getNome().equals(area.getNome()))
+                .filter(a -> a.getId().equals(area.getId()))
                 .findFirst();
 
+        // Verifica se a área existe e se a poltrona está disponível
         if (areaEvento.isPresent() && areaEvento.get().ocuparPoltrona(numeroPoltrona)) {
-            // Mapeia o ID da área para um número sequencial
-            long areaIdLong;
-            String areaId = area.getId();
+            // Obtém o ID numérico da área para o banco de dados
+            long areaIdLong = getAreaIdAsLong(area.getId());
             
-            if (areaId.startsWith("PA")) {
-                areaIdLong = 1;
-            } else if (areaId.startsWith("PB")) {
-                areaIdLong = 2;
-            } else if (areaId.startsWith("CM")) {
-                int num = Integer.parseInt(areaId.substring(2));
-                areaIdLong = 2 + num;
-            } else if (areaId.startsWith("FR")) {
-                int num = Integer.parseInt(areaId.substring(2));
-                areaIdLong = 7 + num;
-            } else {
-                areaIdLong = 13; // Balcão Nobre
+            // Obtém o ID do horário específico da sessão
+            Long horarioEspecificoId = null;
+            if (sessao.getHorarioEspecifico() != null) {
+                horarioEspecificoId = sessao.getHorarioEspecifico().getId();
             }
             
+            // Cria e salva o ingresso
             Ingresso ingresso = new Ingresso(
                 usuario.get().getId(),
                 sessao.getId(),
                 areaIdLong,
                 numeroPoltrona,
-                area.getPreco()
+                area.getPreco(),
+                horarioEspecificoId
             );
             
             if (ingressoDAO.salvar(ingresso)) {
                 ingressoDAO.atualizarStatusPoltrona(sessao.getId(), areaIdLong, numeroPoltrona, true);
                 ingressoDAO.atualizarFaturamento(sessao.getId(), areaIdLong, area.getPreco());
+                
+                // Atualiza as informações adicionais do ingresso para exibição
+                ingresso.setEventoNome(sessao.getNome());
+                ingresso.setHorario(sessao.getHorarioCompleto());
+                ingresso.setAreaNome(area.getNome());
+                
                 return Optional.of(ingresso);
             }
         }

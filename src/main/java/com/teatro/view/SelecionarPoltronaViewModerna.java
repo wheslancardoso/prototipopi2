@@ -279,6 +279,47 @@ public class SelecionarPoltronaViewModerna {
             
             // Cria o callback para quando o pagamento for concluído
             Runnable onPagamentoConcluido = () -> {
+                // Para cada poltrona selecionada, marca como ocupada no banco de dados
+                for (Poltrona poltrona : poltronasSelecionadas) {
+                    // Cria o objeto Ingresso para salvar no banco de dados
+                    Ingresso ingressoParaSalvar = new Ingresso();
+                    ingressoParaSalvar.setUsuarioId(usuario.getId());
+                    ingressoParaSalvar.setSessaoId(sessao.getId());
+                    // Usa o método getAreaIdAsLong para converter o ID alfanumérico da área para um valor Long
+                    ingressoParaSalvar.setAreaId(teatro.getAreaIdAsLong(area.getId()));
+                    ingressoParaSalvar.setNumeroPoltrona(poltrona.getNumero());
+                    ingressoParaSalvar.setValor(area.getPreco());
+                    ingressoParaSalvar.setDataCompra(new java.sql.Timestamp(System.currentTimeMillis()));
+                    ingressoParaSalvar.setEventoNome(sessao.getNome());
+                    ingressoParaSalvar.setHorario(sessao.getHorario());
+                    ingressoParaSalvar.setAreaNome(area.getNome());
+                    
+                    // Adiciona o horário específico ao ingresso
+                    if (sessao.getHorarioEspecifico() != null) {
+                        ingressoParaSalvar.setHorarioEspecificoId(sessao.getHorarioEspecifico().getId());
+                    }
+                    
+                    // Salva o ingresso no banco de dados usando o DAO
+                    try {
+                        new com.teatro.dao.IngressoDAO().salvar(ingressoParaSalvar);
+                        System.out.println("Ingresso salvo com sucesso para a poltrona " + poltrona.getNumero() + 
+                                          " da sessão " + sessao.getNome() + " na data " + sessao.getDataSessao());
+                    } catch (Exception ex) {
+                        System.err.println("Erro ao salvar ingresso: " + ex.getMessage());
+                        ex.printStackTrace();
+                    }
+                    
+                    // Chama o método de compra de ingresso para atualizar o modelo local
+                    Evento eventoTemp = new Evento(sessao.getNome());
+                    teatro.comprarIngresso(
+                        usuario.getCpf(),
+                        eventoTemp,
+                        sessao,
+                        area,
+                        poltrona.getNumero()
+                    );
+                }
+                
                 // Adiciona os ingressos ao usuário
                 usuario.adicionarIngressos(ingressosModernos);
                 

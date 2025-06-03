@@ -26,13 +26,24 @@ public class Main extends Application {
 
     @Override
     public void init() {
-        // Inicializa o sistema
+        // Inicializa o objeto Teatro, que é o controlador principal
         teatro = new Teatro();
         
         // Verifica a conexão com o banco de dados
         try {
             DatabaseConnection.getConnection();
             System.out.println("Conexão com o banco de dados estabelecida com sucesso.");
+            
+            // Executa o script de atualização do banco de dados, se necessário
+            try {
+                // Importando dinamicamente para evitar dependência circular
+                com.teatro.database.DatabaseUpdateRunner.updateDatabase();
+            } catch (Exception e) {
+                System.err.println("Aviso: Não foi possível verificar ou aplicar atualizações do banco: " + e.getMessage());
+                e.printStackTrace();
+                // Continua a execução mesmo se a atualização falhar
+            }
+            
         } catch (Exception e) {
             System.err.println("Erro ao conectar ao banco de dados: " + e.getMessage());
             Platform.exit();

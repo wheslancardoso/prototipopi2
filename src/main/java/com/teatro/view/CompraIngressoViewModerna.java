@@ -210,6 +210,25 @@ public class CompraIngressoViewModerna {
         areaComboBox.setOnAction(e -> {
             areaSelecionada = areaComboBox.getValue();
             if (areaSelecionada != null) {
+                // Força uma atualização das poltronas ocupadas para garantir dados atualizados
+                if (sessao != null && sessao.getHorarioEspecifico() != null) {
+                    // Busca poltronas ocupadas considerando o horário específico
+                    try {
+                        Long horarioEspecificoId = sessao.getHorarioEspecifico().getId();
+                        long areaIdLong = teatro.getAreaIdAsLong(areaSelecionada.getId());
+                        
+                        // Busca as poltronas ocupadas específicas para esta área e horário
+                        List<Integer> poltronasOcupadas = teatro.getIngressoDAO()
+                               .buscarPoltronasOcupadas(sessao.getId(), areaIdLong, horarioEspecificoId);
+                        
+                        // Atualiza a área com as poltronas ocupadas para o horário específico
+                        areaSelecionada.carregarPoltronasOcupadas(poltronasOcupadas, horarioEspecificoId);
+                    } catch (Exception ex) {
+                        System.err.println("Erro ao atualizar poltronas ocupadas: " + ex.getMessage());
+                        ex.printStackTrace();
+                    }
+                }
+                
                 precoValor.setText(String.format("R$ %.2f", areaSelecionada.getPreco()));
                 disponibilidadeValor.setText(areaSelecionada.getPoltronasDisponiveis() + " de " + areaSelecionada.getCapacidadeTotal());
                 areaInfoBox.setVisible(true);

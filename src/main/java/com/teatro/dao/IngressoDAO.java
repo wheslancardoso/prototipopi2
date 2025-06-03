@@ -11,7 +11,7 @@ import java.util.HashMap;
 public class IngressoDAO {
     
     public boolean salvar(Ingresso ingresso) {
-        String sql = "INSERT INTO ingressos (usuario_id, sessao_id, area_id, numero_poltrona, valor) VALUES (?, ?, ?, ?, ?)";
+        String sql = "INSERT INTO ingressos (usuario_id, sessao_id, area_id, numero_poltrona, valor, horario_especifico_id) VALUES (?, ?, ?, ?, ?, ?)";
         
         try (Connection conn = DatabaseConnection.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
@@ -21,6 +21,7 @@ public class IngressoDAO {
             stmt.setLong(3, ingresso.getAreaId());
             stmt.setInt(4, ingresso.getNumeroPoltrona());
             stmt.setDouble(5, ingresso.getValor());
+            stmt.setLong(6, ingresso.getHorarioEspecificoId() != null ? ingresso.getHorarioEspecificoId() : 0);
             
             return stmt.executeUpdate() > 0;
         } catch (SQLException e) {
@@ -29,8 +30,11 @@ public class IngressoDAO {
         }
     }
     
-    public List<Integer> buscarPoltronasOcupadas(Long sessaoId, Long areaId) {
-        String sql = "SELECT numero_poltrona FROM ingressos WHERE sessao_id = ? AND area_id = ?";
+    public List<Integer> buscarPoltronasOcupadas(Long sessaoId, Long areaId, Long horarioEspecificoId) {
+        String sql = "SELECT i.numero_poltrona FROM ingressos i " +
+                   "JOIN sessoes s ON i.sessao_id = s.id " +
+                   "WHERE i.sessao_id = ? AND i.area_id = ? AND i.horario_especifico_id = ?";
+        
         List<Integer> poltronasOcupadas = new ArrayList<>();
         
         try (Connection conn = DatabaseConnection.getConnection();
@@ -38,16 +42,67 @@ public class IngressoDAO {
             
             stmt.setLong(1, sessaoId);
             stmt.setLong(2, areaId);
+            stmt.setLong(3, horarioEspecificoId != null ? horarioEspecificoId : 0);
             ResultSet rs = stmt.executeQuery();
             
             while (rs.next()) {
-                poltronasOcupadas.add(rs.getInt("numero_poltrona"));
+                int numeroPoltrona = rs.getInt("numero_poltrona");
+                if (numeroPoltrona > 0) { // Garante que apenas números de poltrona válidos são adicionados
+                    poltronasOcupadas.add(numeroPoltrona);
+                }
             }
         } catch (SQLException e) {
+            System.err.println("Erro ao buscar poltronas ocupadas para sessão: " + sessaoId + ", área: " + areaId + ", horário: " + horarioEspecificoId);
             e.printStackTrace();
         }
         
         return poltronasOcupadas;
+    }
+    
+    /**
+     * Busca poltronas ocupadas para uma combinação específica de sessão, área, horário e data
+     * @param sessaoId ID da sessão
+     * @param areaId ID da área
+     * @param horarioEspecificoId ID do horário específico
+     * @param dataSessao Data da sessão no formato YYYY-MM-DD
+     * @return Lista de números de poltronas ocupadas
+     */
+    public List<Integer> buscarPoltronasOcupadas(Long sessaoId, Long areaId, Long horarioEspecificoId, String dataSessao) {
+        String sql = "SELECT i.numero_poltrona FROM ingressos i " +
+                   "JOIN sessoes s ON i.sessao_id = s.id " +
+                   "WHERE i.sessao_id = ? AND i.area_id = ? AND i.horario_especifico_id = ? AND s.data_sessao = ?";
+        
+        List<Integer> poltronasOcupadas = new ArrayList<>();
+        
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            
+            stmt.setLong(1, sessaoId);
+            stmt.setLong(2, areaId);
+            stmt.setLong(3, horarioEspecificoId != null ? horarioEspecificoId : 0);
+            stmt.setDate(4, java.sql.Date.valueOf(dataSessao));
+            ResultSet rs = stmt.executeQuery();
+            
+            while (rs.next()) {
+                int numeroPoltrona = rs.getInt("numero_poltrona");
+                if (numeroPoltrona > 0) { // Garante que apenas números de poltrona válidos são adicionados
+                    poltronasOcupadas.add(numeroPoltrona);
+                }
+            }
+        } catch (SQLException e) {
+            System.err.println("Erro ao buscar poltronas ocupadas para sessão: " + sessaoId + ", área: " + areaId + 
+                           ", horário: " + horarioEspecificoId + ", data: " + dataSessao);
+            e.printStackTrace();
+        }
+        
+        return poltronasOcupadas;
+    }
+    
+    /**
+     * Versão sobrecarregada para compatibilidade com código existente
+     */
+    public List<Integer> buscarPoltronasOcupadas(Long sessaoId, Long areaId) {
+        return buscarPoltronasOcupadas(sessaoId, areaId, null);
     }
     
     public List<Ingresso> buscarPorUsuarioId(Long usuarioId) {
