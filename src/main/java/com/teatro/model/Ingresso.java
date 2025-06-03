@@ -128,11 +128,17 @@ public class Ingresso {
 
     @Override
     public String toString() {
+        // Extrai o nome da sessão (parte antes do hífen) e o horário (parte depois do hífen)
+        String[] partesHorario = horario != null ? horario.split(" - ", 2) : new String[]{"", ""};
+        String nomeSessao = partesHorario.length > 0 ? partesHorario[0].trim() : "";
+        String horarioSessao = partesHorario.length > 1 ? partesHorario[1].trim() : horario;
+        
         return String.format("""
             ==========================================
             INGRESSO - TEATRO
             ==========================================
             Evento: %s
+            Sessão: %s
             Horário: %s
             Área: %s
             Poltrona: %d
@@ -141,7 +147,8 @@ public class Ingresso {
             ==========================================
             """,
             eventoNome,
-            horario,
+            nomeSessao,
+            horarioSessao,
             areaNome,
             numeroPoltrona,
             valor,
