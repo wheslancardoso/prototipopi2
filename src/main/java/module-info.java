@@ -5,11 +5,18 @@ module com.teatro {
     requires java.desktop;
     requires javafx.graphics;
     requires javafx.base;
+    requires com.google.zxing;
+    requires com.google.zxing.javase;
+    requires org.slf4j;
+    requires ch.qos.logback.classic;
+    requires ch.qos.logback.core;
 
-    opens com.teatro to javafx.fxml;
+    // Abre os pacotes necessários para reflexão
+    opens com.teatro to javafx.fxml, org.slf4j, ch.qos.logback.classic;
     opens com.teatro.controller to javafx.fxml;
     opens com.teatro.view to javafx.fxml;
     
+    // Exporta os pacotes necessários
     exports com.teatro;
     exports com.teatro.controller;
     exports com.teatro.view;
