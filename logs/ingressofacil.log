@@ -46,3 +46,9 @@
 2025-06-03 23:15:50.249 [JavaFX-Launcher] INFO  com.teatro.Main - Conexão com o banco de dados estabelecida com sucesso.
 2025-06-03 23:15:50.253 [JavaFX-Launcher] INFO  com.teatro.Main - Atualizações do banco de dados verificadas com sucesso.
 2025-06-03 23:15:50.848 [JavaFX Application Thread] INFO  com.teatro.Main - Aplicação iniciada com sucesso
+2025-06-03 23:31:12.564 [JavaFX-Launcher] INFO  com.teatro.Main - Conexão com o banco de dados estabelecida com sucesso.
+2025-06-03 23:31:12.567 [JavaFX-Launcher] INFO  com.teatro.Main - Atualizações do banco de dados verificadas com sucesso.
+2025-06-03 23:31:13.139 [JavaFX Application Thread] INFO  com.teatro.Main - Aplicação iniciada com sucesso
+2025-06-03 23:32:51.864 [JavaFX-Launcher] INFO  com.teatro.Main - Conexão com o banco de dados estabelecida com sucesso.
+2025-06-03 23:32:51.867 [JavaFX-Launcher] INFO  com.teatro.Main - Atualizações do banco de dados verificadas com sucesso.
+2025-06-03 23:32:52.456 [JavaFX Application Thread] INFO  com.teatro.Main - Aplicação iniciada com sucesso

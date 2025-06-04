@@ -234,8 +234,10 @@ public class Teatro {
                             }
                             
                             // Se não estiver ocupada no modelo local, verifica no banco de dados
-                            List<Integer> poltronasOcupadas = ingressoDAO.buscarPoltronasOcupadas(sessaoId, 
-                                getAreaIdAsLong(areaId), horarioEspecificoId);
+                            String dataSessao = sessao.getDataSessao() != null ? sessao.getDataSessao().toString() : null;
+                            List<Integer> poltronasOcupadas = dataSessao != null ?
+                                ingressoDAO.buscarPoltronasOcupadas(sessaoId, getAreaIdAsLong(areaId), horarioEspecificoId, dataSessao) :
+                                ingressoDAO.buscarPoltronasOcupadas(sessaoId, getAreaIdAsLong(areaId), horarioEspecificoId);
                             return poltronasOcupadas.contains(numeroPoltrona);
                         }
                     }

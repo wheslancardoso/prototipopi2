@@ -69,32 +69,8 @@ public class IngressoDAO {
     }
     
     public List<Integer> buscarPoltronasOcupadas(Long sessaoId, Long areaId, Long horarioEspecificoId) {
-        String sql = "SELECT i.numero_poltrona FROM ingressos i " +
-                   "JOIN sessoes s ON i.sessao_id = s.id " +
-                   "WHERE i.sessao_id = ? AND i.area_id = ? AND i.horario_especifico_id = ?";
-        
-        List<Integer> poltronasOcupadas = new ArrayList<>();
-        
-        try (Connection conn = DatabaseConnection.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql)) {
-            
-            stmt.setLong(1, sessaoId);
-            stmt.setLong(2, areaId);
-            stmt.setLong(3, horarioEspecificoId != null ? horarioEspecificoId : 0);
-            ResultSet rs = stmt.executeQuery();
-            
-            while (rs.next()) {
-                int numeroPoltrona = rs.getInt("numero_poltrona");
-                if (numeroPoltrona > 0) { // Garante que apenas números de poltrona válidos são adicionados
-                    poltronasOcupadas.add(numeroPoltrona);
-                }
-            }
-        } catch (SQLException e) {
-            System.err.println("Erro ao buscar poltronas ocupadas para sessão: " + sessaoId + ", área: " + areaId + ", horário: " + horarioEspecificoId);
-            e.printStackTrace();
-        }
-        
-        return poltronasOcupadas;
+        // Chama a versão com data para garantir consistência
+        return buscarPoltronasOcupadas(sessaoId, areaId, horarioEspecificoId, null);
     }
     
     /**

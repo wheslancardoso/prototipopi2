@@ -209,24 +209,36 @@ public class CompraIngressoViewModerna {
         // Atualiza as informações quando uma área é selecionada
         areaComboBox.setOnAction(e -> {
             areaSelecionada = areaComboBox.getValue();
-            if (areaSelecionada != null) {
+            if (areaSelecionada != null && sessao != null) {
                 // Força uma atualização das poltronas ocupadas para garantir dados atualizados
-                if (sessao != null && sessao.getHorarioEspecifico() != null) {
-                    // Busca poltronas ocupadas considerando o horário específico
-                    try {
-                        Long horarioEspecificoId = sessao.getHorarioEspecifico().getId();
-                        long areaIdLong = teatro.getAreaIdAsLong(areaSelecionada.getId());
-                        
-                        // Busca as poltronas ocupadas específicas para esta área e horário
-                        List<Integer> poltronasOcupadas = teatro.getIngressoDAO()
-                               .buscarPoltronasOcupadas(sessao.getId(), areaIdLong, horarioEspecificoId);
-                        
-                        // Atualiza a área com as poltronas ocupadas para o horário específico
-                        areaSelecionada.carregarPoltronasOcupadas(poltronasOcupadas, horarioEspecificoId);
-                    } catch (Exception ex) {
-                        System.err.println("Erro ao atualizar poltronas ocupadas: " + ex.getMessage());
-                        ex.printStackTrace();
+                try {
+                    Long horarioEspecificoId = sessao.getHorarioEspecifico() != null ? 
+                            sessao.getHorarioEspecifico().getId() : null;
+                    long areaIdLong = teatro.getAreaIdAsLong(areaSelecionada.getId());
+                    String dataSessao = sessao.getDataSessao() != null ? 
+                            sessao.getDataSessao().toString() : null;
+                    
+                    // Busca as poltronas ocupadas específicas para esta área, horário e data
+                    List<Integer> poltronasOcupadas;
+                    if (dataSessao != null && horarioEspecificoId != null) {
+                        poltronasOcupadas = teatro.getIngressoDAO()
+                            .buscarPoltronasOcupadas(sessao.getId(), areaIdLong, horarioEspecificoId, dataSessao);
+                    } else if (horarioEspecificoId != null) {
+                        poltronasOcupadas = teatro.getIngressoDAO()
+                            .buscarPoltronasOcupadas(sessao.getId(), areaIdLong, horarioEspecificoId);
+                    } else {
+                        poltronasOcupadas = new ArrayList<>();
                     }
+                    
+                    // Atualiza a área com as poltronas ocupadas
+                    if (horarioEspecificoId != null) {
+                        areaSelecionada.carregarPoltronasOcupadas(poltronasOcupadas, horarioEspecificoId);
+                    } else {
+                        areaSelecionada.carregarPoltronasOcupadas(poltronasOcupadas);
+                    }
+                } catch (Exception ex) {
+                    System.err.println("Erro ao atualizar poltronas ocupadas: " + ex.getMessage());
+                    ex.printStackTrace();
                 }
                 
                 precoValor.setText(String.format("R$ %.2f", areaSelecionada.getPreco()));
