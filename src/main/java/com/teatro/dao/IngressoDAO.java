@@ -30,6 +30,44 @@ public class IngressoDAO {
         }
     }
     
+    /**
+     * Salva um ingresso no banco de dados e retorna o ID gerado
+     * @param ingresso O ingresso a ser salvo
+     * @return O ID do ingresso salvo ou null em caso de erro
+     */
+    public Long salvarERetornarId(Ingresso ingresso) {
+        String sql = "INSERT INTO ingressos (usuario_id, sessao_id, area_id, numero_poltrona, valor, horario_especifico_id) VALUES (?, ?, ?, ?, ?, ?)";
+        
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
+            
+            stmt.setLong(1, ingresso.getUsuarioId());
+            stmt.setLong(2, ingresso.getSessaoId());
+            stmt.setLong(3, ingresso.getAreaId());
+            stmt.setInt(4, ingresso.getNumeroPoltrona());
+            stmt.setDouble(5, ingresso.getValor());
+            stmt.setLong(6, ingresso.getHorarioEspecificoId() != null ? ingresso.getHorarioEspecificoId() : 0);
+            
+            int affectedRows = stmt.executeUpdate();
+            
+            if (affectedRows == 0) {
+                throw new SQLException("Falha ao salvar o ingresso, nenhuma linha afetada.");
+            }
+            
+            try (ResultSet generatedKeys = stmt.getGeneratedKeys()) {
+                if (generatedKeys.next()) {
+                    return generatedKeys.getLong(1);
+                } else {
+                    throw new SQLException("Falha ao obter o ID do ingresso, nenhum ID obtido.");
+                }
+            }
+        } catch (SQLException e) {
+            System.err.println("Erro ao salvar ingresso: " + e.getMessage());
+            e.printStackTrace();
+            return null;
+        }
+    }
+    
     public List<Integer> buscarPoltronasOcupadas(Long sessaoId, Long areaId, Long horarioEspecificoId) {
         String sql = "SELECT i.numero_poltrona FROM ingressos i " +
                    "JOIN sessoes s ON i.sessao_id = s.id " +

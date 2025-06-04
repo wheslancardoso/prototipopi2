@@ -113,11 +113,38 @@ public class Usuario {
      * Adiciona uma lista de ingressos ao usuário
      * @param ingressos Lista de ingressos a serem adicionados
      */
-    public void adicionarIngressos(List<IngressoModerno> ingressos) {
+    public void adicionarIngressos(List<IngressoModerno> novosIngressos) {
         if (this.ingressos == null) {
             this.ingressos = new ArrayList<>();
         }
-        this.ingressos.addAll(ingressos);
+        
+        // Evita adicionar ingressos duplicados
+        for (IngressoModerno novoIngresso : novosIngressos) {
+            boolean jaExiste = false;
+            
+            // Verifica se o ingresso já existe na lista
+            for (IngressoModerno ingressoExistente : this.ingressos) {
+                if (ingressoExistente.getId() != null && ingressoExistente.getId().equals(novoIngresso.getId())) {
+                    jaExiste = true;
+                    break;
+                }
+                
+                // Se não tiver ID, verifica por outros critérios
+                if (ingressoExistente.getSessao() != null && novoIngresso.getSessao() != null &&
+                    ingressoExistente.getSessao().getId() != null && 
+                    ingressoExistente.getSessao().getId().equals(novoIngresso.getSessao().getId()) &&
+                    ingressoExistente.getPoltrona() != null && novoIngresso.getPoltrona() != null &&
+                    ingressoExistente.getPoltrona().getNumero() == novoIngresso.getPoltrona().getNumero()) {
+                    jaExiste = true;
+                    break;
+                }
+            }
+            
+            // Adiciona apenas se não existir
+            if (!jaExiste) {
+                this.ingressos.add(novoIngresso);
+            }
+        }
     }
 
     public boolean validarCPF() {

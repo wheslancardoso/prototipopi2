@@ -335,34 +335,59 @@ public class DashboardView {
     private List<IngressoModerno> converterParaIngressoModerno(List<Ingresso> ingressos) {
         List<IngressoModerno> ingressosModernos = new ArrayList<>();
         
+        if (ingressos == null) {
+            return ingressosModernos;
+        }
+        
+        // Primeiro, verifica se já existem ingressos no usuário
+        List<IngressoModerno> ingressosExistentes = usuarioLogado.getIngressos();
+        
         for (Ingresso ingresso : ingressos) {
             try {
-                // Criar objetos básicos necessários para o IngressoModerno
-                Usuario usuario = new Usuario();
-                usuario.setId(ingresso.getUsuarioId());
-                usuario.setNome(usuarioLogado.getNome()); // Usar o nome do usuário logado
+                // Verifica se já existe um ingresso com este ID na lista do usuário
+                boolean ingressoJaExiste = false;
+                if (ingressosExistentes != null) {
+                    for (IngressoModerno existente : ingressosExistentes) {
+                        if (existente.getId() != null && existente.getId().equals(ingresso.getId())) {
+                            // Se o ingresso já existe, usa o existente
+                            ingressosModernos.add(existente);
+                            ingressoJaExiste = true;
+                            System.out.println("Ingresso " + ingresso.getId() + " já existe na lista do usuário");
+                            break;
+                        }
+                    }
+                }
                 
-                Sessao sessao = new Sessao(ingresso.getHorario());
-                sessao.setId(ingresso.getSessaoId());
-                sessao.setNome(ingresso.getEventoNome());
-                
-                // Converter o ID da área para o formato esperado
-                String areaId = converterIdArea(ingresso.getAreaId());
-                Area area = new Area(areaId, ingresso.getAreaNome(), ingresso.getValor(), 0);
-                
-                Poltrona poltrona = new Poltrona(ingresso.getNumeroPoltrona());
-                
-                // Criar o ingresso moderno
-                IngressoModerno ingressoModerno = new IngressoModerno(sessao, area, poltrona, usuario);
-                ingressoModerno.setId(ingresso.getId());
-                ingressoModerno.setValor(ingresso.getValor());
-                ingressoModerno.setDataCompra(ingresso.getDataCompra());
-                
-                // Gerar um código único para o ingresso
-                String codigo = "ING" + (ingresso.getId() != null ? ingresso.getId() : "") + "-" + System.currentTimeMillis();
-                ingressoModerno.setCodigo(codigo);
-                
-                ingressosModernos.add(ingressoModerno);
+                // Se o ingresso não existe, cria um novo
+                if (!ingressoJaExiste) {
+                    // Criar objetos básicos necessários para o IngressoModerno
+                    Usuario usuario = new Usuario();
+                    usuario.setId(ingresso.getUsuarioId());
+                    usuario.setNome(usuarioLogado.getNome()); // Usar o nome do usuário logado
+                    
+                    Sessao sessao = new Sessao(ingresso.getHorario());
+                    sessao.setId(ingresso.getSessaoId());
+                    sessao.setNome(ingresso.getEventoNome());
+                    
+                    // Converter o ID da área para o formato esperado
+                    String areaId = converterIdArea(ingresso.getAreaId());
+                    Area area = new Area(areaId, ingresso.getAreaNome(), ingresso.getValor(), 0);
+                    
+                    Poltrona poltrona = new Poltrona(ingresso.getNumeroPoltrona());
+                    
+                    // Criar o ingresso moderno
+                    IngressoModerno ingressoModerno = new IngressoModerno(sessao, area, poltrona, usuario);
+                    ingressoModerno.setId(ingresso.getId());
+                    ingressoModerno.setValor(ingresso.getValor());
+                    ingressoModerno.setDataCompra(ingresso.getDataCompra());
+                    
+                    // Gerar um código único para o ingresso
+                    String codigo = "ING" + (ingresso.getId() != null ? ingresso.getId() : "") + "-" + System.currentTimeMillis();
+                    ingressoModerno.setCodigo(codigo);
+                    
+                    System.out.println("Adicionando novo ingresso: " + ingressoModerno.getId() + " - " + ingressoModerno.getSessao().getNome());
+                    ingressosModernos.add(ingressoModerno);
+                }
             } catch (Exception e) {
                 System.err.println("Erro ao converter ingresso: " + e.getMessage());
                 e.printStackTrace();
@@ -386,9 +411,28 @@ public class DashboardView {
     }
     
     private void mostrarTelaImpressao() {
-        // Buscar os ingressos do usuário logado
-        List<Ingresso> ingressos = ingressoDAO.buscarPorUsuarioId(usuarioLogado.getId());
-        List<IngressoModerno> ingressosModernos = converterParaIngressoModerno(ingressos);
-        new ImpressaoIngressoViewModerna(teatro, usuarioLogado, stage, ingressosModernos).show();
+        // Verifica se o usuário já tem ingressos na memória
+        if (usuarioLogado.getIngressos() != null && !usuarioLogado.getIngressos().isEmpty()) {
+            // Usa os ingressos já carregados na memória
+            System.out.println("Usando ingressos da memória: " + usuarioLogado.getIngressos().size());
+            new ImpressaoIngressoViewModerna(teatro, usuarioLogado, stage, usuarioLogado.getIngressos()).show();
+        } else {
+            // Se não houver ingressos na memória, busca do banco de dados
+            System.out.println("Buscando ingressos do banco de dados");
+            List<Ingresso> ingressos = ingressoDAO.buscarPorUsuarioId(usuarioLogado.getId());
+            if (ingressos != null && !ingressos.isEmpty()) {
+                List<IngressoModerno> ingressosModernos = converterParaIngressoModerno(ingressos);
+                // Atualiza a lista de ingressos do usuário
+                usuarioLogado.setIngressos(ingressosModernos);
+                new ImpressaoIngressoViewModerna(teatro, usuarioLogado, stage, ingressosModernos).show();
+            } else {
+                // Se não houver ingressos, exibe uma mensagem
+                Alert alert = new Alert(Alert.AlertType.INFORMATION);
+                alert.setTitle("Nenhum ingresso encontrado");
+                alert.setHeaderText(null);
+                alert.setContentText("Você ainda não possui ingressos comprados.");
+                alert.showAndWait();
+            }
+        }
     }
 } 

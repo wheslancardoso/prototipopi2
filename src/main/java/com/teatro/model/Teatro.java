@@ -207,6 +207,7 @@ public class Teatro {
      * @return true se a poltrona estiver ocupada, false caso contrário
      */
     public boolean isPoltronaOcupada(Long sessaoId, String areaId, int numeroPoltrona) {
+        // Chama a versão com horário específico como null
         return isPoltronaOcupada(sessaoId, areaId, numeroPoltrona, null);
     }
     
@@ -219,13 +220,20 @@ public class Teatro {
      * @return true se a poltrona estiver ocupada, false caso contrário
      */
     public boolean isPoltronaOcupada(Long sessaoId, String areaId, int numeroPoltrona, Long horarioEspecificoId) {
-        // Encontra a sessão pelo ID
+        // Primeiro verifica no modelo local
         for (Evento evento : eventos) {
             for (Sessao sessao : evento.getSessoes()) {
                 if (sessao.getId().equals(sessaoId)) {
                     for (Area area : sessao.getAreas()) {
                         if (area.getId().equals(areaId)) {
-                            // Verifica se a poltrona está ocupada
+                            // Verifica se a poltrona está ocupada no modelo local
+                            if (area.getPoltronas() != null && numeroPoltrona > 0 && numeroPoltrona <= area.getPoltronas().size()) {
+                                if (area.getPoltronas().get(numeroPoltrona - 1)) {
+                                    return true;
+                                }
+                            }
+                            
+                            // Se não estiver ocupada no modelo local, verifica no banco de dados
                             List<Integer> poltronasOcupadas = ingressoDAO.buscarPoltronasOcupadas(sessaoId, 
                                 getAreaIdAsLong(areaId), horarioEspecificoId);
                             return poltronasOcupadas.contains(numeroPoltrona);
@@ -234,7 +242,10 @@ public class Teatro {
                 }
             }
         }
-        return false;
+        // Se não encontrou a área ou sessão, verifica no banco de dados como fallback
+        List<Integer> poltronasOcupadas = ingressoDAO.buscarPoltronasOcupadas(sessaoId, 
+            getAreaIdAsLong(areaId), horarioEspecificoId);
+        return poltronasOcupadas.contains(numeroPoltrona);
     }
     
     /**
@@ -284,7 +295,7 @@ public class Teatro {
         return this.ingressoDAO;
     }
 
-    public Optional<Ingresso> comprarIngresso(String cpf, Evento evento, Sessao sessao, Area area, int numeroPoltrona) {
+    public Optional<IngressoModerno> comprarIngresso(String cpf, Evento evento, Sessao sessao, Area area, int numeroPoltrona) {
         // Verifica se o usuário existe
         Optional<Usuario> usuario = usuarioDAO.buscarPorCpf(cpf);
         if (usuario.isEmpty()) {
@@ -307,8 +318,12 @@ public class Teatro {
                 horarioEspecificoId = sessao.getHorarioEspecifico().getId();
             }
             
-            // Cria e salva o ingresso
-            Ingresso ingresso = new Ingresso(
+            // Cria o ingresso moderno
+            Poltrona poltrona = new Poltrona(numeroPoltrona);
+            IngressoModerno ingressoModerno = new IngressoModerno(sessao, area, poltrona, usuario.get());
+            
+            // Cria e salva o ingresso no banco de dados
+            Ingresso ingressoParaSalvar = new Ingresso(
                 usuario.get().getId(),
                 sessao.getId(),
                 areaIdLong,
@@ -317,16 +332,28 @@ public class Teatro {
                 horarioEspecificoId
             );
             
-            if (ingressoDAO.salvar(ingresso)) {
+            // Define as informações adicionais do ingresso para exibição
+            ingressoParaSalvar.setEventoNome(sessao.getNome());
+            ingressoParaSalvar.setHorario(sessao.getHorarioCompleto());
+            ingressoParaSalvar.setAreaNome(area.getNome());
+            
+            // Salva o ingresso no banco de dados e obtém o ID gerado
+            Long idSalvo = ingressoDAO.salvarERetornarId(ingressoParaSalvar);
+            
+            if (idSalvo != null) {
+                // Atualiza o ID do ingresso moderno com o ID gerado pelo banco de dados
+                ingressoModerno.setId(idSalvo);
+                
+                // Atualiza o status da poltrona e o faturamento
                 ingressoDAO.atualizarStatusPoltrona(sessao.getId(), areaIdLong, numeroPoltrona, true);
                 ingressoDAO.atualizarFaturamento(sessao.getId(), areaIdLong, area.getPreco());
                 
-                // Atualiza as informações adicionais do ingresso para exibição
-                ingresso.setEventoNome(sessao.getNome());
-                ingresso.setHorario(sessao.getHorarioCompleto());
-                ingresso.setAreaNome(area.getNome());
+                System.out.println("Ingresso salvo com sucesso. ID: " + idSalvo + 
+                                 ", Sessão: " + sessao.getNome() + 
+                                 ", Área: " + area.getNome() + 
+                                 ", Poltrona: " + numeroPoltrona);
                 
-                return Optional.of(ingresso);
+                return Optional.of(ingressoModerno);
             }
         }
 

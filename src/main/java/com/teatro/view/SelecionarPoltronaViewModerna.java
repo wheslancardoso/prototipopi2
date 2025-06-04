@@ -14,6 +14,7 @@ import javafx.stage.Stage;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 /**
  * Versão modernizada da tela de seleção de poltronas.
@@ -270,78 +271,51 @@ public class SelecionarPoltronaViewModerna {
         confirmarButton.setDisable(true);
         
         confirmarButton.setOnAction(e -> {
-            // Cria os ingressos modernos
-            List<IngressoModerno> ingressosModernos = new ArrayList<>();
+            // Lista para armazenar os ingressos comprados
+            List<IngressoModerno> ingressosComprados = new ArrayList<>();
+            
+            // Para cada poltrona selecionada, tenta comprar o ingresso
             for (Poltrona poltrona : poltronasSelecionadas) {
-                IngressoModerno ingresso = new IngressoModerno(sessao, area, poltrona, usuario);
-                ingressosModernos.add(ingresso);
+                // Cria um evento temporário com o nome da sessão
+                Evento eventoTemp = new Evento(sessao.getNome());
+                
+                // Tenta comprar o ingresso
+                Optional<IngressoModerno> ingressoOpt = teatro.comprarIngresso(
+                    usuario.getCpf(),
+                    eventoTemp,
+                    sessao,
+                    area,
+                    poltrona.getNumero()
+                );
+                
+                // Se o ingresso foi comprado com sucesso, adiciona à lista
+                ingressoOpt.ifPresent(ingressoComprado -> {
+                    ingressosComprados.add(ingressoComprado);
+                    System.out.println("Ingresso comprado com sucesso para a poltrona " + 
+                                      poltrona.getNumero() + 
+                                      ". ID: " + ingressoComprado.getId());
+                });
             }
             
-            // Cria o callback para quando o pagamento for concluído
-            Runnable onPagamentoConcluido = () -> {
-                // Para cada poltrona selecionada, marca como ocupada no banco de dados
-                for (Poltrona poltrona : poltronasSelecionadas) {
-                    // Cria o objeto Ingresso para salvar no banco de dados
-                    Ingresso ingressoParaSalvar = new Ingresso();
-                    ingressoParaSalvar.setUsuarioId(usuario.getId());
-                    ingressoParaSalvar.setSessaoId(sessao.getId());
-                    // Usa o método getAreaIdAsLong para converter o ID alfanumérico da área para um valor Long
-                    ingressoParaSalvar.setAreaId(teatro.getAreaIdAsLong(area.getId()));
-                    ingressoParaSalvar.setNumeroPoltrona(poltrona.getNumero());
-                    ingressoParaSalvar.setValor(area.getPreco());
-                    ingressoParaSalvar.setDataCompra(new java.sql.Timestamp(System.currentTimeMillis()));
-                    ingressoParaSalvar.setEventoNome(sessao.getNome());
-                    ingressoParaSalvar.setHorario(sessao.getHorario());
-                    ingressoParaSalvar.setAreaNome(area.getNome());
-                    
-                    // Adiciona o horário específico ao ingresso
-                    if (sessao.getHorarioEspecifico() != null) {
-                        ingressoParaSalvar.setHorarioEspecificoId(sessao.getHorarioEspecifico().getId());
-                    }
-                    
-                    // Salva o ingresso no banco de dados usando o DAO
-                    try {
-                        new com.teatro.dao.IngressoDAO().salvar(ingressoParaSalvar);
-                        System.out.println("Ingresso salvo com sucesso para a poltrona " + poltrona.getNumero() + 
-                                          " da sessão " + sessao.getNome() + " na data " + sessao.getDataSessao());
-                    } catch (Exception ex) {
-                        System.err.println("Erro ao salvar ingresso: " + ex.getMessage());
-                        ex.printStackTrace();
-                    }
-                    
-                    // Chama o método de compra de ingresso para atualizar o modelo local
-                    Evento eventoTemp = new Evento(sessao.getNome());
-                    teatro.comprarIngresso(
-                        usuario.getCpf(),
-                        eventoTemp,
-                        sessao,
-                        area,
-                        poltrona.getNumero()
-                    );
-                }
-                
+            // Se pelo menos um ingresso foi comprado com sucesso
+            if (!ingressosComprados.isEmpty()) {
                 // Adiciona os ingressos ao usuário
-                usuario.adicionarIngressos(ingressosModernos);
+                usuario.adicionarIngressos(ingressosComprados);
                 
                 // Atualiza o faturamento da sessão
-                double valorTotal = poltronasSelecionadas.size() * area.getPreco();
+                double valorTotal = ingressosComprados.size() * area.getPreco();
                 sessao.adicionarFaturamento(valorTotal);
                 
                 // Mostra a tela de impressão de ingressos
-                new ImpressaoIngressoViewModerna(teatro, usuario, stage, ingressosModernos).show();
-            };
-            
-            // Abre a tela de seleção de método de pagamento
-            SelecionarMetodoPagamentoView metodoPagamentoView = new SelecionarMetodoPagamentoView(
-                stage,
-                usuario,
-                ingressosModernos,
-                onPagamentoConcluido
-            );
-            
-            // Cria uma nova cena com a tela de seleção de método de pagamento
-            Scene cenaPagamento = new Scene(metodoPagamentoView, WINDOW_WIDTH, WINDOW_HEIGHT);
-            stage.setScene(cenaPagamento);
+                new ImpressaoIngressoViewModerna(teatro, usuario, stage, ingressosComprados).show();
+            } else {
+                // Se nenhum ingresso foi comprado, exibe uma mensagem de erro
+                Alert alert = new Alert(Alert.AlertType.ERROR);
+                alert.setTitle("Erro");
+                alert.setHeaderText(null);
+                alert.setContentText("Ocorreu um erro ao comprar os ingressos. Por favor, tente novamente.");
+                alert.showAndWait();
+            }
         });
         
         botoesBox.getChildren().addAll(voltarButton, confirmarButton);

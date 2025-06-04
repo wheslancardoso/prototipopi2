@@ -74,9 +74,20 @@ public class ImpressaoIngressoViewModerna {
         // Container para os ingressos
         VBox ingressosContainer = new VBox(20);
         
-        // Cria um card para cada ingresso
-        for (IngressoModerno ingresso : ingressos) {
-            ingressosContainer.getChildren().add(criarCardIngresso(ingresso));
+        // Verifica se a lista de ingressos não é nula e não está vazia
+        if (ingressos != null && !ingressos.isEmpty()) {
+            // Cria um card para cada ingresso
+            for (IngressoModerno ingresso : ingressos) {
+                if (ingresso != null) {
+                    ingressosContainer.getChildren().add(criarCardIngresso(ingresso));
+                }
+            }
+        } else {
+            // Se não houver ingressos, exibe uma mensagem
+            Label semIngressosLabel = new Label("Nenhum ingresso disponível para impressão.");
+            semIngressosLabel.setFont(Font.font("System", 16));
+            semIngressosLabel.setTextFill(Color.web(TEXT_COLOR));
+            ingressosContainer.getChildren().add(semIngressosLabel);
         }
         
         // Botões de ação

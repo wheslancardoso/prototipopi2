@@ -170,6 +170,10 @@ public class Area implements Comparable<Area> {
         return disponiveis;
     }
 
+    public List<Boolean> getPoltronas() {
+        return new ArrayList<>(poltronas); // Retorna uma cópia para evitar modificações externas
+    }
+    
     public List<Integer> getPoltronasDisponiveisList() {
         List<Integer> disponiveisList = new ArrayList<>();
         for (int i = 0; i < poltronas.size(); i++) {
