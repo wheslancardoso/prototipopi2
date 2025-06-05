@@ -11,6 +11,7 @@ public class Ingresso {
     private double valor;
     private Timestamp dataCompra;
     private Long horarioEspecificoId; // ID do horário específico (14:00, 15:30, etc.)
+    private Timestamp dataSessao; // Data da sessão para a qual o ingresso foi comprado
     
     // Campos para exibição
     private String eventoNome;
@@ -124,6 +125,14 @@ public class Ingresso {
 
     public void setHorarioEspecificoId(Long horarioEspecificoId) {
         this.horarioEspecificoId = horarioEspecificoId;
+    }
+    
+    public Timestamp getDataSessao() {
+        return dataSessao;
+    }
+    
+    public void setDataSessao(Timestamp dataSessao) {
+        this.dataSessao = dataSessao;
     }
 
     @Override

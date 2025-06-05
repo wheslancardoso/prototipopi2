@@ -11,7 +11,7 @@ import java.util.HashMap;
 public class IngressoDAO {
     
     public boolean salvar(Ingresso ingresso) {
-        String sql = "INSERT INTO ingressos (usuario_id, sessao_id, area_id, numero_poltrona, valor, horario_especifico_id) VALUES (?, ?, ?, ?, ?, ?)";
+        String sql = "INSERT INTO ingressos (usuario_id, sessao_id, area_id, numero_poltrona, valor, horario_especifico_id, data_sessao, evento_nome) VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
         
         try (Connection conn = DatabaseConnection.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
@@ -22,6 +22,8 @@ public class IngressoDAO {
             stmt.setInt(4, ingresso.getNumeroPoltrona());
             stmt.setDouble(5, ingresso.getValor());
             stmt.setLong(6, ingresso.getHorarioEspecificoId() != null ? ingresso.getHorarioEspecificoId() : 0);
+            stmt.setTimestamp(7, ingresso.getDataSessao());
+            stmt.setString(8, ingresso.getEventoNome());
             
             return stmt.executeUpdate() > 0;
         } catch (SQLException e) {
@@ -36,7 +38,7 @@ public class IngressoDAO {
      * @return O ID do ingresso salvo ou null em caso de erro
      */
     public Long salvarERetornarId(Ingresso ingresso) {
-        String sql = "INSERT INTO ingressos (usuario_id, sessao_id, area_id, numero_poltrona, valor, horario_especifico_id) VALUES (?, ?, ?, ?, ?, ?)";
+        String sql = "INSERT INTO ingressos (usuario_id, sessao_id, area_id, numero_poltrona, valor, horario_especifico_id, data_sessao, evento_nome) VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
         
         try (Connection conn = DatabaseConnection.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
@@ -47,6 +49,8 @@ public class IngressoDAO {
             stmt.setInt(4, ingresso.getNumeroPoltrona());
             stmt.setDouble(5, ingresso.getValor());
             stmt.setLong(6, ingresso.getHorarioEspecificoId() != null ? ingresso.getHorarioEspecificoId() : 0);
+            stmt.setTimestamp(7, ingresso.getDataSessao());
+            stmt.setString(8, ingresso.getEventoNome());
             
             int affectedRows = stmt.executeUpdate();
             
@@ -119,15 +123,26 @@ public class IngressoDAO {
         return buscarPoltronasOcupadas(sessaoId, areaId, null);
     }
     
+    /**
+     * Busca todos os ingressos de um usuário pelo ID, incluindo informações da sessão e evento
+     * @param usuarioId ID do usuário
+     * @return Lista de ingressos do usuário
+     */
     public List<Ingresso> buscarPorUsuarioId(Long usuarioId) {
         String sql = """
-            SELECT i.*, e.nome as evento_nome, s.horario, a.nome as area_nome 
+            SELECT 
+                i.*, 
+                e.nome as evento_nome, 
+                s.horario, 
+                s.data_sessao as data_sessao_sessao,
+                a.nome as area_nome, 
+                COALESCE(i.data_sessao, s.data_sessao) as data_sessao
             FROM ingressos i
             JOIN sessoes s ON i.sessao_id = s.id
             JOIN eventos e ON s.evento_id = e.id
             JOIN areas a ON i.area_id = a.id
             WHERE i.usuario_id = ?
-            ORDER BY i.data_compra DESC
+            ORDER BY COALESCE(i.data_sessao, s.data_sessao) DESC, i.data_compra DESC
             """;
         
         List<Ingresso> ingressos = new ArrayList<>();
@@ -150,9 +165,22 @@ public class IngressoDAO {
                 ingresso.setEventoNome(rs.getString("evento_nome"));
                 ingresso.setHorario(rs.getString("horario"));
                 ingresso.setAreaNome(rs.getString("area_nome"));
+                
+                // Tenta obter a data da sessão do ingresso, se não existir, usa a data da sessão
+                Timestamp dataSessao = rs.getTimestamp("data_sessao");
+                if (dataSessao == null) {
+                    dataSessao = rs.getTimestamp("data_sessao_sessao");
+                }
+                ingresso.setDataSessao(dataSessao);
+                
+                // Debug log
+                System.out.println("Ingresso ID: " + ingresso.getId() + 
+                                 " - Data da Sessão: " + (dataSessao != null ? dataSessao.toString() : "não definida"));
+                
                 ingressos.add(ingresso);
             }
         } catch (SQLException e) {
+            System.err.println("Erro ao buscar ingressos do usuário " + usuarioId + ": " + e.getMessage());
             e.printStackTrace();
         }
         return ingressos;

@@ -91,6 +91,17 @@ public class IngressoModerno {
     public void setCodigo(String codigo) {
         this.codigo = codigo;
     }
+    
+    /**
+     * Obtém a data da sessão a partir do ingresso.
+     * @return Timestamp com a data da sessão ou null se não estiver definida
+     */
+    public Timestamp getDataSessao() {
+        if (this.sessao != null && this.sessao.getDataSessao() != null) {
+            return Timestamp.valueOf(this.sessao.getDataSessao().atStartOfDay());
+        }
+        return null;
+    }
 
     /**
      * Converte para o formato de Ingresso tradicional para persistência no banco de dados.
@@ -107,6 +118,10 @@ public class IngressoModerno {
         ingresso.setEventoNome(sessao.getNome());
         ingresso.setHorario(sessao.getHorario());
         ingresso.setAreaNome(area.getNome());
+        // Definir a data da sessão a partir do objeto Sessao
+        if (sessao != null && sessao.getDataSessao() != null) {
+            ingresso.setDataSessao(Timestamp.valueOf(sessao.getDataSessao().atStartOfDay()));
+        }
         return ingresso;
     }
 }

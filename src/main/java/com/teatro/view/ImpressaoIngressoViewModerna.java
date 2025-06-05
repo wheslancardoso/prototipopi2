@@ -178,7 +178,36 @@ public class ImpressaoIngressoViewModerna {
         dataLabel.setStyle(titleStyle);
         
         Sessao sessao = ingresso.getSessao();
-        String dataHorario = sessao.getDataFormatada() + " - " + sessao.getHorarioCompleto();
+        String dataHorario = "";
+        
+        // Tenta obter a data da sessão do ingresso primeiro
+        if (ingresso.getDataSessao() != null) {
+            try {
+                // Converte o Timestamp para LocalDate diretamente
+                dataHorario = ingresso.getDataSessao().toLocalDateTime().toLocalDate()
+                    .format(DateTimeFormatter.ofPattern("dd/MM/yyyy"));
+                System.out.println("Data do ingresso: " + dataHorario);
+            } catch (Exception e) {
+                System.err.println("Erro ao formatar data do ingresso: " + e.getMessage());
+                e.printStackTrace();
+            }
+        } 
+        // Se não tiver data no ingresso, tenta obter da sessão
+        else if (sessao.getDataSessao() != null) {
+            try {
+                dataHorario = sessao.getDataSessao().format(DateTimeFormatter.ofPattern("dd/MM/yyyy"));
+                System.out.println("Data da sessão: " + dataHorario);
+            } catch (Exception e) {
+                System.err.println("Erro ao formatar data da sessão: " + e.getMessage());
+                e.printStackTrace();
+            }
+        }
+        
+        // Adiciona o horário da sessão
+        if (sessao.getHorarioCompleto() != null && !sessao.getHorarioCompleto().isEmpty()) {
+            dataHorario += " - " + sessao.getHorarioCompleto();
+        }
+        
         Label dataValor = new Label(dataHorario);
         dataValor.setStyle(valueStyle);
         
