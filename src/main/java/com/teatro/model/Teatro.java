@@ -228,6 +228,9 @@ public class Teatro {
      * @return true se a poltrona estiver ocupada, false caso contrário
      */
     public boolean isPoltronaOcupada(Long sessaoId, String areaId, int numeroPoltrona, Long horarioEspecificoId) {
+        System.out.println("Verificando poltrona ocupada - Sessão: " + sessaoId + ", Área: " + areaId + 
+                          ", Poltrona: " + numeroPoltrona + ", Horário: " + horarioEspecificoId);
+        
         // Primeiro verifica no modelo local
         for (Evento evento : eventos) {
             for (Sessao sessao : evento.getSessoes()) {
@@ -236,26 +239,53 @@ public class Teatro {
                         if (area.getId().equals(areaId)) {
                             // Verifica se a poltrona está ocupada no modelo local
                             if (area.getPoltronas() != null && numeroPoltrona > 0 && numeroPoltrona <= area.getPoltronas().size()) {
-                                if (area.getPoltronas().get(numeroPoltrona - 1)) {
+                                boolean ocupadaLocal = area.getPoltronas().get(numeroPoltrona - 1);
+                                if (ocupadaLocal) {
+                                    System.out.println("Poltrona " + numeroPoltrona + " está ocupada no modelo local");
                                     return true;
                                 }
                             }
                             
                             // Se não estiver ocupada no modelo local, verifica no banco de dados
                             String dataSessao = sessao.getDataSessao() != null ? sessao.getDataSessao().toString() : null;
-                            List<Integer> poltronasOcupadas = dataSessao != null ?
-                                ingressoDAO.buscarPoltronasOcupadas(sessaoId, getAreaIdAsLong(areaId), horarioEspecificoId, dataSessao) :
-                                ingressoDAO.buscarPoltronasOcupadas(sessaoId, getAreaIdAsLong(areaId), horarioEspecificoId);
-                            return poltronasOcupadas.contains(numeroPoltrona);
+                            List<Integer> poltronasOcupadas;
+                            
+                            if (dataSessao != null) {
+                                System.out.println("Buscando poltronas ocupadas com data: " + dataSessao);
+                                poltronasOcupadas = ingressoDAO.buscarPoltronasOcupadas(
+                                    sessaoId, 
+                                    getAreaIdAsLong(areaId), 
+                                    horarioEspecificoId, 
+                                    dataSessao
+                                );
+                            } else {
+                                System.out.println("Buscando poltronas ocupadas sem data");
+                                poltronasOcupadas = ingressoDAO.buscarPoltronasOcupadas(
+                                    sessaoId, 
+                                    getAreaIdAsLong(areaId), 
+                                    horarioEspecificoId
+                                );
+                            }
+                            
+                            boolean ocupadaNoBanco = poltronasOcupadas.contains(numeroPoltrona);
+                            System.out.println("Poltrona " + numeroPoltrona + " ocupada no banco: " + ocupadaNoBanco);
+                            return ocupadaNoBanco;
                         }
                     }
                 }
             }
         }
+        
         // Se não encontrou a área ou sessão, verifica no banco de dados como fallback
-        List<Integer> poltronasOcupadas = ingressoDAO.buscarPoltronasOcupadas(sessaoId, 
-            getAreaIdAsLong(areaId), horarioEspecificoId);
-        return poltronasOcupadas.contains(numeroPoltrona);
+        System.out.println("Sessão/Área não encontrada no modelo local, verificando no banco de dados");
+        List<Integer> poltronasOcupadas = ingressoDAO.buscarPoltronasOcupadas(
+            sessaoId, 
+            getAreaIdAsLong(areaId), 
+            horarioEspecificoId
+        );
+        boolean ocupada = poltronasOcupadas.contains(numeroPoltrona);
+        System.out.println("Poltrona " + numeroPoltrona + " ocupada (fallback): " + ocupada);
+        return ocupada;
     }
     
     /**

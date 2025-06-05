@@ -68,6 +68,10 @@ public class Area implements Comparable<Area> {
      * @param poltronasOcupadas Lista de números de poltronas ocupadas
      */
     public void carregarPoltronasOcupadas(List<Integer> poltronasOcupadas) {
+        System.out.println("Carregando poltronas ocupadas para área " + nome + 
+                         " (Capacidade: " + capacidadeTotal + ")");
+        System.out.println("Poltronas ocupadas recebidas: " + poltronasOcupadas);
+        
         // Garante que a lista de poltronas está inicializada
         if (poltronas == null) {
             poltronas = new ArrayList<>(capacidadeTotal);
@@ -81,10 +85,18 @@ public class Area implements Comparable<Area> {
         
         // Marca as poltronas ocupadas
         if (poltronasOcupadas != null && !poltronasOcupadas.isEmpty()) {
+            int poltronasInvalidas = 0;
+            
             for (Integer numeroPoltrona : poltronasOcupadas) {
                 if (numeroPoltrona != null && numeroPoltrona > 0 && numeroPoltrona <= capacidadeTotal) {
                     poltronas.set(numeroPoltrona - 1, true);
+                } else {
+                    poltronasInvalidas++;
                 }
+            }
+            
+            if (poltronasInvalidas > 0) {
+                System.out.println("Aviso: " + poltronasInvalidas + " números de poltronas inválidos foram ignorados.");
             }
             
             // Atualiza o contador de poltronas ocupadas para o faturamento
@@ -92,10 +104,17 @@ public class Area implements Comparable<Area> {
             for (Boolean ocupada : poltronas) {
                 if (ocupada) ocupadas++;
             }
+            
             this.faturamento = ocupadas * preco;
+            System.out.println("Total de poltronas ocupadas: " + ocupadas + "/" + capacidadeTotal);
+            System.out.println("Faturamento calculado: R$" + faturamento);
         } else {
             this.faturamento = 0.0;
+            System.out.println("Nenhuma poltrona ocupada encontrada para esta área.");
         }
+        
+        System.out.println("Estado final das poltronas (V=disponível, X=ocupada): " + 
+                           getEstadoPoltronasString());
     }
     
     /**
@@ -104,6 +123,10 @@ public class Area implements Comparable<Area> {
      * @param horarioEspecificoId ID do horário específico
      */
     public void carregarPoltronasOcupadas(List<Integer> poltronasOcupadas, Long horarioEspecificoId) {
+        System.out.println("Carregando poltronas ocupadas para área " + nome + 
+                         " (Capacidade: " + capacidadeTotal + ", Horário ID: " + horarioEspecificoId + ")");
+        System.out.println("Poltronas ocupadas recebidas: " + poltronasOcupadas);
+        
         // Garante que a lista de poltronas está inicializada
         if (poltronas == null) {
             poltronas = new ArrayList<>(capacidadeTotal);
@@ -115,12 +138,20 @@ public class Area implements Comparable<Area> {
             poltronas.add(false);
         }
         
-        // Marca as poltronas ocupadas apenas se a lista não for vazia
+        // Marca as poltronas ocupadas
         if (poltronasOcupadas != null && !poltronasOcupadas.isEmpty()) {
+            int poltronasInvalidas = 0;
+            
             for (Integer numeroPoltrona : poltronasOcupadas) {
                 if (numeroPoltrona != null && numeroPoltrona > 0 && numeroPoltrona <= capacidadeTotal) {
                     poltronas.set(numeroPoltrona - 1, true);
+                } else {
+                    poltronasInvalidas++;
                 }
+            }
+            
+            if (poltronasInvalidas > 0) {
+                System.out.println("Aviso: " + poltronasInvalidas + " números de poltronas inválidos foram ignorados.");
             }
             
             // Atualiza o contador de poltronas ocupadas para o faturamento
@@ -128,14 +159,17 @@ public class Area implements Comparable<Area> {
             for (Boolean ocupada : poltronas) {
                 if (ocupada) ocupadas++;
             }
+            
             this.faturamento = ocupadas * preco;
+            System.out.println("Total de poltronas ocupadas: " + ocupadas + "/" + capacidadeTotal);
+            System.out.println("Faturamento calculado: R$" + faturamento);
         } else {
             this.faturamento = 0.0;
+            System.out.println("Nenhuma poltrona ocupada encontrada para esta área e horário.");
         }
         
-        System.out.println("Carregando poltronas ocupadas para área " + this.nome + ", horário ID: " + horarioEspecificoId + 
-                           ", total ocupadas: " + (poltronasOcupadas != null ? poltronasOcupadas.size() : 0) + 
-                           ", disponíveis: " + getPoltronasDisponiveis());
+        System.out.println("Estado final das poltronas (V=disponível, X=ocupada): " + 
+                           getEstadoPoltronasString());
     }
 
     public String getId() {
@@ -166,11 +200,27 @@ public class Area implements Comparable<Area> {
         return sessaoId;
     }
 
+    /**
+     * Retorna uma representação em string do estado das poltronas (para debug)
+     */
+    private String getEstadoPoltronasString() {
+        StringBuilder sb = new StringBuilder();
+        for (int i = 0; i < Math.min(poltronas.size(), 50); i++) { // Limita a 50 para não ficar muito grande
+            sb.append(poltronas.get(i) ? "X" : "V");
+            if ((i + 1) % 10 == 0) sb.append(" ");
+        }
+        if (poltronas.size() > 50) {
+            sb.append("... (mais ").append(poltronas.size() - 50).append(" poltronas)");
+        }
+        return sb.toString();
+    }
+    
     public int getPoltronasDisponiveis() {
         int disponiveis = 0;
         for (Boolean ocupada : poltronas) {
             if (!ocupada) disponiveis++;
         }
+        System.out.println("Poltronas disponíveis em " + nome + ": " + disponiveis + "/" + capacidadeTotal);
         return disponiveis;
     }
 

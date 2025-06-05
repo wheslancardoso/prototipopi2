@@ -86,19 +86,51 @@ public class IngressoDAO {
      * @return Lista de números de poltronas ocupadas
      */
     public List<Integer> buscarPoltronasOcupadas(Long sessaoId, Long areaId, Long horarioEspecificoId, String dataSessao) {
-        String sql = "SELECT i.numero_poltrona FROM ingressos i " +
-                   "JOIN sessoes s ON i.sessao_id = s.id " +
-                   "WHERE i.sessao_id = ? AND i.area_id = ? AND i.horario_especifico_id = ? AND s.data_sessao = ?";
+        // Construir a query dinamicamente com base nos parâmetros fornecidos
+        StringBuilder sqlBuilder = new StringBuilder(
+            "SELECT DISTINCT i.numero_poltrona FROM ingressos i " +
+            "WHERE i.sessao_id = ? AND i.area_id = ?"
+        );
+        
+        // Adiciona condições para o horário específico
+        if (horarioEspecificoId != null) {
+            // Se houver horário específico, busca apenas os ingressos com aquele horário específico
+            sqlBuilder.append(" AND (i.horario_especifico_id = ?)");
+        } else {
+            // Se não houver horário específico, busca ingressos sem horário específico
+            sqlBuilder.append(" AND (i.horario_especifico_id IS NULL OR i.horario_especifico_id = 0)");
+        }
+        
+        // Adiciona condição para a data da sessão se fornecida
+        if (dataSessao != null && !dataSessao.isEmpty()) {
+            sqlBuilder.append(" AND DATE(i.data_sessao) = ?");
+        }
+        
+        String sql = sqlBuilder.toString();
+        System.out.println("SQL para buscar poltronas ocupadas: " + sql);
         
         List<Integer> poltronasOcupadas = new ArrayList<>();
         
         try (Connection conn = DatabaseConnection.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
             
-            stmt.setLong(1, sessaoId);
-            stmt.setLong(2, areaId);
-            stmt.setLong(3, horarioEspecificoId != null ? horarioEspecificoId : 0);
-            stmt.setDate(4, java.sql.Date.valueOf(dataSessao));
+            int paramIndex = 1;
+            stmt.setLong(paramIndex++, sessaoId);
+            stmt.setLong(paramIndex++, areaId);
+            
+            // Adiciona o parâmetro do horário específico se fornecido
+            if (horarioEspecificoId != null) {
+                stmt.setLong(paramIndex++, horarioEspecificoId);
+            }
+            
+            // Adiciona o parâmetro da data se fornecida
+            if (dataSessao != null && !dataSessao.isEmpty()) {
+                stmt.setString(paramIndex, dataSessao);
+            }
+            
+            System.out.println("Parâmetros: sessaoId=" + sessaoId + ", areaId=" + areaId + 
+                             ", horarioEspecificoId=" + horarioEspecificoId + ", dataSessao=" + dataSessao);
+            
             ResultSet rs = stmt.executeQuery();
             
             while (rs.next()) {
@@ -107,6 +139,8 @@ public class IngressoDAO {
                     poltronasOcupadas.add(numeroPoltrona);
                 }
             }
+            
+            System.out.println("Poltronas ocupadas encontradas: " + poltronasOcupadas.size() + " - " + poltronasOcupadas);
         } catch (SQLException e) {
             System.err.println("Erro ao buscar poltronas ocupadas para sessão: " + sessaoId + ", área: " + areaId + 
                            ", horário: " + horarioEspecificoId + ", data: " + dataSessao);
