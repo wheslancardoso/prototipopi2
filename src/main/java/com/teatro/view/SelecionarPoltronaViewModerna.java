@@ -171,14 +171,20 @@ public class SelecionarPoltronaViewModerna {
         poltronasGrid.setHgap(10);
         poltronasGrid.setVgap(10);
         
-        // Número de linhas e colunas para o grid
-        int numLinhas = 5;
-        int numColunas = 10;
+        // Configuração do grid de poltronas
+        int poltronasPorFileira = 10; // Número de poltronas por fileira
+        int totalPoltronas = area.getCapacidade(); // Total de poltronas na área
+        int fileiras = (int) Math.ceil((double) totalPoltronas / poltronasPorFileira);
         
         // Cria as poltronas
-        for (int i = 0; i < numLinhas; i++) {
-            for (int j = 0; j < numColunas; j++) {
-                int numero = i * numColunas + j + 1;
+        for (int i = 0; i < fileiras; i++) {
+            for (int j = 0; j < poltronasPorFileira; j++) {
+                int numero = i * poltronasPorFileira + j + 1;
+                
+                // Verifica se o número da poltrona está dentro do limite da área
+                if (numero > totalPoltronas) {
+                    continue; // Pula poltronas que excedem a capacidade
+                }
                 
                 // Cria a poltrona
                 Button poltrona = new Button(String.valueOf(numero));
@@ -189,12 +195,14 @@ public class SelecionarPoltronaViewModerna {
                 boolean ocupada = teatro.isPoltronaOcupada(sessao.getId(), area.getId(), numero);
                 
                 if (ocupada) {
+                    // Poltrona ocupada
                     poltrona.setStyle("-fx-background-color: " + POLTRONA_OCUPADA + "; -fx-text-fill: white; -fx-background-radius: 5;");
                     poltrona.setDisable(true);
                 } else {
+                    // Poltrona disponível
                     poltrona.setStyle("-fx-background-color: " + POLTRONA_DISPONIVEL + "; -fx-text-fill: white; -fx-background-radius: 5;");
                     
-                    // Adiciona evento de clique
+                    // Adiciona evento de clique apenas para poltronas disponíveis
                     poltrona.setOnAction(e -> {
                         if (poltrona.getStyle().contains(POLTRONA_DISPONIVEL)) {
                             // Seleciona a poltrona

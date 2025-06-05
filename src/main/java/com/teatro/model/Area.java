@@ -150,6 +150,10 @@ public class Area implements Comparable<Area> {
         return preco;
     }
 
+    public int getCapacidade() {
+        return capacidadeTotal;
+    }
+    
     public int getCapacidadeTotal() {
         return capacidadeTotal;
     }
