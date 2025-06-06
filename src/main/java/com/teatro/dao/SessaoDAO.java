@@ -3,11 +3,19 @@ package com.teatro.dao;
 import com.teatro.database.DatabaseConnection;
 import com.teatro.model.HorarioDisponivel;
 import com.teatro.model.Sessao;
+import com.teatro.model.Evento;
 
-import java.sql.*;
+import java.sql.Connection;
+import java.sql.Date;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Types;
 import java.time.LocalDate;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Classe responsável por operações de acesso a dados relacionados às sessões.
@@ -116,6 +124,92 @@ public class SessaoDAO {
      * @param eventoId ID do evento
      * @return Lista de sessões do evento
      */
+    /**
+     * Busca sessões por data.
+     * 
+     * @param data Data para buscar as sessões
+     * @return Mapa de eventos com suas respectivas sessões na data
+     */
+    public Map<Evento, List<Sessao>> buscarSessoesPorData(LocalDate data) {
+        System.out.println("Buscando sessões para a data: " + data);
+        Map<Evento, List<Sessao>> eventosSessoes = new HashMap<>();
+        
+        String sql = "SELECT s.id, s.horario, s.data_sessao, " +
+                   "e.id as evento_id, e.nome as evento_nome, e.descricao as evento_descricao " +
+                   "FROM sessoes s " +
+                   "JOIN eventos e ON s.evento_id = e.id " +
+                   "WHERE s.data_sessao = ? " +
+                   "ORDER BY e.nome, s.horario";
+        
+        System.out.println("SQL: " + sql);
+        System.out.println("Data: " + data);
+        
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            
+            stmt.setDate(1, Date.valueOf(data));
+            
+            System.out.println("Executando consulta...");
+            try (ResultSet rs = stmt.executeQuery()) {
+                System.out.println("Consulta executada, processando resultados...");
+                int count = 0;
+                while (rs.next()) {
+                    // Cria ou obtém o evento
+                    Evento evento = new Evento(
+                        rs.getLong("evento_id"),
+                        rs.getString("evento_nome"),
+                        rs.getString("evento_descricao")
+                    );
+                    
+                    // Cria a sessão
+                    Sessao sessao = new Sessao(rs.getString("horario"), data);
+                    sessao.setId(rs.getLong("id"));
+                    sessao.setNome(evento.getNome());
+                    
+                    // Adiciona a sessão ao mapa de eventos
+                    eventosSessoes
+                        .computeIfAbsent(evento, k -> new ArrayList<>())
+                        .add(sessao);
+                }
+                
+                System.out.println("Total de registros processados: " + count);
+            }
+        } catch (SQLException e) {
+            System.err.println("Erro ao buscar sessões por data: " + e.getMessage());
+            e.printStackTrace();
+        }
+        
+        System.out.println("Total de eventos encontrados: " + eventosSessoes.size());
+        return eventosSessoes;
+    }
+    
+    /**
+     * Busca todas as sessões de um evento.
+     * 
+     * @param eventoId ID do evento
+     * @return Lista de sessões do evento
+     */
+    /**
+     * Conta o número total de sessões no banco de dados.
+     * 
+     * @return Número total de sessões
+     */
+    public int contarSessoes() {
+        String sql = "SELECT COUNT(*) as total FROM sessoes";
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql);
+             ResultSet rs = stmt.executeQuery()) {
+            
+            if (rs.next()) {
+                return rs.getInt("total");
+            }
+        } catch (SQLException e) {
+            System.err.println("Erro ao contar sessões: " + e.getMessage());
+            e.printStackTrace();
+        }
+        return 0;
+    }
+    
     public List<Sessao> buscarPorEvento(Long eventoId) {
         List<Sessao> sessoes = new ArrayList<>();
         
