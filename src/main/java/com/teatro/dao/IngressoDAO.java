@@ -167,14 +167,19 @@ public class IngressoDAO {
             SELECT 
                 i.*, 
                 e.nome as evento_nome, 
-                s.horario, 
+                CASE 
+                    WHEN hd.horario IS NOT NULL THEN CONCAT(s.horario, ' - ', TIME_FORMAT(hd.horario, '%H:%i'))
+                    ELSE s.horario 
+                END as horario,
                 s.data_sessao as data_sessao_sessao,
                 a.nome as area_nome, 
-                COALESCE(i.data_sessao, s.data_sessao) as data_sessao
+                COALESCE(i.data_sessao, s.data_sessao) as data_sessao,
+                hd.horario as horario_especifico
             FROM ingressos i
             JOIN sessoes s ON i.sessao_id = s.id
             JOIN eventos e ON s.evento_id = e.id
             JOIN areas a ON i.area_id = a.id
+            LEFT JOIN horarios_disponiveis hd ON i.horario_especifico_id = hd.id
             WHERE i.usuario_id = ?
             ORDER BY COALESCE(i.data_sessao, s.data_sessao) DESC, i.data_compra DESC
             """;
@@ -197,7 +202,21 @@ public class IngressoDAO {
                 ingresso.setValor(rs.getDouble("valor"));
                 ingresso.setDataCompra(rs.getTimestamp("data_compra"));
                 ingresso.setEventoNome(rs.getString("evento_nome"));
-                ingresso.setHorario(rs.getString("horario"));
+                
+                // Define o horário completo (período + horário específico se existir)
+                String horario = rs.getString("horario");
+                Time horarioEspecifico = rs.getTime("horario_especifico");
+                
+                if (horarioEspecifico != null) {
+                    // Formata o horário específico para HH:mm
+                    String horarioFormatado = String.format("%02d:%02d", 
+                        horarioEspecifico.toLocalTime().getHour(),
+                        horarioEspecifico.toLocalTime().getMinute());
+                    // Concatena com o período (ex: "Noite - 20:30")
+                    horario = horario + " - " + horarioFormatado;
+                }
+                
+                ingresso.setHorario(horario);
                 ingresso.setAreaNome(rs.getString("area_nome"));
                 
                 // Tenta obter a data da sessão do ingresso, se não existir, usa a data da sessão
@@ -209,7 +228,8 @@ public class IngressoDAO {
                 
                 // Debug log
                 System.out.println("Ingresso ID: " + ingresso.getId() + 
-                                 " - Data da Sessão: " + (dataSessao != null ? dataSessao.toString() : "não definida"));
+                                 " - Data da Sessão: " + (dataSessao != null ? dataSessao.toString() : "não definida") +
+                                 " - Horário: " + horario);
                 
                 ingressos.add(ingresso);
             }

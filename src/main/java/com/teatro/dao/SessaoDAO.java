@@ -13,7 +13,7 @@ import java.sql.SQLException;
 import java.sql.Types;
 import java.time.LocalDate;
 import java.util.ArrayList;
-import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -132,7 +132,8 @@ public class SessaoDAO {
      */
     public Map<Evento, List<Sessao>> buscarSessoesPorData(LocalDate data) {
         System.out.println("Buscando sessões para a data: " + data);
-        Map<Evento, List<Sessao>> eventosSessoes = new HashMap<>();
+        // Usando LinkedHashMap para manter a ordem de inserção
+        Map<Evento, List<Sessao>> eventosSessoes = new LinkedHashMap<>();
         
         String sql = "SELECT s.id, s.horario, s.data_sessao, " +
                    "e.id as evento_id, e.nome as evento_nome, e.descricao as evento_descricao " +

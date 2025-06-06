@@ -75,14 +75,12 @@ CREATE TABLE IF NOT EXISTS ingressos (
     valor DECIMAL(10,2) NOT NULL,
     data_compra TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     codigo_ingresso VARCHAR(100) NULL,
-    data_sessao DATE,  -- Adicionado para compatibilidade
-    evento_nome VARCHAR(100),  -- Adicionado para compatibilidade
     FOREIGN KEY (usuario_id) REFERENCES usuarios(id),
     FOREIGN KEY (sessao_id) REFERENCES sessoes(id),
     FOREIGN KEY (area_id) REFERENCES areas(id),
     FOREIGN KEY (horario_especifico_id) REFERENCES horarios_disponiveis(id) ON DELETE SET NULL,
     CONSTRAINT uk_poltrona_sessao_area UNIQUE (sessao_id, area_id, horario_especifico_id, numero_poltrona)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+);
 
 -- 4. Criar VIEW de compatibilidade (opcional, se o código usar)
 CREATE OR REPLACE VIEW v_sessoes_areas_disponibilidade AS
@@ -162,11 +160,8 @@ INSERT INTO horarios_disponiveis (tipo_sessao, horario, ordem, descricao) VALUES
 ('Noite', '20:30:00', 2, 'Sessão Noturna - 20:30'),
 ('Noite', '22:00:00', 3, 'Sessão Noturna - 22:00');
 
--- Sessões para cada evento e data
--- Criando 7 dias de sessões para cada evento (3 sessões por dia)
--- Formato: (id, evento_id, horario, data_sessao)
+-- Sessões (compatíveis com o sistema antigo)
 INSERT INTO sessoes (id, evento_id, horario, data_sessao) VALUES
--- Dia 1 (hoje)
 (1, 1, 'Manhã', CURDATE()),
 (2, 1, 'Tarde', CURDATE()),
 (3, 1, 'Noite', CURDATE()),
@@ -175,73 +170,7 @@ INSERT INTO sessoes (id, evento_id, horario, data_sessao) VALUES
 (6, 2, 'Noite', CURDATE()),
 (7, 3, 'Manhã', CURDATE()),
 (8, 3, 'Tarde', CURDATE()),
-(9, 3, 'Noite', CURDATE()),
-
--- Dia 2 (amanhã)
-(10, 1, 'Manhã', DATE_ADD(CURDATE(), INTERVAL 1 DAY)),
-(11, 1, 'Tarde', DATE_ADD(CURDATE(), INTERVAL 1 DAY)),
-(12, 1, 'Noite', DATE_ADD(CURDATE(), INTERVAL 1 DAY)),
-(13, 2, 'Manhã', DATE_ADD(CURDATE(), INTERVAL 1 DAY)),
-(14, 2, 'Tarde', DATE_ADD(CURDATE(), INTERVAL 1 DAY)),
-(15, 2, 'Noite', DATE_ADD(CURDATE(), INTERVAL 1 DAY)),
-(16, 3, 'Manhã', DATE_ADD(CURDATE(), INTERVAL 1 DAY)),
-(17, 3, 'Tarde', DATE_ADD(CURDATE(), INTERVAL 1 DAY)),
-(18, 3, 'Noite', DATE_ADD(CURDATE(), INTERVAL 1 DAY)),
-
--- Dia 3
-(19, 1, 'Manhã', DATE_ADD(CURDATE(), INTERVAL 2 DAY)),
-(20, 1, 'Tarde', DATE_ADD(CURDATE(), INTERVAL 2 DAY)),
-(21, 1, 'Noite', DATE_ADD(CURDATE(), INTERVAL 2 DAY)),
-(22, 2, 'Manhã', DATE_ADD(CURDATE(), INTERVAL 2 DAY)),
-(23, 2, 'Tarde', DATE_ADD(CURDATE(), INTERVAL 2 DAY)),
-(24, 2, 'Noite', DATE_ADD(CURDATE(), INTERVAL 2 DAY)),
-(25, 3, 'Manhã', DATE_ADD(CURDATE(), INTERVAL 2 DAY)),
-(26, 3, 'Tarde', DATE_ADD(CURDATE(), INTERVAL 2 DAY)),
-(27, 3, 'Noite', DATE_ADD(CURDATE(), INTERVAL 2 DAY)),
-
--- Dia 4
-(28, 1, 'Manhã', DATE_ADD(CURDATE(), INTERVAL 3 DAY)),
-(29, 1, 'Tarde', DATE_ADD(CURDATE(), INTERVAL 3 DAY)),
-(30, 1, 'Noite', DATE_ADD(CURDATE(), INTERVAL 3 DAY)),
-(31, 2, 'Manhã', DATE_ADD(CURDATE(), INTERVAL 3 DAY)),
-(32, 2, 'Tarde', DATE_ADD(CURDATE(), INTERVAL 3 DAY)),
-(33, 2, 'Noite', DATE_ADD(CURDATE(), INTERVAL 3 DAY)),
-(34, 3, 'Manhã', DATE_ADD(CURDATE(), INTERVAL 3 DAY)),
-(35, 3, 'Tarde', DATE_ADD(CURDATE(), INTERVAL 3 DAY)),
-(36, 3, 'Noite', DATE_ADD(CURDATE(), INTERVAL 3 DAY)),
-
--- Dia 5
-(37, 1, 'Manhã', DATE_ADD(CURDATE(), INTERVAL 4 DAY)),
-(38, 1, 'Tarde', DATE_ADD(CURDATE(), INTERVAL 4 DAY)),
-(39, 1, 'Noite', DATE_ADD(CURDATE(), INTERVAL 4 DAY)),
-(40, 2, 'Manhã', DATE_ADD(CURDATE(), INTERVAL 4 DAY)),
-(41, 2, 'Tarde', DATE_ADD(CURDATE(), INTERVAL 4 DAY)),
-(42, 2, 'Noite', DATE_ADD(CURDATE(), INTERVAL 4 DAY)),
-(43, 3, 'Manhã', DATE_ADD(CURDATE(), INTERVAL 4 DAY)),
-(44, 3, 'Tarde', DATE_ADD(CURDATE(), INTERVAL 4 DAY)),
-(45, 3, 'Noite', DATE_ADD(CURDATE(), INTERVAL 4 DAY)),
-
--- Dia 6
-(46, 1, 'Manhã', DATE_ADD(CURDATE(), INTERVAL 5 DAY)),
-(47, 1, 'Tarde', DATE_ADD(CURDATE(), INTERVAL 5 DAY)),
-(48, 1, 'Noite', DATE_ADD(CURDATE(), INTERVAL 5 DAY)),
-(49, 2, 'Manhã', DATE_ADD(CURDATE(), INTERVAL 5 DAY)),
-(50, 2, 'Tarde', DATE_ADD(CURDATE(), INTERVAL 5 DAY)),
-(51, 2, 'Noite', DATE_ADD(CURDATE(), INTERVAL 5 DAY)),
-(52, 3, 'Manhã', DATE_ADD(CURDATE(), INTERVAL 5 DAY)),
-(53, 3, 'Tarde', DATE_ADD(CURDATE(), INTERVAL 5 DAY)),
-(54, 3, 'Noite', DATE_ADD(CURDATE(), INTERVAL 5 DAY)),
-
--- Dia 7
-(55, 1, 'Manhã', DATE_ADD(CURDATE(), INTERVAL 6 DAY)),
-(56, 1, 'Tarde', DATE_ADD(CURDATE(), INTERVAL 6 DAY)),
-(57, 1, 'Noite', DATE_ADD(CURDATE(), INTERVAL 6 DAY)),
-(58, 2, 'Manhã', DATE_ADD(CURDATE(), INTERVAL 6 DAY)),
-(59, 2, 'Tarde', DATE_ADD(CURDATE(), INTERVAL 6 DAY)),
-(60, 2, 'Noite', DATE_ADD(CURDATE(), INTERVAL 6 DAY)),
-(61, 3, 'Manhã', DATE_ADD(CURDATE(), INTERVAL 6 DAY)),
-(62, 3, 'Tarde', DATE_ADD(CURDATE(), INTERVAL 6 DAY)),
-(63, 3, 'Noite', DATE_ADD(CURDATE(), INTERVAL 6 DAY));
+(9, 3, 'Noite', CURDATE());
 
 -- Relacionamentos entre sessões e áreas (compatível com o sistema antigo)
 INSERT INTO sessoes_areas (sessao_id, area_id, faturamento)
@@ -252,34 +181,5 @@ CROSS JOIN areas a;
 -- 6. Criar índices para melhorar o desempenho
 CREATE INDEX idx_ingressos_horario ON ingressos (sessao_id, area_id, horario_especifico_id);
 
--- 11. Criar trigger para preencher automaticamente data_sessao e evento_nome
-DELIMITER //
-CREATE TRIGGER before_insert_ingresso
-BEFORE INSERT ON ingressos
-FOR EACH ROW
-BEGIN
-    -- Preenche a data da sessão com base na tabela sessoes
-    SELECT s.data_sessao, e.nome 
-    INTO NEW.data_sessao, NEW.evento_nome
-    FROM sessoes s
-    JOIN eventos e ON s.evento_id = e.id
-    WHERE s.id = NEW.sessao_id
-    LIMIT 1;
-    
-    -- Gera um código de ingresso se não existir
-    IF NEW.codigo_ingresso IS NULL THEN
-        SET NEW.codigo_ingresso = CONCAT('ING', LPAD(NEW.id, 6, '0'), '-', DATE_FORMAT(NOW(), '%Y%m%d'));
-    END IF;
-END//
-DELIMITER ;
-
--- 12. Atualizar ingressos existentes com dados de sessão
-UPDATE ingressos i
-JOIN sessoes s ON i.sessao_id = s.id
-JOIN eventos e ON s.evento_id = e.id
-SET i.data_sessao = s.data_sessao,
-    i.evento_nome = e.nome
-WHERE i.data_sessao IS NULL OR i.evento_nome IS NULL;
-
--- 13. Mensagem de conclusão
+-- 7. Mensagem de conclusão
 SELECT 'Banco de dados reiniciado com sucesso!' AS mensagem;
