@@ -24,8 +24,7 @@ public class IngressoDAO implements DAO<Ingresso, Long> {
     
     @Override
     public void salvar(Ingresso ingresso) {
-        String sql = "INSERT INTO ingressos (usuario_id, sessao_id, area_id, numero_poltrona, valor, data_compra, " +
-                    "evento_nome, horario, area_nome, codigo) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+        String sql = "INSERT INTO ingressos (usuario_id, sessao_id, area_id, numero_poltrona, valor, data_compra, codigo) VALUES (?, ?, ?, ?, ?, ?, ?)";
         try (PreparedStatement stmt = connection.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
             preencherStatement(stmt, ingresso);
             
@@ -49,12 +48,10 @@ public class IngressoDAO implements DAO<Ingresso, Long> {
     
     @Override
     public void atualizar(Ingresso ingresso) {
-        String sql = "UPDATE ingressos SET usuario_id = ?, sessao_id = ?, area_id = ?, numero_poltrona = ?, " +
-                    "valor = ?, data_compra = ?, evento_nome = ?, horario = ?, area_nome = ?, codigo = ? " +
-                    "WHERE id = ?";
+        String sql = "UPDATE ingressos SET usuario_id = ?, sessao_id = ?, area_id = ?, numero_poltrona = ?, valor = ?, data_compra = ?, codigo = ? WHERE id = ?";
         try (PreparedStatement stmt = connection.prepareStatement(sql)) {
             preencherStatement(stmt, ingresso);
-            stmt.setLong(11, ingresso.getId());
+            stmt.setLong(8, ingresso.getId());
             
             int affectedRows = stmt.executeUpdate();
             if (affectedRows == 0) {
@@ -217,10 +214,7 @@ public class IngressoDAO implements DAO<Ingresso, Long> {
         stmt.setInt(4, ingresso.getNumeroPoltrona());
         stmt.setDouble(5, ingresso.getValor());
         stmt.setTimestamp(6, ingresso.getDataCompra());
-        stmt.setString(7, ingresso.getEventoNome());
-        stmt.setString(8, ingresso.getHorario());
-        stmt.setString(9, ingresso.getAreaNome());
-        stmt.setString(10, ingresso.getCodigo());
+        stmt.setString(7, ingresso.getCodigo());
     }
     
     private Ingresso montarIngresso(ResultSet rs) throws SQLException {
@@ -232,9 +226,6 @@ public class IngressoDAO implements DAO<Ingresso, Long> {
         ingresso.setNumeroPoltrona(rs.getInt("numero_poltrona"));
         ingresso.setValor(rs.getDouble("valor"));
         ingresso.setDataCompra(rs.getTimestamp("data_compra"));
-        ingresso.setEventoNome(rs.getString("evento_nome"));
-        ingresso.setHorario(rs.getString("horario"));
-        ingresso.setAreaNome(rs.getString("area_nome"));
         ingresso.setCodigo(rs.getString("codigo"));
         return ingresso;
     }

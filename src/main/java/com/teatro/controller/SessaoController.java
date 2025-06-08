@@ -60,9 +60,9 @@ public class SessaoController {
         }
     }
 
-    public List<Sessao> buscarSessoesPorEvento(String eventoNome) {
+    public List<Sessao> buscarSessoesPorEvento(Long eventoId) {
         try {
-            return sessaoDAO.buscarPorEvento(eventoNome);
+            return sessaoDAO.buscarPorEvento(eventoId);
         } catch (TeatroException e) {
             logger.error("Erro ao buscar sessões por evento: " + e.getMessage());
             throw e;

@@ -121,9 +121,16 @@ public class SessaoDAO implements DAO<Sessao, Long> {
     private Sessao montarSessao(ResultSet rs) throws SQLException {
         Sessao sessao = new Sessao();
         sessao.setId(rs.getLong("id"));
-        sessao.setNome(rs.getString("nome"));
-        sessao.setTipoSessao(TipoSessao.valueOf(rs.getString("tipo_sessao")));
-        sessao.setData(rs.getTimestamp("data"));
+        String horarioStr = rs.getString("horario");
+        TipoSessao tipoSessao = null;
+        for (TipoSessao ts : TipoSessao.values()) {
+            if (ts.getDescricao().equalsIgnoreCase(horarioStr)) {
+                tipoSessao = ts;
+                break;
+            }
+        }
+        sessao.setTipoSessao(tipoSessao);
+        sessao.setData(rs.getTimestamp("data_sessao"));
         return sessao;
     }
     
@@ -144,12 +151,12 @@ public class SessaoDAO implements DAO<Sessao, Long> {
         }
     }
     
-    public List<Sessao> buscarPorEvento(String nomeEvento) {
-        String sql = "SELECT * FROM sessoes WHERE evento_nome LIKE ? ORDER BY data_sessao, tipo_sessao";
+    public List<Sessao> buscarPorEvento(Long eventoId) {
+        String sql = "SELECT * FROM sessoes WHERE evento_id = ? ORDER BY data_sessao, horario";
         List<Sessao> sessoes = new ArrayList<>();
         
         try (PreparedStatement stmt = connection.prepareStatement(sql)) {
-            stmt.setString(1, "%" + nomeEvento + "%");
+            stmt.setLong(1, eventoId);
             
             try (ResultSet rs = stmt.executeQuery()) {
                 while (rs.next()) {

@@ -11,6 +11,10 @@ import com.teatro.exception.PoltronaOcupadaException;
 import java.util.List;
 import java.util.ArrayList;
 import java.util.Optional;
+import com.teatro.dao.EventoDAO;
+import com.teatro.database.DatabaseConnection;
+import java.sql.Connection;
+import com.teatro.dao.SessaoDAO;
 
 /**
  * Classe principal do sistema, implementando o padrão Façade.
@@ -29,6 +33,7 @@ public class Teatro {
         this.areas = new ArrayList<>();
         this.eventos = new ArrayList<>();
         inicializarAreas();
+        carregarEventosDoBanco();
     }
     
     public static synchronized Teatro getInstance() {
@@ -117,6 +122,23 @@ public class Teatro {
         }
         // Balcão Nobre: 50 poltronas, R$ 250,00
         areas.add(new Area(14L, "Balcão Nobre", 250.00, 50));
+    }
+
+    private void carregarEventosDoBanco() {
+        try {
+            Connection conn = DatabaseConnection.getInstance().getConnection();
+            EventoDAO eventoDAO = new EventoDAO(conn);
+            SessaoDAO sessaoDAO = new SessaoDAO(conn);
+            this.eventos = eventoDAO.listarTodos();
+            for (Evento evento : this.eventos) {
+                List<Sessao> sessoes = sessaoDAO.buscarPorEvento(evento.getId());
+                for (Sessao sessao : sessoes) {
+                    evento.addSessao(sessao);
+                }
+            }
+        } catch (Exception e) {
+            logger.error("Erro ao carregar eventos e sessões do banco: " + e.getMessage());
+        }
     }
 
     public List<Area> getAreas() {

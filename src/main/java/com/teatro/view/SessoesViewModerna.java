@@ -29,10 +29,20 @@ public class SessoesViewModerna {
     private static final String TEXT_COLOR = "#2c3e50";
     private static final String CARD_BACKGROUND = "white";
 
+    private Evento eventoSelecionado;
+
     public SessoesViewModerna(Teatro teatro, Usuario usuario, Stage stage) {
         this.teatro = teatro;
         this.usuario = usuario;
         this.stage = stage;
+        this.eventoSelecionado = null;
+    }
+
+    public SessoesViewModerna(Teatro teatro, Usuario usuario, Stage stage, Evento eventoSelecionado) {
+        this.teatro = teatro;
+        this.usuario = usuario;
+        this.stage = stage;
+        this.eventoSelecionado = eventoSelecionado;
     }
 
     public void show() {
@@ -59,10 +69,13 @@ public class SessoesViewModerna {
         pageTitle.setFont(Font.font("System", FontWeight.BOLD, 28));
         pageTitle.setTextFill(Color.web(TEXT_COLOR));
         
-        // Adiciona os cards de eventos
         VBox eventsContainer = new VBox(25);
-        for (Evento evento : teatro.getEventos()) {
-            eventsContainer.getChildren().add(criarCardEvento(evento));
+        if (eventoSelecionado != null) {
+            eventsContainer.getChildren().add(criarCardEvento(eventoSelecionado));
+        } else {
+            for (Evento evento : teatro.getEventos()) {
+                eventsContainer.getChildren().add(criarCardEvento(evento));
+            }
         }
         
         contentContainer.getChildren().addAll(pageTitle, eventsContainer);
