@@ -6,7 +6,6 @@ import javafx.geometry.Pos;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.layout.*;
-import javafx.scene.control.Alert;
 import javafx.scene.paint.Color;
 import javafx.scene.text.Font;
 import javafx.scene.text.FontWeight;
@@ -122,7 +121,7 @@ public class SessoesViewModerna {
         homeButton.setStyle("-fx-background-color: white; -fx-text-fill: " + PRIMARY_COLOR + "; -fx-font-weight: bold; -fx-cursor: hand;");
         
         homeButton.setOnAction(e -> {
-            new DashboardViewModerna(teatro, usuario, stage).show();
+            new DashboardView(teatro, usuario, stage).show();
         });
         
         // Espaçador para empurrar o userInfo para a direita

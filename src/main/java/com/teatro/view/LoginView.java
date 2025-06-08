@@ -195,9 +195,9 @@ public class LoginViewModerna {
                 
                 // Redireciona para a tela apropriada com base no tipo de usuário
                 if ("ADMIN".equals(usuario.getTipoUsuario())) {
-                    new DashboardViewModerna(teatro, usuario, stage).show();
+                    new DashboardView(teatro, usuario, stage).show();
                 } else {
-                    new SessoesViewModerna(teatro, usuario, stage).show();
+                    new SessoesView(teatro, usuario, stage).show();
                 }
             } else {
                 errorLabel.setText("CPF/Email ou senha incorretos.");
