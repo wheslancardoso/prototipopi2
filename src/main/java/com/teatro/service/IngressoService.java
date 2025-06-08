@@ -20,6 +20,11 @@ import com.teatro.exception.PoltronaOcupadaException;
 import com.teatro.exception.UsuarioNaoEncontradoException;
 import com.teatro.dao.AreaDAO;
 import com.teatro.model.Area;
+import com.teatro.observer.VendaLoggerObserver;
+import com.teatro.dao.SessaoDAO;
+import com.teatro.model.Sessao;
+import com.teatro.dao.EventoDAO;
+import com.teatro.model.Evento;
 
 /**
  * Serviço para gerenciamento de ingressos.
@@ -39,6 +44,8 @@ public class IngressoService extends AbstractService<Ingresso, Long, IngressoDAO
         this.usuarioService = UsuarioService.getInstance();
         this.observers = new ArrayList<>();
         this.areaDAO = new AreaDAO(DatabaseConnection.getInstance().getConnection());
+        // Registrar observer de log de venda
+        this.registerObserver(new VendaLoggerObserver());
     }
     
     /**
@@ -125,6 +132,29 @@ public class IngressoService extends AbstractService<Ingresso, Long, IngressoDAO
             }
             
             dao.salvar(ingresso);
+            // Preencher campos de exibição para notificação
+            try {
+                SessaoDAO sessaoDAO = new SessaoDAO(DatabaseConnection.getInstance().getConnection());
+                Optional<Sessao> sessaoOpt = sessaoDAO.buscarPorId(ingresso.getSessaoId());
+                if (sessaoOpt.isPresent()) {
+                    Sessao sessao = sessaoOpt.get();
+                    ingresso.setHorario(sessao.getTipoSessao().getDescricao());
+                    ingresso.setDataSessao(sessao.getData());
+                    Long eventoId = sessao.getEventoId();
+                    if (eventoId != null) {
+                        EventoDAO eventoDAO = new EventoDAO(DatabaseConnection.getInstance().getConnection());
+                        Evento evento = eventoDAO.buscarPorId(eventoId);
+                        if (evento != null) {
+                            ingresso.setEventoNome(evento.getNome());
+                        }
+                    }
+                }
+                AreaDAO areaDAO = new AreaDAO(DatabaseConnection.getInstance().getConnection());
+                Optional<Area> areaOptNotificacao = areaDAO.buscarPorId(ingresso.getAreaId());
+                areaOptNotificacao.ifPresent(area -> ingresso.setAreaNome(area.getNome()));
+            } catch (Exception e) {
+                logger.error("Erro ao preencher dados de exibição do ingresso para notificação: " + e.getMessage());
+            }
             notifyObservers(new NotificacaoVenda(ingresso));
             return ingresso;
         } catch (TeatroException e) {
