@@ -66,6 +66,15 @@ public class UsuarioService extends AbstractService<Usuario, Long, UsuarioDAO> {
         return usuarioDAO.autenticarPorEmail(email, senha);
     }
 
+    public Optional<Usuario> buscarPorCpfEEmail(String cpf, String email) {
+        return usuarioDAO.buscarPorCpfEEmail(cpf, email);
+    }
+
+    public void atualizarSenha(Long id, String novaSenha) {
+        Validator.validarStringNaoVazia(novaSenha, "Nova senha");
+        usuarioDAO.atualizarSenha(id, novaSenha);
+    }
+
     @Override
     protected void validarAntesSalvar(Usuario usuario) {
         Validator.validarStringNaoVazia(usuario.getNome(), "Nome");

@@ -138,6 +138,14 @@ public class LoginViewModerna {
             "-fx-cursor: hand;"
         );
         
+        // Botão de esqueceu a senha
+        Button esqueceuSenhaButton = new Button("Esqueceu a senha?");
+        esqueceuSenhaButton.setStyle(
+            "-fx-background-color: transparent;" +
+            "-fx-text-fill: " + PRIMARY_COLOR + ";" +
+            "-fx-cursor: hand;"
+        );
+        
         // Botão de cadastro
         Button cadastrarButton = new Button("Criar nova conta");
         cadastrarButton.setPrefHeight(40);
@@ -159,6 +167,9 @@ public class LoginViewModerna {
         
         // Ação do botão de cadastro
         cadastrarButton.setOnAction(e -> mostrarTelaCadastro());
+        
+        // Ação do botão de esqueceu a senha
+        esqueceuSenhaButton.setOnAction(e -> mostrarTelaRecuperacaoSenha());
         
         loginButton.setOnAction(e -> {
             String identificador = identificadorField.getText();
@@ -194,7 +205,7 @@ public class LoginViewModerna {
             }
         });
         
-        loginForm.getChildren().addAll(identificadorBox, senhaBox, loginButton, cadastrarButton, errorLabel);
+        loginForm.getChildren().addAll(identificadorBox, senhaBox, loginButton, esqueceuSenhaButton, cadastrarButton, errorLabel);
         
         card.getChildren().addAll(title, subtitle, separator, loginForm);
         return card;
@@ -410,5 +421,162 @@ public class LoginViewModerna {
         Scene scene = new Scene(root, 800, 800);
         cadastroStage.setScene(scene);
         cadastroStage.show();
+    }
+
+    private void mostrarTelaRecuperacaoSenha() {
+        Stage recuperacaoStage = new Stage();
+        recuperacaoStage.setTitle("Recuperação de Senha");
+
+        VBox root = new VBox(20);
+        root.setAlignment(Pos.CENTER);
+        root.setPadding(new Insets(40));
+        root.setStyle("-fx-background-color: " + BACKGROUND_COLOR + ";");
+
+        // Container do formulário
+        VBox formContainer = new VBox(20);
+        formContainer.setAlignment(Pos.CENTER);
+        formContainer.setMaxWidth(400);
+        formContainer.setStyle(
+            "-fx-background-color: " + CARD_BACKGROUND + ";" +
+            "-fx-padding: 30;" +
+            "-fx-background-radius: 8;" +
+            "-fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.1), 10, 0, 0, 0);"
+        );
+
+        // Título
+        Label titulo = new Label("Recuperação de Senha");
+        titulo.setFont(Font.font("System", FontWeight.BOLD, 24));
+        titulo.setTextFill(Color.web(PRIMARY_COLOR));
+
+        // Subtítulo
+        Label subtitulo = new Label("Digite seu CPF e email para recuperar sua senha");
+        subtitulo.setFont(Font.font("System", 14));
+        subtitulo.setTextFill(Color.web(TEXT_COLOR));
+
+        // Separador
+        Separator separator = new Separator();
+        separator.setPadding(new Insets(10, 0, 10, 0));
+
+        // Campos do formulário
+        VBox formFields = new VBox(15);
+        formFields.setAlignment(Pos.CENTER);
+
+        // Campo CPF
+        VBox cpfBox = new VBox(5);
+        Label cpfLabel = new Label("CPF");
+        cpfLabel.setFont(Font.font("System", FontWeight.BOLD, 14));
+        TextField cpfField = new TextField();
+        cpfField.setPromptText("Digite seu CPF");
+        cpfField.setPrefHeight(40);
+        cpfField.setStyle(
+            "-fx-background-color: white;" +
+            "-fx-border-color: #e0e0e0;" +
+            "-fx-border-radius: 4;" +
+            "-fx-padding: 8;"
+        );
+        cpfBox.getChildren().addAll(cpfLabel, cpfField);
+
+        // Campo Email
+        VBox emailBox = new VBox(5);
+        Label emailLabel = new Label("Email");
+        emailLabel.setFont(Font.font("System", FontWeight.BOLD, 14));
+        TextField emailField = new TextField();
+        emailField.setPromptText("Digite seu email");
+        emailField.setPrefHeight(40);
+        emailField.setStyle(
+            "-fx-background-color: white;" +
+            "-fx-border-color: #e0e0e0;" +
+            "-fx-border-radius: 4;" +
+            "-fx-padding: 8;"
+        );
+        emailBox.getChildren().addAll(emailLabel, emailField);
+
+        // Campo Nova Senha
+        VBox novaSenhaBox = new VBox(5);
+        Label novaSenhaLabel = new Label("Nova Senha");
+        novaSenhaLabel.setFont(Font.font("System", FontWeight.BOLD, 14));
+        PasswordField novaSenhaField = new PasswordField();
+        novaSenhaField.setPromptText("Digite sua nova senha");
+        novaSenhaField.setPrefHeight(40);
+        novaSenhaField.setStyle(
+            "-fx-background-color: white;" +
+            "-fx-border-color: #e0e0e0;" +
+            "-fx-border-radius: 4;" +
+            "-fx-padding: 8;"
+        );
+        novaSenhaBox.getChildren().addAll(novaSenhaLabel, novaSenhaField);
+
+        formFields.getChildren().addAll(cpfBox, emailBox, novaSenhaBox);
+
+        // Botão de recuperar
+        Button recuperarButton = new Button("Recuperar Senha");
+        recuperarButton.setPrefHeight(40);
+        recuperarButton.setMaxWidth(Double.MAX_VALUE);
+        recuperarButton.setStyle(
+            "-fx-background-color: " + PRIMARY_COLOR + ";" +
+            "-fx-text-fill: white;" +
+            "-fx-background-radius: 4;" +
+            "-fx-cursor: hand;"
+        );
+
+        // Mensagem de erro
+        Label errorLabel = new Label();
+        errorLabel.setTextFill(Color.web("#e74c3c"));
+        errorLabel.setVisible(false);
+
+        // Layout
+        VBox content = new VBox(20);
+        content.setAlignment(Pos.CENTER);
+        content.getChildren().addAll(titulo, subtitulo, separator, formFields, recuperarButton, errorLabel);
+
+        formContainer.getChildren().add(content);
+        root.getChildren().add(formContainer);
+
+        // Ação do botão de recuperar
+        recuperarButton.setOnAction(e -> {
+            String cpf = cpfField.getText();
+            String email = emailField.getText();
+            String novaSenha = novaSenhaField.getText();
+
+            if (cpf.isEmpty() || email.isEmpty() || novaSenha.isEmpty()) {
+                errorLabel.setText("Por favor, preencha todos os campos");
+                errorLabel.setVisible(true);
+                return;
+            }
+
+            try {
+                // Inicializa o teatro se necessário
+                if (teatro == null) {
+                    teatro = Teatro.getInstance();
+                }
+
+                // Verifica se o usuário existe
+                Optional<Usuario> usuarioOpt = teatro.verificarUsuarioParaRecuperacao(cpf, email);
+                
+                if (usuarioOpt.isPresent()) {
+                    Usuario usuario = usuarioOpt.get();
+                    teatro.recuperarSenha(usuario.getId(), novaSenha);
+                    
+                    // Mostra mensagem de sucesso
+                    Alert alert = new Alert(Alert.AlertType.INFORMATION);
+                    alert.setTitle("Senha Recuperada");
+                    alert.setHeaderText(null);
+                    alert.setContentText("Sua senha foi atualizada com sucesso!");
+                    alert.showAndWait();
+                    
+                    recuperacaoStage.close();
+                } else {
+                    errorLabel.setText("CPF ou email não encontrados");
+                    errorLabel.setVisible(true);
+                }
+            } catch (Exception ex) {
+                errorLabel.setText("Erro ao recuperar senha: " + ex.getMessage());
+                errorLabel.setVisible(true);
+            }
+        });
+
+        Scene scene = new Scene(root, 500, 600);
+        recuperacaoStage.setScene(scene);
+        recuperacaoStage.show();
     }
 }

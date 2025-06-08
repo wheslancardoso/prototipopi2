@@ -36,4 +36,19 @@ public interface UsuarioDAO extends DAO<Usuario, Long> {
      * @return Optional contendo o usuário se autenticado com sucesso
      */
     Optional<Usuario> autenticarPorEmail(String email, String senha);
+
+    /**
+     * Verifica se existe um usuário com o CPF e email fornecidos.
+     * @param cpf CPF do usuário
+     * @param email Email do usuário
+     * @return Optional contendo o usuário se encontrado
+     */
+    Optional<Usuario> buscarPorCpfEEmail(String cpf, String email);
+
+    /**
+     * Atualiza a senha de um usuário.
+     * @param id ID do usuário
+     * @param novaSenha Nova senha do usuário
+     */
+    void atualizarSenha(Long id, String novaSenha);
 } 

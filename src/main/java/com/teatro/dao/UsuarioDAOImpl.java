@@ -100,6 +100,41 @@ public class UsuarioDAOImpl implements UsuarioDAO {
         }
     }
 
+    @Override
+    public Optional<Usuario> buscarPorCpfEEmail(String cpf, String email) {
+        String sql = "SELECT * FROM usuarios WHERE cpf = ? AND email = ?";
+        try (Connection conn = dbConnection.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            
+            stmt.setString(1, cpf);
+            stmt.setString(2, email);
+            ResultSet rs = stmt.executeQuery();
+            
+            if (rs.next()) {
+                return Optional.of(montarUsuario(rs));
+            }
+            return Optional.empty();
+        } catch (SQLException e) {
+            logger.error("Erro ao buscar usuário por CPF e email: " + e.getMessage());
+            throw new RuntimeException("Erro ao buscar usuário por CPF e email", e);
+        }
+    }
+
+    @Override
+    public void atualizarSenha(Long id, String novaSenha) {
+        String sql = "UPDATE usuarios SET senha = ? WHERE id = ?";
+        try (Connection conn = dbConnection.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            
+            stmt.setString(1, novaSenha);
+            stmt.setLong(2, id);
+            stmt.executeUpdate();
+        } catch (SQLException e) {
+            logger.error("Erro ao atualizar senha do usuário: " + e.getMessage());
+            throw new RuntimeException("Erro ao atualizar senha do usuário", e);
+        }
+    }
+
     // Implementação dos métodos da interface DAO
     @Override
     public void salvar(Usuario usuario) {

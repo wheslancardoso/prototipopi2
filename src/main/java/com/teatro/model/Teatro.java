@@ -334,4 +334,32 @@ public class Teatro {
     private String gerarCodigoIngresso() {
         return String.format("%06d", (int)(Math.random() * 1000000));
     }
+
+    public Optional<Usuario> verificarUsuarioParaRecuperacao(String cpf, String email) {
+        try {
+            Validator.validarCpf(cpf);
+            Validator.validarEmail(email);
+            return usuarioService.buscarPorCpfEEmail(cpf, email);
+        } catch (TeatroException e) {
+            logger.error("Erro ao verificar usuário para recuperação: " + e.getMessage());
+            throw e;
+        } catch (Exception e) {
+            logger.error("Erro inesperado ao verificar usuário para recuperação: " + e.getMessage());
+            throw new TeatroException("Erro ao verificar usuário para recuperação", e);
+        }
+    }
+
+    public void recuperarSenha(Long usuarioId, String novaSenha) {
+        try {
+            Validator.validarNaoNulo(usuarioId, "ID do Usuário");
+            Validator.validarStringNaoVazia(novaSenha, "Nova senha");
+            usuarioService.atualizarSenha(usuarioId, novaSenha);
+        } catch (TeatroException e) {
+            logger.error("Erro ao recuperar senha: " + e.getMessage());
+            throw e;
+        } catch (Exception e) {
+            logger.error("Erro inesperado ao recuperar senha: " + e.getMessage());
+            throw new TeatroException("Erro ao recuperar senha", e);
+        }
+    }
 } 
