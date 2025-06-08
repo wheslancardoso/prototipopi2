@@ -1,160 +1,165 @@
 package com.teatro.dao;
 
-import com.teatro.database.DatabaseConnection;
-import com.teatro.model.HorarioDisponivel;
 import com.teatro.model.Sessao;
-
+import com.teatro.model.TipoSessao;
+import com.teatro.exception.TeatroException;
+import com.teatro.exception.SessaoNaoEncontradaException;
+import com.teatro.util.TeatroLogger;
 import java.sql.*;
-import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 /**
  * Classe responsável por operações de acesso a dados relacionados às sessões.
  */
-public class SessaoDAO {
+public class SessaoDAO implements DAO<Sessao, Long> {
+    private final TeatroLogger logger = TeatroLogger.getInstance();
+    private final Connection connection;
     
-    /**
-     * Atualiza o horário específico de uma sessão.
-     * 
-     * @param sessao Sessão a ser atualizada
-     * @return true se a atualização foi bem-sucedida, false caso contrário
-     */
-    public boolean atualizarHorarioEspecifico(Sessao sessao) {
-        String sql = "UPDATE sessoes SET horario_especifico_id = ? WHERE id = ?";
-        
-        try (Connection conn = DatabaseConnection.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql)) {
+    public SessaoDAO(Connection connection) {
+        this.connection = connection;
+    }
+    
+    @Override
+    public void salvar(Sessao sessao) {
+        String sql = "INSERT INTO sessoes (nome, tipo_sessao, data) VALUES (?, ?, ?)";
+        try (PreparedStatement stmt = connection.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
+            stmt.setString(1, sessao.getNome());
+            stmt.setString(2, sessao.getTipoSessao().name());
+            stmt.setTimestamp(3, sessao.getData());
             
-            if (sessao.getHorarioEspecifico() != null) {
-                stmt.setLong(1, sessao.getHorarioEspecifico().getId());
-            } else {
-                stmt.setNull(1, Types.BIGINT);
+            int affectedRows = stmt.executeUpdate();
+            if (affectedRows == 0) {
+                throw new TeatroException("Erro ao salvar sessão: nenhuma linha afetada");
             }
             
-            stmt.setLong(2, sessao.getId());
-            
-            int rowsAffected = stmt.executeUpdate();
-            return rowsAffected > 0;
+            try (ResultSet generatedKeys = stmt.getGeneratedKeys()) {
+                if (generatedKeys.next()) {
+                    sessao.setId(generatedKeys.getLong(1));
+                } else {
+                    throw new TeatroException("Erro ao salvar sessão: ID não gerado");
+                }
+            }
         } catch (SQLException e) {
-            System.err.println("Erro ao atualizar horário específico da sessão: " + e.getMessage());
-            return false;
+            logger.error("Erro ao salvar sessão: " + e.getMessage());
+            throw new TeatroException("Erro ao salvar sessão", e);
         }
     }
     
-    /**
-     * Atualiza a data de uma sessão.
-     * 
-     * @param sessao Sessão a ser atualizada
-     * @return true se a atualização foi bem-sucedida, false caso contrário
-     */
-    public boolean atualizarDataSessao(Sessao sessao) {
-        String sql = "UPDATE sessoes SET data_sessao = ? WHERE id = ?";
-        
-        try (Connection conn = DatabaseConnection.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql)) {
+    @Override
+    public void atualizar(Sessao sessao) {
+        String sql = "UPDATE sessoes SET nome = ?, tipo_sessao = ?, data = ? WHERE id = ?";
+        try (PreparedStatement stmt = connection.prepareStatement(sql)) {
+            stmt.setString(1, sessao.getNome());
+            stmt.setString(2, sessao.getTipoSessao().name());
+            stmt.setTimestamp(3, sessao.getData());
+            stmt.setLong(4, sessao.getId());
             
-            stmt.setDate(1, Date.valueOf(sessao.getDataSessao()));
-            stmt.setLong(2, sessao.getId());
-            
-            int rowsAffected = stmt.executeUpdate();
-            return rowsAffected > 0;
+            int affectedRows = stmt.executeUpdate();
+            if (affectedRows == 0) {
+                throw new SessaoNaoEncontradaException("Sessão com ID " + sessao.getId() + " não encontrada");
+            }
         } catch (SQLException e) {
-            System.err.println("Erro ao atualizar data da sessão: " + e.getMessage());
-            return false;
+            logger.error("Erro ao atualizar sessão: " + e.getMessage());
+            throw new TeatroException("Erro ao atualizar sessão", e);
         }
     }
     
-    /**
-     * Busca uma sessão pelo ID.
-     * 
-     * @param id ID da sessão
-     * @return Sessão encontrada ou null se não encontrada
-     */
-    public Sessao buscarPorId(Long id) {
-        String sql = "SELECT s.id, s.horario, s.data_sessao, s.horario_especifico_id, " +
-                     "e.nome as evento_nome " +
-                     "FROM sessoes s " +
-                     "JOIN eventos e ON s.evento_id = e.id " +
-                     "WHERE s.id = ?";
-        
-        try (Connection conn = DatabaseConnection.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql)) {
+    @Override
+    public void remover(Long id) {
+        String sql = "DELETE FROM sessoes WHERE id = ?";
+        try (PreparedStatement stmt = connection.prepareStatement(sql)) {
+            stmt.setLong(1, id);
             
+            int affectedRows = stmt.executeUpdate();
+            if (affectedRows == 0) {
+                throw new SessaoNaoEncontradaException("Sessão com ID " + id + " não encontrada");
+            }
+        } catch (SQLException e) {
+            logger.error("Erro ao remover sessão: " + e.getMessage());
+            throw new TeatroException("Erro ao remover sessão", e);
+        }
+    }
+    
+    @Override
+    public Optional<Sessao> buscarPorId(Long id) {
+        String sql = "SELECT * FROM sessoes WHERE id = ?";
+        try (PreparedStatement stmt = connection.prepareStatement(sql)) {
             stmt.setLong(1, id);
             
             try (ResultSet rs = stmt.executeQuery()) {
                 if (rs.next()) {
-                    String horario = rs.getString("horario");
-                    LocalDate dataSessao = rs.getDate("data_sessao").toLocalDate();
-                    
-                    Sessao sessao = new Sessao(horario, dataSessao);
-                    sessao.setId(id);
-                    sessao.setNome(rs.getString("evento_nome"));
-                    
-                    // Busca o horário específico se existir
-                    Long horarioEspecificoId = rs.getLong("horario_especifico_id");
-                    if (!rs.wasNull()) {
-                        HorarioDisponivelDAO horarioDAO = new HorarioDisponivelDAO();
-                        HorarioDisponivel horarioEspecifico = horarioDAO.buscarPorId(horarioEspecificoId);
-                        sessao.setHorarioEspecifico(horarioEspecifico);
-                    }
-                    
-                    return sessao;
+                    return Optional.of(montarSessao(rs));
                 }
+                return Optional.empty();
             }
         } catch (SQLException e) {
-            System.err.println("Erro ao buscar sessão: " + e.getMessage());
+            logger.error("Erro ao buscar sessão por ID: " + e.getMessage());
+            throw new TeatroException("Erro ao buscar sessão por ID", e);
         }
-        
-        return null;
     }
     
-    /**
-     * Busca todas as sessões de um evento.
-     * 
-     * @param eventoId ID do evento
-     * @return Lista de sessões do evento
-     */
-    public List<Sessao> buscarPorEvento(Long eventoId) {
+    @Override
+    public List<Sessao> listarTodos() {
+        String sql = "SELECT * FROM sessoes ORDER BY data";
         List<Sessao> sessoes = new ArrayList<>();
         
-        String sql = "SELECT s.id, s.horario, s.data_sessao, s.horario_especifico_id, " +
-                     "e.nome as evento_nome " +
-                     "FROM sessoes s " +
-                     "JOIN eventos e ON s.evento_id = e.id " +
-                     "WHERE s.evento_id = ?";
-        
-        try (Connection conn = DatabaseConnection.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql)) {
+        try (Statement stmt = connection.createStatement();
+             ResultSet rs = stmt.executeQuery(sql)) {
             
-            stmt.setLong(1, eventoId);
+            while (rs.next()) {
+                sessoes.add(montarSessao(rs));
+            }
+            return sessoes;
+        } catch (SQLException e) {
+            logger.error("Erro ao listar sessões: " + e.getMessage());
+            throw new TeatroException("Erro ao listar sessões", e);
+        }
+    }
+    
+    private Sessao montarSessao(ResultSet rs) throws SQLException {
+        Sessao sessao = new Sessao();
+        sessao.setId(rs.getLong("id"));
+        sessao.setNome(rs.getString("nome"));
+        sessao.setTipoSessao(TipoSessao.valueOf(rs.getString("tipo_sessao")));
+        sessao.setData(rs.getTimestamp("data"));
+        return sessao;
+    }
+    
+    public boolean existe(Long id) {
+        String sql = "SELECT COUNT(*) FROM sessoes WHERE id = ?";
+        try (PreparedStatement stmt = connection.prepareStatement(sql)) {
+            stmt.setLong(1, id);
+            
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getInt(1) > 0;
+                }
+                return false;
+            }
+        } catch (SQLException e) {
+            logger.error("Erro ao verificar existência da sessão: " + e.getMessage());
+            throw new TeatroException("Erro ao verificar existência da sessão", e);
+        }
+    }
+    
+    public List<Sessao> buscarPorEvento(String nomeEvento) {
+        String sql = "SELECT * FROM sessoes WHERE evento_nome LIKE ? ORDER BY data_sessao, tipo_sessao";
+        List<Sessao> sessoes = new ArrayList<>();
+        
+        try (PreparedStatement stmt = connection.prepareStatement(sql)) {
+            stmt.setString(1, "%" + nomeEvento + "%");
             
             try (ResultSet rs = stmt.executeQuery()) {
                 while (rs.next()) {
-                    Long id = rs.getLong("id");
-                    String horario = rs.getString("horario");
-                    LocalDate dataSessao = rs.getDate("data_sessao").toLocalDate();
-                    
-                    Sessao sessao = new Sessao(horario, dataSessao);
-                    sessao.setId(id);
-                    sessao.setNome(rs.getString("evento_nome"));
-                    
-                    // Busca o horário específico se existir
-                    Long horarioEspecificoId = rs.getLong("horario_especifico_id");
-                    if (!rs.wasNull()) {
-                        HorarioDisponivelDAO horarioDAO = new HorarioDisponivelDAO();
-                        HorarioDisponivel horarioEspecifico = horarioDAO.buscarPorId(horarioEspecificoId);
-                        sessao.setHorarioEspecifico(horarioEspecifico);
-                    }
-                    
-                    sessoes.add(sessao);
+                    sessoes.add(montarSessao(rs));
                 }
             }
+            return sessoes;
         } catch (SQLException e) {
-            System.err.println("Erro ao buscar sessões por evento: " + e.getMessage());
+            logger.error("Erro ao buscar sessões por evento: " + e.getMessage());
+            throw new TeatroException("Erro ao buscar sessões por evento", e);
         }
-        
-        return sessoes;
     }
 }

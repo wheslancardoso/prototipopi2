@@ -1,121 +1,199 @@
 package com.teatro.dao;
 
-import com.teatro.database.DatabaseConnection;
 import com.teatro.model.Ingresso;
+import com.teatro.exception.TeatroException;
+import com.teatro.exception.IngressoException;
+import com.teatro.exception.PoltronaOcupadaException;
+import com.teatro.util.TeatroLogger;
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
-import java.util.HashMap;
+import java.util.Optional;
 
-public class IngressoDAO {
+/**
+ * Implementação do DAO para a entidade Ingresso.
+ */
+public class IngressoDAO implements DAO<Ingresso, Long> {
     
-    public boolean salvar(Ingresso ingresso) {
-        String sql = "INSERT INTO ingressos (usuario_id, sessao_id, area_id, numero_poltrona, valor, codigo) VALUES (?, ?, ?, ?, ?, ?)";
-        
-        try (Connection conn = DatabaseConnection.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql)) {
-            
-            stmt.setLong(1, ingresso.getUsuarioId());
-            stmt.setLong(2, ingresso.getSessaoId());
-            stmt.setLong(3, ingresso.getAreaId());
-            stmt.setInt(4, ingresso.getNumeroPoltrona());
-            stmt.setDouble(5, ingresso.getValor());
-            stmt.setString(6, ingresso.getCodigo());
-            
-            return stmt.executeUpdate() > 0;
-        } catch (SQLException e) {
-            e.printStackTrace();
-            return false;
-        }
+    private final TeatroLogger logger = TeatroLogger.getInstance();
+    private final Connection connection;
+    
+    public IngressoDAO(Connection connection) {
+        this.connection = connection;
     }
     
-    public List<Integer> buscarPoltronasOcupadas(Long sessaoId, Long areaId) {
-        String sql = "SELECT numero_poltrona FROM ingressos WHERE sessao_id = ? AND area_id = ?";
-        List<Integer> poltronasOcupadas = new ArrayList<>();
-        
-        try (Connection conn = DatabaseConnection.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql)) {
+    @Override
+    public void salvar(Ingresso ingresso) {
+        String sql = "INSERT INTO ingressos (usuario_id, sessao_id, area_id, numero_poltrona, valor, data_compra, " +
+                    "evento_nome, horario, area_nome, codigo) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+        try (PreparedStatement stmt = connection.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
+            preencherStatement(stmt, ingresso);
             
-            stmt.setLong(1, sessaoId);
-            stmt.setLong(2, areaId);
-            ResultSet rs = stmt.executeQuery();
+            int affectedRows = stmt.executeUpdate();
+            if (affectedRows == 0) {
+                throw new IngressoException("Erro ao salvar ingresso: nenhuma linha afetada");
+            }
             
-            while (rs.next()) {
-                poltronasOcupadas.add(rs.getInt("numero_poltrona"));
+            try (ResultSet generatedKeys = stmt.getGeneratedKeys()) {
+                if (generatedKeys.next()) {
+                    ingresso.setId(generatedKeys.getLong(1));
+                } else {
+                    throw new IngressoException("Erro ao salvar ingresso: ID não gerado");
+                }
             }
         } catch (SQLException e) {
-            e.printStackTrace();
+            logger.error("Erro ao salvar ingresso: " + e.getMessage());
+            throw new TeatroException("Erro ao salvar ingresso", e);
         }
-        
-        return poltronasOcupadas;
     }
     
-    public List<Ingresso> buscarPorUsuarioId(Long usuarioId) {
-        String sql = """
-            SELECT i.*, e.nome as evento_nome, s.horario, a.nome as area_nome, 
-                   u.nome as usuario_nome, u.cpf as usuario_cpf, u.email as usuario_email,
-                   u.telefone as usuario_telefone, u.tipo_usuario as usuario_tipo
-            FROM ingressos i
-            JOIN sessoes s ON i.sessao_id = s.id
-            JOIN eventos e ON s.evento_id = e.id
-            JOIN areas a ON i.area_id = a.id
-            JOIN usuarios u ON i.usuario_id = u.id
-            WHERE i.usuario_id = ?
-            ORDER BY i.data_compra DESC
-            """;
-        
+    @Override
+    public void atualizar(Ingresso ingresso) {
+        String sql = "UPDATE ingressos SET usuario_id = ?, sessao_id = ?, area_id = ?, numero_poltrona = ?, " +
+                    "valor = ?, data_compra = ?, evento_nome = ?, horario = ?, area_nome = ?, codigo = ? " +
+                    "WHERE id = ?";
+        try (PreparedStatement stmt = connection.prepareStatement(sql)) {
+            preencherStatement(stmt, ingresso);
+            stmt.setLong(11, ingresso.getId());
+            
+            int affectedRows = stmt.executeUpdate();
+            if (affectedRows == 0) {
+                throw new IngressoException("Ingresso com ID " + ingresso.getId() + " não encontrado");
+            }
+        } catch (SQLException e) {
+            logger.error("Erro ao atualizar ingresso: " + e.getMessage());
+            throw new TeatroException("Erro ao atualizar ingresso", e);
+        }
+    }
+    
+    @Override
+    public void remover(Long id) {
+        String sql = "DELETE FROM ingressos WHERE id = ?";
+        try (PreparedStatement stmt = connection.prepareStatement(sql)) {
+            stmt.setLong(1, id);
+            
+            int affectedRows = stmt.executeUpdate();
+            if (affectedRows == 0) {
+                throw new IngressoException("Ingresso com ID " + id + " não encontrado");
+            }
+        } catch (SQLException e) {
+            logger.error("Erro ao remover ingresso: " + e.getMessage());
+            throw new TeatroException("Erro ao remover ingresso", e);
+        }
+    }
+    
+    @Override
+    public Optional<Ingresso> buscarPorId(Long id) {
+        String sql = "SELECT * FROM ingressos WHERE id = ?";
+        try (PreparedStatement stmt = connection.prepareStatement(sql)) {
+            stmt.setLong(1, id);
+            
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (rs.next()) {
+                    return Optional.of(montarIngresso(rs));
+                }
+                return Optional.empty();
+            }
+        } catch (SQLException e) {
+            logger.error("Erro ao buscar ingresso por ID: " + e.getMessage());
+            throw new TeatroException("Erro ao buscar ingresso por ID", e);
+        }
+    }
+    
+    @Override
+    public List<Ingresso> listarTodos() {
+        String sql = "SELECT * FROM ingressos ORDER BY data_compra";
         List<Ingresso> ingressos = new ArrayList<>();
         
-        try (Connection conn = DatabaseConnection.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql)) {
-            
-            stmt.setLong(1, usuarioId);
-            ResultSet rs = stmt.executeQuery();
+        try (Statement stmt = connection.createStatement();
+             ResultSet rs = stmt.executeQuery(sql)) {
             
             while (rs.next()) {
-                Ingresso ingresso = new Ingresso();
-                ingresso.setId(rs.getLong("id"));
-                ingresso.setUsuarioId(rs.getLong("usuario_id"));
-                ingresso.setSessaoId(rs.getLong("sessao_id"));
-                ingresso.setAreaId(rs.getLong("area_id"));
-                ingresso.setNumeroPoltrona(rs.getInt("numero_poltrona"));
-                ingresso.setValor(rs.getDouble("valor"));
-                ingresso.setDataCompra(rs.getTimestamp("data_compra"));
-                ingresso.setEventoNome(rs.getString("evento_nome"));
-                ingresso.setHorario(rs.getString("horario"));
-                ingresso.setAreaNome(rs.getString("area_nome"));
-                ingressos.add(ingresso);
+                ingressos.add(montarIngresso(rs));
+            }
+            return ingressos;
+        } catch (SQLException e) {
+            logger.error("Erro ao listar ingressos: " + e.getMessage());
+            throw new TeatroException("Erro ao listar ingressos", e);
+        }
+    }
+    
+    @Override
+    public boolean existe(Long id) {
+        String sql = "SELECT COUNT(*) FROM ingressos WHERE id = ?";
+        
+        try (PreparedStatement stmt = connection.prepareStatement(sql)) {
+            stmt.setLong(1, id);
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getInt(1) > 0;
+                }
+            }
+            return false;
+        } catch (SQLException e) {
+            logger.error("Erro ao verificar existência do ingresso: {}", e.getMessage());
+            throw new TeatroException("Erro ao verificar existência do ingresso", e);
+        }
+    }
+    
+    /**
+     * Busca ingressos por usuário.
+     * @param usuarioId O ID do usuário
+     * @return Lista de ingressos do usuário
+     */
+    public List<Ingresso> buscarPorUsuario(Long usuarioId) {
+        String sql = "SELECT * FROM ingressos WHERE usuario_id = ? ORDER BY data_compra";
+        List<Ingresso> ingressos = new ArrayList<>();
+        
+        try (PreparedStatement stmt = connection.prepareStatement(sql)) {
+            stmt.setLong(1, usuarioId);
+            
+            try (ResultSet rs = stmt.executeQuery()) {
+                while (rs.next()) {
+                    ingressos.add(montarIngresso(rs));
+                }
+                return ingressos;
             }
         } catch (SQLException e) {
-            e.printStackTrace();
+            logger.error("Erro ao buscar ingressos do usuário: " + e.getMessage());
+            throw new TeatroException("Erro ao buscar ingressos do usuário", e);
         }
-        return ingressos;
     }
     
-    public boolean atualizarStatusPoltrona(Long sessaoId, Long areaId, int numeroPoltrona, boolean ocupada) {
-        String sql = "UPDATE sessoes_areas SET poltronas_disponiveis = poltronas_disponiveis + ? WHERE sessao_id = ? AND area_id = ?";
+    /**
+     * Busca ingressos por sessão.
+     * @param sessaoId O ID da sessão
+     * @return Lista de ingressos da sessão
+     */
+    public List<Ingresso> buscarPorSessao(Long sessaoId) {
+        String sql = "SELECT * FROM ingressos WHERE sessao_id = ? ORDER BY data_compra";
+        List<Ingresso> ingressos = new ArrayList<>();
         
-        try (Connection conn = DatabaseConnection.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql)) {
+        try (PreparedStatement stmt = connection.prepareStatement(sql)) {
+            stmt.setLong(1, sessaoId);
             
-            stmt.setInt(1, ocupada ? -1 : 1);
-            stmt.setLong(2, sessaoId);
-            stmt.setLong(3, areaId);
-            
-            return stmt.executeUpdate() > 0;
+            try (ResultSet rs = stmt.executeQuery()) {
+                while (rs.next()) {
+                    ingressos.add(montarIngresso(rs));
+                }
+                return ingressos;
+            }
         } catch (SQLException e) {
-            e.printStackTrace();
-            return false;
+            logger.error("Erro ao buscar ingressos da sessão: " + e.getMessage());
+            throw new TeatroException("Erro ao buscar ingressos da sessão", e);
         }
     }
     
-    public boolean isPoltronaOcupada(Long sessaoId, Long areaId, int numeroPoltrona) {
+    /**
+     * Verifica se uma poltrona está ocupada.
+     * @param sessaoId O ID da sessão
+     * @param areaId O ID da área
+     * @param numeroPoltrona O número da poltrona
+     * @return true se a poltrona estiver ocupada, false caso contrário
+     */
+    public boolean poltronaOcupada(Long sessaoId, Long areaId, int numeroPoltrona) {
         String sql = "SELECT COUNT(*) FROM ingressos WHERE sessao_id = ? AND area_id = ? AND numero_poltrona = ?";
-        
-        try (Connection conn = DatabaseConnection.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql)) {
-            
+        try (PreparedStatement stmt = connection.prepareStatement(sql)) {
             stmt.setLong(1, sessaoId);
             stmt.setLong(2, areaId);
             stmt.setInt(3, numeroPoltrona);
@@ -124,187 +202,40 @@ public class IngressoDAO {
                 if (rs.next()) {
                     return rs.getInt(1) > 0;
                 }
+                return false;
             }
         } catch (SQLException e) {
-            e.printStackTrace();
+            logger.error("Erro ao verificar ocupação da poltrona: " + e.getMessage());
+            throw new TeatroException("Erro ao verificar ocupação da poltrona", e);
         }
-        return false;
     }
     
-    public Map<String, Object> buscarEstatisticasVendas() {
-        Map<String, Object> estatisticas = new HashMap<>();
-        
-        // Peça com mais ingressos vendidos
-        String sqlMaisVendidos = """
-            SELECT e.nome, COUNT(*) as total_vendas
-            FROM ingressos i
-            JOIN sessoes s ON i.sessao_id = s.id
-            JOIN eventos e ON s.evento_id = e.id
-            GROUP BY e.id, e.nome
-            ORDER BY total_vendas DESC
-            LIMIT 1
-        """;
-        
-        // Peça com menos ingressos vendidos
-        String sqlMenosVendidos = """
-            SELECT e.nome, COUNT(*) as total_vendas
-            FROM ingressos i
-            JOIN sessoes s ON i.sessao_id = s.id
-            JOIN eventos e ON s.evento_id = e.id
-            GROUP BY e.id, e.nome
-            ORDER BY total_vendas ASC
-            LIMIT 1
-        """;
-        
-        // Sessão com maior ocupação
-        String sqlMaiorOcupacao = """
-            SELECT e.nome, s.horario, s.data_sessao,
-                   COUNT(*) * 100.0 / (
-                       SELECT SUM(capacidade_total)
-                       FROM areas
-                   ) as ocupacao
-            FROM ingressos i
-            JOIN sessoes s ON i.sessao_id = s.id
-            JOIN eventos e ON s.evento_id = e.id
-            GROUP BY s.id, e.nome, s.horario, s.data_sessao
-            ORDER BY ocupacao DESC
-            LIMIT 1
-        """;
-        
-        // Sessão com menor ocupação
-        String sqlMenorOcupacao = """
-            SELECT e.nome, s.horario, s.data_sessao,
-                   COUNT(*) * 100.0 / (
-                       SELECT SUM(capacidade_total)
-                       FROM areas
-                   ) as ocupacao
-            FROM ingressos i
-            JOIN sessoes s ON i.sessao_id = s.id
-            JOIN eventos e ON s.evento_id = e.id
-            GROUP BY s.id, e.nome, s.horario, s.data_sessao
-            ORDER BY ocupacao ASC
-            LIMIT 1
-        """;
-        
-        // Peça mais lucrativa
-        String sqlMaisLucrativa = """
-            SELECT e.nome, SUM(i.valor) as total_faturamento
-            FROM ingressos i
-            JOIN sessoes s ON i.sessao_id = s.id
-            JOIN eventos e ON s.evento_id = e.id
-            GROUP BY e.id, e.nome
-            ORDER BY total_faturamento DESC
-            LIMIT 1
-        """;
-        
-        // Peça menos lucrativa
-        String sqlMenosLucrativa = """
-            SELECT e.nome, SUM(i.valor) as total_faturamento
-            FROM ingressos i
-            JOIN sessoes s ON i.sessao_id = s.id
-            JOIN eventos e ON s.evento_id = e.id
-            GROUP BY e.id, e.nome
-            ORDER BY total_faturamento ASC
-            LIMIT 1
-        """;
-        
-        // Lucro médio por peça
-        String sqlLucroMedio = """
-            SELECT e.nome, AVG(i.valor) as media_faturamento
-            FROM ingressos i
-            JOIN sessoes s ON i.sessao_id = s.id
-            JOIN eventos e ON s.evento_id = e.id
-            GROUP BY e.id, e.nome
-        """;
-        
-        try (Connection conn = DatabaseConnection.getConnection()) {
-            // Busca peça mais vendida
-            try (PreparedStatement stmt = conn.prepareStatement(sqlMaisVendidos);
-                 ResultSet rs = stmt.executeQuery()) {
-                if (rs.next()) {
-                    estatisticas.put("pecaMaisVendida", Map.of(
-                        "nome", rs.getString("nome"),
-                        "totalVendas", rs.getInt("total_vendas")
-                    ));
-                }
-            }
-            
-            // Busca peça menos vendida
-            try (PreparedStatement stmt = conn.prepareStatement(sqlMenosVendidos);
-                 ResultSet rs = stmt.executeQuery()) {
-                if (rs.next()) {
-                    estatisticas.put("pecaMenosVendida", Map.of(
-                        "nome", rs.getString("nome"),
-                        "totalVendas", rs.getInt("total_vendas")
-                    ));
-                }
-            }
-            
-            // Busca sessão com maior ocupação
-            try (PreparedStatement stmt = conn.prepareStatement(sqlMaiorOcupacao);
-                 ResultSet rs = stmt.executeQuery()) {
-                if (rs.next()) {
-                    estatisticas.put("sessaoMaiorOcupacao", Map.of(
-                        "nome", rs.getString("nome"),
-                        "horario", rs.getString("horario"),
-                        "data", rs.getDate("data_sessao").toString(),
-                        "ocupacao", String.format("%.2f%%", rs.getDouble("ocupacao"))
-                    ));
-                }
-            }
-            
-            // Busca sessão com menor ocupação
-            try (PreparedStatement stmt = conn.prepareStatement(sqlMenorOcupacao);
-                 ResultSet rs = stmt.executeQuery()) {
-                if (rs.next()) {
-                    estatisticas.put("sessaoMenorOcupacao", Map.of(
-                        "nome", rs.getString("nome"),
-                        "horario", rs.getString("horario"),
-                        "data", rs.getDate("data_sessao").toString(),
-                        "ocupacao", String.format("%.2f%%", rs.getDouble("ocupacao"))
-                    ));
-                }
-            }
-            
-            // Busca peça mais lucrativa
-            try (PreparedStatement stmt = conn.prepareStatement(sqlMaisLucrativa);
-                 ResultSet rs = stmt.executeQuery()) {
-                if (rs.next()) {
-                    estatisticas.put("pecaMaisLucrativa", Map.of(
-                        "nome", rs.getString("nome"),
-                        "faturamento", String.format("R$ %.2f", rs.getDouble("total_faturamento"))
-                    ));
-                }
-            }
-            
-            // Busca peça menos lucrativa
-            try (PreparedStatement stmt = conn.prepareStatement(sqlMenosLucrativa);
-                 ResultSet rs = stmt.executeQuery()) {
-                if (rs.next()) {
-                    estatisticas.put("pecaMenosLucrativa", Map.of(
-                        "nome", rs.getString("nome"),
-                        "faturamento", String.format("R$ %.2f", rs.getDouble("total_faturamento"))
-                    ));
-                }
-            }
-            
-            // Busca lucro médio por peça
-            List<Map<String, Object>> lucroMedioPorPeca = new ArrayList<>();
-            try (PreparedStatement stmt = conn.prepareStatement(sqlLucroMedio);
-                 ResultSet rs = stmt.executeQuery()) {
-                while (rs.next()) {
-                    lucroMedioPorPeca.add(Map.of(
-                        "nome", rs.getString("nome"),
-                        "mediaFaturamento", String.format("R$ %.2f", rs.getDouble("media_faturamento"))
-                    ));
-                }
-                estatisticas.put("lucroMedioPorPeca", lucroMedioPorPeca);
-            }
-            
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
-        
-        return estatisticas;
+    private void preencherStatement(PreparedStatement stmt, Ingresso ingresso) throws SQLException {
+        stmt.setLong(1, ingresso.getUsuarioId());
+        stmt.setLong(2, ingresso.getSessaoId());
+        stmt.setLong(3, ingresso.getAreaId());
+        stmt.setInt(4, ingresso.getNumeroPoltrona());
+        stmt.setDouble(5, ingresso.getValor());
+        stmt.setTimestamp(6, ingresso.getDataCompra());
+        stmt.setString(7, ingresso.getEventoNome());
+        stmt.setString(8, ingresso.getHorario());
+        stmt.setString(9, ingresso.getAreaNome());
+        stmt.setString(10, ingresso.getCodigo());
+    }
+    
+    private Ingresso montarIngresso(ResultSet rs) throws SQLException {
+        Ingresso ingresso = new Ingresso();
+        ingresso.setId(rs.getLong("id"));
+        ingresso.setUsuarioId(rs.getLong("usuario_id"));
+        ingresso.setSessaoId(rs.getLong("sessao_id"));
+        ingresso.setAreaId(rs.getLong("area_id"));
+        ingresso.setNumeroPoltrona(rs.getInt("numero_poltrona"));
+        ingresso.setValor(rs.getDouble("valor"));
+        ingresso.setDataCompra(rs.getTimestamp("data_compra"));
+        ingresso.setEventoNome(rs.getString("evento_nome"));
+        ingresso.setHorario(rs.getString("horario"));
+        ingresso.setAreaNome(rs.getString("area_nome"));
+        ingresso.setCodigo(rs.getString("codigo"));
+        return ingresso;
     }
 } 

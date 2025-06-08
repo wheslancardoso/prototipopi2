@@ -144,7 +144,7 @@ public class ImpressaoIngressoViewModerna {
         card.setStyle("-fx-background-color: " + CARD_BACKGROUND + "; -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.1), 10, 0, 0, 0); -fx-background-radius: 8;");
         
         // Título do evento
-        Label eventoLabel = new Label(ingresso.getSessao().getNome());
+        Label eventoLabel = new Label(ingresso.getEventoNome());
         eventoLabel.setFont(Font.font("System", FontWeight.BOLD, 20));
         eventoLabel.setTextFill(Color.web(TEXT_COLOR));
         
@@ -163,21 +163,21 @@ public class ImpressaoIngressoViewModerna {
         Label horarioLabel = new Label("Horário:");
         horarioLabel.setStyle(titleStyle);
         
-        Label horarioValor = new Label(ingresso.getSessao().getHorario());
+        Label horarioValor = new Label(ingresso.getHorario());
         horarioValor.setStyle(valueStyle);
         
         // Área
         Label areaLabel = new Label("Área:");
         areaLabel.setStyle(titleStyle);
         
-        Label areaValor = new Label(ingresso.getArea().getNome());
+        Label areaValor = new Label(ingresso.getAreaNome());
         areaValor.setStyle(valueStyle);
         
         // Poltrona
         Label poltronaLabel = new Label("Poltrona:");
         poltronaLabel.setStyle(titleStyle);
         
-        Label poltronaValor = new Label(String.valueOf(ingresso.getPoltrona().getNumero()));
+        Label poltronaValor = new Label(String.valueOf(ingresso.getNumeroPoltrona()));
         poltronaValor.setStyle(valueStyle);
         
         // Valor
@@ -244,10 +244,10 @@ public class ImpressaoIngressoViewModerna {
         sb.append("           INGRESSO DE TEATRO           \n");
         sb.append("========================================\n\n");
         
-        sb.append("Evento: ").append(ingresso.getSessao().getNome()).append("\n");
-        sb.append("Horário: ").append(ingresso.getSessao().getHorario()).append("\n");
-        sb.append("Área: ").append(ingresso.getArea().getNome()).append("\n");
-        sb.append("Poltrona: ").append(ingresso.getPoltrona().getNumero()).append("\n");
+        sb.append("Evento: ").append(ingresso.getEventoNome()).append("\n");
+        sb.append("Horário: ").append(ingresso.getHorario()).append("\n");
+        sb.append("Área: ").append(ingresso.getAreaNome()).append("\n");
+        sb.append("Poltrona: ").append(ingresso.getNumeroPoltrona()).append("\n");
         sb.append("Valor: R$ ").append(String.format("%.2f", ingresso.getValor())).append("\n");
         sb.append("Código: ").append(ingresso.getCodigo()).append("\n");
         

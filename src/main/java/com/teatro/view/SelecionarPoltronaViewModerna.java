@@ -33,6 +33,7 @@ public class SelecionarPoltronaViewModerna {
     private Sessao sessao;
     private Area area;
     private List<Poltrona> poltronasSelecionadas;
+    private List<Integer> poltronasDisponiveis;
     
     // Componentes da interface que precisam ser acessados em múltiplos métodos
     private Label qtdValor;
@@ -61,6 +62,29 @@ public class SelecionarPoltronaViewModerna {
         this.sessao = sessao;
         this.area = area;
         this.poltronasSelecionadas = new ArrayList<>();
+        this.poltronasDisponiveis = new ArrayList<>();
+        
+        try {
+            // Busca as poltronas disponíveis para a área na sessão
+            this.poltronasDisponiveis = teatro.getPoltronasDisponiveis(sessao, area);
+            if (this.poltronasDisponiveis.isEmpty()) {
+                Alert alert = new Alert(Alert.AlertType.WARNING);
+                alert.setTitle("Atenção");
+                alert.setHeaderText("Área lotada");
+                alert.setContentText("Esta área não possui mais poltronas disponíveis.");
+                alert.showAndWait();
+                new CompraIngressoViewModerna(teatro, usuario, stage, sessao).show();
+                return;
+            }
+        } catch (Exception e) {
+            Alert alert = new Alert(Alert.AlertType.ERROR);
+            alert.setTitle("Erro");
+            alert.setHeaderText("Erro ao buscar poltronas disponíveis");
+            alert.setContentText("Ocorreu um erro ao buscar as poltronas disponíveis. Por favor, tente novamente.");
+            alert.showAndWait();
+            new CompraIngressoViewModerna(teatro, usuario, stage, sessao).show();
+            return;
+        }
     }
 
     public void show() {
@@ -200,12 +224,7 @@ public class SelecionarPoltronaViewModerna {
                 poltrona.setFont(Font.font("System", FontWeight.BOLD, 14));
 
                 // Verifica se a poltrona está ocupada
-                boolean ocupada = false;
-                if (area != null) {
-                    // O estado das poltronas está em area.getPoltronasDisponiveisList()
-                    List<Integer> disponiveis = area.getPoltronasDisponiveisList();
-                    ocupada = !disponiveis.contains(numero);
-                }
+                boolean ocupada = !poltronasDisponiveis.contains(numero);
 
                 if (ocupada) {
                     poltrona.setStyle("-fx-background-color: " + POLTRONA_OCUPADA + "; -fx-text-fill: white; -fx-background-radius: 5;");
@@ -214,16 +233,41 @@ public class SelecionarPoltronaViewModerna {
                     poltrona.setStyle("-fx-background-color: " + POLTRONA_DISPONIVEL + "; -fx-text-fill: white; -fx-background-radius: 5;");
                     // Adiciona evento de clique
                     poltrona.setOnAction(e -> {
-                        if (poltrona.getStyle().contains(POLTRONA_DISPONIVEL)) {
-                            // Seleciona a poltrona
-                            poltrona.setStyle("-fx-background-color: " + POLTRONA_SELECIONADA + "; -fx-text-fill: white; -fx-background-radius: 5;");
-                            poltronasSelecionadas.add(new Poltrona(numero, area));
-                        } else {
-                            // Desseleciona a poltrona
-                            poltrona.setStyle("-fx-background-color: " + POLTRONA_DISPONIVEL + "; -fx-text-fill: white; -fx-background-radius: 5;");
-                            poltronasSelecionadas.removeIf(p -> p.getNumero() == numero);
+                        try {
+                            // Verifica se a poltrona ainda está disponível
+                            if (!teatro.verificarPoltronaDisponivel(sessao, area, numero)) {
+                                Alert alert = new Alert(Alert.AlertType.WARNING);
+                                alert.setTitle("Atenção");
+                                alert.setHeaderText("Poltrona ocupada");
+                                alert.setContentText("Esta poltrona acabou de ser ocupada. Por favor, selecione outra.");
+                                alert.showAndWait();
+                                
+                                // Atualiza o estado da poltrona
+                                poltrona.setStyle("-fx-background-color: " + POLTRONA_OCUPADA + "; -fx-text-fill: white; -fx-background-radius: 5;");
+                                poltrona.setDisable(true);
+                                poltronasDisponiveis.remove(Integer.valueOf(numero));
+                                poltronasSelecionadas.removeIf(p -> p.getNumero() == numero);
+                                atualizarResumo();
+                                return;
+                            }
+                            
+                            if (poltrona.getStyle().contains(POLTRONA_DISPONIVEL)) {
+                                // Seleciona a poltrona
+                                poltrona.setStyle("-fx-background-color: " + POLTRONA_SELECIONADA + "; -fx-text-fill: white; -fx-background-radius: 5;");
+                                poltronasSelecionadas.add(new Poltrona(numero, area));
+                            } else {
+                                // Desseleciona a poltrona
+                                poltrona.setStyle("-fx-background-color: " + POLTRONA_DISPONIVEL + "; -fx-text-fill: white; -fx-background-radius: 5;");
+                                poltronasSelecionadas.removeIf(p -> p.getNumero() == numero);
+                            }
+                            atualizarResumo();
+                        } catch (Exception ex) {
+                            Alert alert = new Alert(Alert.AlertType.ERROR);
+                            alert.setTitle("Erro");
+                            alert.setHeaderText("Erro ao selecionar poltrona");
+                            alert.setContentText("Ocorreu um erro ao verificar a disponibilidade da poltrona. Por favor, tente novamente.");
+                            alert.showAndWait();
                         }
-                        atualizarResumo();
                     });
                 }
                 poltronasGrid.add(poltrona, j, i);
@@ -286,57 +330,81 @@ public class SelecionarPoltronaViewModerna {
         this.confirmarButton.setDisable(true);
         
         this.confirmarButton.setOnAction(e -> {
-            // Cria os ingressos
-            List<IngressoModerno> ingressos = new ArrayList<>();
-            boolean todosSalvos = true;
-            
-            for (Poltrona poltrona : poltronasSelecionadas) {
-                // Cria o ingresso moderno
-                IngressoModerno ingresso = new IngressoModerno(sessao, area, poltrona, usuario);
-                ingresso.setCodigo(gerarCodigoIngresso());
-                
-                // Busca o evento da sessão
-                Evento evento = teatro.getEventos().stream()
-                    .filter(evt -> evt.getSessoes().contains(sessao))
-                    .findFirst()
-                    .orElse(null);
-                
-                if (evento == null) {
-                    todosSalvos = false;
-                    Alert alert = new Alert(Alert.AlertType.ERROR);
-                    alert.setTitle("Erro");
-                    alert.setHeaderText("Erro ao comprar ingresso");
-                    alert.setContentText("Não foi possível encontrar o evento da sessão. Tente novamente.");
-                    alert.showAndWait();
-                    break;
+            try {
+                // Verifica se todas as poltronas selecionadas ainda estão disponíveis
+                for (Poltrona poltrona : new ArrayList<>(poltronasSelecionadas)) {
+                    if (!teatro.verificarPoltronaDisponivel(sessao, area, poltrona.getNumero())) {
+                        Alert alert = new Alert(Alert.AlertType.WARNING);
+                        alert.setTitle("Atenção");
+                        alert.setHeaderText("Poltrona ocupada");
+                        alert.setContentText("A poltrona " + poltrona.getNumero() + " acabou de ser ocupada. Por favor, selecione outra.");
+                        alert.showAndWait();
+                        
+                        // Remove a poltrona da seleção
+                        poltronasSelecionadas.remove(poltrona);
+                        atualizarResumo();
+                        return;
+                    }
                 }
                 
-                // Tenta salvar o ingresso no banco de dados
-                Optional<IngressoModerno> ingressoSalvo = teatro.comprarIngresso(usuario.getCpf(), evento, sessao, area, poltrona.getNumero());
-                if (ingressoSalvo.isPresent()) {
-                    // Adiciona o ingresso ao usuário
-                    ingressos.add(ingressoSalvo.get());
-                } else {
-                    todosSalvos = false;
+                // Cria os ingressos
+                List<IngressoModerno> ingressos = new ArrayList<>();
+                boolean todosSalvos = true;
+                
+                for (Poltrona poltrona : poltronasSelecionadas) {
+                    try {
+                        // Cria o ingresso moderno
+                        IngressoModerno ingresso = new IngressoModerno(sessao, area, poltrona, usuario);
+                        ingresso.setCodigo(gerarCodigoIngresso());
+                        
+                        // Busca o evento da sessão
+                        Evento evento = teatro.getEventos().stream()
+                            .filter(evt -> evt.getSessoes().contains(sessao))
+                            .findFirst()
+                            .orElse(null);
+                        
+                        if (evento == null) {
+                            throw new Exception("Não foi possível encontrar o evento da sessão");
+                        }
+                        
+                        // Tenta salvar o ingresso no banco de dados
+                        Optional<IngressoModerno> ingressoSalvo = teatro.comprarIngresso(usuario.getCpf(), evento, sessao, area, poltrona.getNumero());
+                        if (ingressoSalvo.isPresent()) {
+                            // Adiciona o ingresso à lista
+                            ingressos.add(ingressoSalvo.get());
+                            // Remove a poltrona da lista de disponíveis
+                            poltronasDisponiveis.remove(Integer.valueOf(poltrona.getNumero()));
+                        } else {
+                            throw new Exception("Não foi possível comprar o ingresso para a poltrona " + poltrona.getNumero());
+                        }
+                    } catch (Exception ex) {
+                        todosSalvos = false;
+                        Alert alert = new Alert(Alert.AlertType.ERROR);
+                        alert.setTitle("Erro");
+                        alert.setHeaderText("Erro ao comprar ingresso");
+                        alert.setContentText(ex.getMessage() + ". Tente novamente.");
+                        alert.showAndWait();
+                        break;
+                    }
+                }
+                
+                if (todosSalvos && !ingressos.isEmpty()) {
+                    // Adiciona os ingressos ao usuário
+                    usuario.adicionarIngressos(ingressos);
+                    
+                    // Mostra a tela de impressão
+                    new ImpressaoIngressoViewModerna(teatro, usuario, stage, ingressos).show();
+                } else if (ingressos.isEmpty()) {
                     Alert alert = new Alert(Alert.AlertType.ERROR);
                     alert.setTitle("Erro");
-                    alert.setHeaderText("Erro ao comprar ingresso");
-                    alert.setContentText("Não foi possível comprar o ingresso para a poltrona " + poltrona.getNumero() + ". Tente novamente.");
+                    alert.setHeaderText("Nenhum ingresso foi comprado");
+                    alert.setContentText("Ocorreu um erro ao processar sua compra. Por favor, tente novamente.");
                     alert.showAndWait();
-                    break;
                 }
-            }
-            
-            if (todosSalvos && !ingressos.isEmpty()) {
-                // Adiciona os ingressos ao usuário
-                usuario.adicionarIngressos(ingressos);
-                
-                // Mostra a tela de impressão
-                new ImpressaoIngressoViewModerna(teatro, usuario, stage, ingressos).show();
-            } else if (ingressos.isEmpty()) {
+            } catch (Exception ex) {
                 Alert alert = new Alert(Alert.AlertType.ERROR);
                 alert.setTitle("Erro");
-                alert.setHeaderText("Nenhum ingresso foi comprado");
+                alert.setHeaderText("Erro ao processar compra");
                 alert.setContentText("Ocorreu um erro ao processar sua compra. Por favor, tente novamente.");
                 alert.showAndWait();
             }

@@ -24,6 +24,7 @@ public class CompraIngressoViewModerna {
     private Stage stage;
     private Sessao sessao;
     private Area areaSelecionada;
+    private List<Area> areasDisponiveis;
     
     private static final double WINDOW_WIDTH = 1024;
     private static final double WINDOW_HEIGHT = 768;
@@ -41,6 +42,28 @@ public class CompraIngressoViewModerna {
         this.usuario = usuario;
         this.stage = stage;
         this.sessao = sessao;
+        this.areasDisponiveis = new ArrayList<>();
+        try {
+            // Busca as áreas disponíveis para a sessão
+            this.areasDisponiveis = teatro.getAreasDisponiveis(sessao);
+            if (this.areasDisponiveis.isEmpty()) {
+                Alert alert = new Alert(Alert.AlertType.WARNING);
+                alert.setTitle("Atenção");
+                alert.setHeaderText("Nenhuma área disponível");
+                alert.setContentText("Não há áreas disponíveis para esta sessão.");
+                alert.showAndWait();
+                new SessoesViewModerna(teatro, usuario, stage).show();
+                return;
+            }
+        } catch (Exception e) {
+            Alert alert = new Alert(Alert.AlertType.ERROR);
+            alert.setTitle("Erro");
+            alert.setHeaderText("Erro ao buscar áreas disponíveis");
+            alert.setContentText("Ocorreu um erro ao buscar as áreas disponíveis. Por favor, tente novamente.");
+            alert.showAndWait();
+            new SessoesViewModerna(teatro, usuario, stage).show();
+            return;
+        }
     }
 
     public void show() {
@@ -147,7 +170,7 @@ public class CompraIngressoViewModerna {
         Label horarioLabel = new Label("Horário:");
         horarioLabel.setFont(Font.font("System", FontWeight.BOLD, 14));
         
-        Label horarioValor = new Label(sessao.getHorario());
+        Label horarioValor = new Label(sessao.getTipoSessao().getDescricao());
         horarioValor.setFont(Font.font("System", 14));
         
         sessaoInfo.getChildren().addAll(horarioLabel, horarioValor);
@@ -164,25 +187,7 @@ public class CompraIngressoViewModerna {
         Label areaLabel = new Label("Selecione a área do teatro:");
         areaLabel.setFont(Font.font("System", FontWeight.BOLD, 16));
         
-        ComboBox<Area> areaComboBox = new ComboBox<>();
-        areaComboBox.setPromptText("Selecione uma área");
-        areaComboBox.setStyle("""
-            -fx-pref-width: 300;
-            -fx-background-color: white;
-            -fx-border-color: #e0e0e0;
-            -fx-border-radius: 4;
-            """);
-        
-        // Cria uma lista ordenada das áreas
-        List<Area> areasOrdenadas = new ArrayList<>(sessao.getAreas());
-        Collections.sort(areasOrdenadas);
-        areaComboBox.getItems().addAll(areasOrdenadas);
-        
-        areaComboBox.setOnAction(e -> {
-            areaSelecionada = areaComboBox.getValue();
-        });
-        
-        // Informações sobre a área selecionada
+        // Container para informações da área
         VBox areaInfoBox = new VBox(10);
         areaInfoBox.setVisible(false);
         
@@ -200,13 +205,62 @@ public class CompraIngressoViewModerna {
         
         areaInfoBox.getChildren().addAll(precoLabel, precoValor, disponibilidadeLabel, disponibilidadeValor);
         
-        // Atualiza as informações quando uma área é selecionada
+        ComboBox<Area> areaComboBox = new ComboBox<>();
+        areaComboBox.setPromptText("Selecione uma área");
+        areaComboBox.setStyle("""
+            -fx-pref-width: 300;
+            -fx-background-color: white;
+            -fx-border-color: #e0e0e0;
+            -fx-border-radius: 4;
+            """);
+        
+        // Cria uma lista ordenada das áreas
+        List<Area> areasOrdenadas = new ArrayList<>(areasDisponiveis);
+        Collections.sort(areasOrdenadas);
+        areaComboBox.getItems().addAll(areasOrdenadas);
+        
         areaComboBox.setOnAction(e -> {
             areaSelecionada = areaComboBox.getValue();
             if (areaSelecionada != null) {
-                precoValor.setText(String.format("R$ %.2f", areaSelecionada.getPreco()));
-                disponibilidadeValor.setText(areaSelecionada.getPoltronasDisponiveis() + " de " + areaSelecionada.getCapacidadeTotal());
-                areaInfoBox.setVisible(true);
+                try {
+                    // Atualiza as informações da área
+                    Area areaAtualizada = teatro.getAreaAtualizada(areaSelecionada.getId());
+                    if (areaAtualizada != null) {
+                        precoValor.setText(String.format("R$ %.2f", areaAtualizada.getPreco()));
+                        disponibilidadeValor.setText(areaAtualizada.getPoltronasDisponiveis() + " de " + areaAtualizada.getCapacidadeTotal());
+                        areaInfoBox.setVisible(true);
+                        
+                        // Verifica se ainda há poltronas disponíveis
+                        if (areaAtualizada.getPoltronasDisponiveis() == 0) {
+                            Alert alert = new Alert(Alert.AlertType.WARNING);
+                            alert.setTitle("Atenção");
+                            alert.setHeaderText("Área lotada");
+                            alert.setContentText("Esta área não possui mais poltronas disponíveis. Por favor, selecione outra área.");
+                            alert.showAndWait();
+                            areaComboBox.setValue(null);
+                            areaSelecionada = null;
+                            areaInfoBox.setVisible(false);
+                        }
+                    } else {
+                        Alert alert = new Alert(Alert.AlertType.ERROR);
+                        alert.setTitle("Erro");
+                        alert.setHeaderText("Erro ao atualizar informações da área");
+                        alert.setContentText("Não foi possível atualizar as informações da área. Por favor, tente novamente.");
+                        alert.showAndWait();
+                        areaComboBox.setValue(null);
+                        areaSelecionada = null;
+                        areaInfoBox.setVisible(false);
+                    }
+                } catch (Exception ex) {
+                    Alert alert = new Alert(Alert.AlertType.ERROR);
+                    alert.setTitle("Erro");
+                    alert.setHeaderText("Erro ao atualizar informações da área");
+                    alert.setContentText("Ocorreu um erro ao atualizar as informações da área. Por favor, tente novamente.");
+                    alert.showAndWait();
+                    areaComboBox.setValue(null);
+                    areaSelecionada = null;
+                    areaInfoBox.setVisible(false);
+                }
             } else {
                 areaInfoBox.setVisible(false);
             }

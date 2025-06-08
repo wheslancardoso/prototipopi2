@@ -1,84 +1,110 @@
 package com.teatro.controller;
 
-import com.teatro.dao.HorarioDisponivelDAO;
-import com.teatro.model.Area;
-import com.teatro.model.HorarioDisponivel;
+import com.teatro.dao.SessaoDAO;
 import com.teatro.model.Sessao;
+import com.teatro.model.TipoSessao;
+import com.teatro.util.TeatroLogger;
+import com.teatro.exception.TeatroException;
+import com.teatro.exception.SessaoNaoEncontradaException;
+import com.teatro.database.DatabaseConnection;
+import java.sql.SQLException;
 
-import java.time.LocalDate;
-import java.time.LocalTime;
-import java.util.ArrayList;
+import java.sql.Date;
 import java.util.List;
+import java.util.Optional;
 
 public class SessaoController {
-    
-    private HorarioDisponivelDAO horarioDisponivelDAO;
-    
-    public SessaoController() {
-        this.horarioDisponivelDAO = new HorarioDisponivelDAO();
+    private final SessaoDAO sessaoDAO;
+    private final TeatroLogger logger;
+
+    public SessaoController() throws SQLException {
+        this.sessaoDAO = new SessaoDAO(DatabaseConnection.getInstance().getConnection());
+        this.logger = TeatroLogger.getInstance();
     }
-    
-    public boolean verificarDisponibilidade(Sessao sessao, Area area, int numeroPoltrona) {
-        return !area.ocuparPoltrona(numeroPoltrona);
-    }
-    
-    public double calcularValorTotal(Area area, int quantidadePoltronas) {
-        return area.getPreco() * quantidadePoltronas;
-    }
-    
-    public void atualizarFaturamento(Sessao sessao) {
-        sessao.atualizarFaturamento();
-    }
-    
-    /**
-     * Busca todos os horários disponíveis para um determinado tipo de sessão
-     * 
-     * @param tipoSessao Tipo de sessão (Manhã, Tarde, Noite)
-     * @return Lista de horários disponíveis
-     */
-    public List<HorarioDisponivel> buscarHorariosPorTipoSessao(String tipoSessao) {
-        return horarioDisponivelDAO.buscarPorTipoSessao(tipoSessao);
-    }
-    
-    /**
-     * Filtra os horários disponíveis de acordo com a data selecionada
-     * Se a data for a atual, remove os horários que já passaram
-     * 
-     * @param horarios Lista de horários disponíveis
-     * @param dataSelecionada Data selecionada
-     * @return Lista de horários filtrados
-     */
-    public List<HorarioDisponivel> filtrarHorariosDisponiveis(List<HorarioDisponivel> horarios, LocalDate dataSelecionada) {
-        if (horarios == null || horarios.isEmpty()) {
-            return new ArrayList<>();
+
+    public boolean criarSessao(String eventoNome, TipoSessao tipoSessao, Date dataSessao) {
+        try {
+            Sessao sessao = new Sessao(eventoNome, tipoSessao, new java.sql.Timestamp(dataSessao.getTime()));
+            sessaoDAO.salvar(sessao);
+            return true;
+        } catch (TeatroException e) {
+            logger.error("Erro ao criar sessão: " + e.getMessage());
+            throw e;
+        } catch (Exception e) {
+            logger.error("Erro inesperado ao criar sessão: " + e.getMessage());
+            throw new TeatroException("Erro ao criar sessão", e);
         }
-        
-        LocalDate dataAtual = LocalDate.now();
-        LocalTime horaAtual = LocalTime.now();
-        
-        // Cria uma nova lista para não modificar a original
-        List<HorarioDisponivel> horariosFiltrados = new ArrayList<>(horarios);
-        
-        // Se a data selecionada for a atual, filtra os horários que já passaram
-        if (dataSelecionada.isEqual(dataAtual)) {
-            horariosFiltrados.removeIf(horario -> !horario.isDisponivel(horaAtual, true));
-        }
-        
-        return horariosFiltrados;
     }
-    
-    /**
-     * Verifica se um horário específico está disponível para a data selecionada
-     * 
-     * @param horario Horário a ser verificado
-     * @param dataSelecionada Data selecionada
-     * @return true se o horário estiver disponível, false caso contrário
-     */
-    public boolean isHorarioDisponivel(HorarioDisponivel horario, LocalDate dataSelecionada) {
-        LocalDate dataAtual = LocalDate.now();
-        LocalTime horaAtual = LocalTime.now();
-        
-        boolean isDataAtual = dataSelecionada.equals(dataAtual);
-        return horario.isDisponivel(horaAtual, isDataAtual);
+
+    public Optional<Sessao> buscarSessao(Long id) {
+        try {
+            return sessaoDAO.buscarPorId(id);
+        } catch (TeatroException e) {
+            logger.error("Erro ao buscar sessão: " + e.getMessage());
+            throw e;
+        } catch (Exception e) {
+            logger.error("Erro inesperado ao buscar sessão: " + e.getMessage());
+            throw new TeatroException("Erro ao buscar sessão", e);
+        }
+    }
+
+    public List<Sessao> listarSessoes() {
+        try {
+            return sessaoDAO.listarTodos();
+        } catch (TeatroException e) {
+            logger.error("Erro ao listar sessões: " + e.getMessage());
+            throw e;
+        } catch (Exception e) {
+            logger.error("Erro inesperado ao listar sessões: " + e.getMessage());
+            throw new TeatroException("Erro ao listar sessões", e);
+        }
+    }
+
+    public List<Sessao> buscarSessoesPorEvento(String eventoNome) {
+        try {
+            return sessaoDAO.buscarPorEvento(eventoNome);
+        } catch (TeatroException e) {
+            logger.error("Erro ao buscar sessões por evento: " + e.getMessage());
+            throw e;
+        } catch (Exception e) {
+            logger.error("Erro inesperado ao buscar sessões por evento: " + e.getMessage());
+            throw new TeatroException("Erro ao buscar sessões por evento", e);
+        }
+    }
+
+    public void atualizarSessao(Sessao sessao) {
+        try {
+            sessaoDAO.atualizar(sessao);
+        } catch (TeatroException e) {
+            logger.error("Erro ao atualizar sessão: " + e.getMessage());
+            throw e;
+        } catch (Exception e) {
+            logger.error("Erro inesperado ao atualizar sessão: " + e.getMessage());
+            throw new TeatroException("Erro ao atualizar sessão", e);
+        }
+    }
+
+    public void removerSessao(Long id) {
+        try {
+            sessaoDAO.remover(id);
+        } catch (TeatroException e) {
+            logger.error("Erro ao remover sessão: " + e.getMessage());
+            throw e;
+        } catch (Exception e) {
+            logger.error("Erro inesperado ao remover sessão: " + e.getMessage());
+            throw new TeatroException("Erro ao remover sessão", e);
+        }
+    }
+
+    public boolean existeSessao(Long id) {
+        try {
+            return sessaoDAO.existe(id);
+        } catch (TeatroException e) {
+            logger.error("Erro ao verificar existência da sessão: " + e.getMessage());
+            throw e;
+        } catch (Exception e) {
+            logger.error("Erro inesperado ao verificar existência da sessão: " + e.getMessage());
+            throw new TeatroException("Erro ao verificar existência da sessão", e);
+        }
     }
 }

@@ -16,6 +16,8 @@ public class Ingresso {
     private String horario;
     private String areaNome;
     private String codigo;
+    private TipoSessao tipoSessao;
+    private Timestamp dataSessao;
 
     public Ingresso() {
     }
@@ -114,6 +116,22 @@ public class Ingresso {
 
     public void setCodigo(String codigo) {
         this.codigo = codigo;
+    }
+
+    public TipoSessao getTipoSessao() {
+        return tipoSessao;
+    }
+
+    public void setTipoSessao(TipoSessao tipoSessao) {
+        this.tipoSessao = tipoSessao;
+    }
+
+    public Timestamp getDataSessao() {
+        return dataSessao;
+    }
+
+    public void setDataSessao(Timestamp dataSessao) {
+        this.dataSessao = dataSessao;
     }
 
     @Override

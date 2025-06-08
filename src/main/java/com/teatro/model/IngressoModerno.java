@@ -1,6 +1,7 @@
 package com.teatro.model;
 
 import java.sql.Timestamp;
+import java.util.UUID;
 
 /**
  * Versão modernizada da classe Ingresso que mantém referências diretas aos objetos
@@ -8,24 +9,54 @@ import java.sql.Timestamp;
  */
 public class IngressoModerno {
     private Long id;
-    private Usuario usuario;
-    private Sessao sessao;
-    private Area area;
-    private Poltrona poltrona;
+    private String eventoNome;
+    private String horario;
+    private Timestamp dataSessao;
+    private String areaNome;
+    private int numeroPoltrona;
     private double valor;
     private Timestamp dataCompra;
     private String codigo;
 
-    public IngressoModerno() {
+    public IngressoModerno(Long id, String eventoNome, String horario, Timestamp dataSessao, 
+                          String areaNome, int numeroPoltrona, double valor, 
+                          Timestamp dataCompra, String codigo) {
+        this.id = id;
+        this.eventoNome = eventoNome;
+        this.horario = horario;
+        this.dataSessao = dataSessao;
+        this.areaNome = areaNome;
+        this.numeroPoltrona = numeroPoltrona;
+        this.valor = valor;
+        this.dataCompra = dataCompra;
+        this.codigo = codigo;
     }
 
     public IngressoModerno(Sessao sessao, Area area, Poltrona poltrona, Usuario usuario) {
-        this.sessao = sessao;
-        this.area = area;
-        this.poltrona = poltrona;
-        this.usuario = usuario;
+        this.eventoNome = sessao.getNome();
+        this.horario = sessao.getHorario();
+        this.dataSessao = sessao.getData();
+        this.areaNome = area.getNome();
+        this.numeroPoltrona = poltrona.getNumero();
         this.valor = area.getPreco();
         this.dataCompra = new Timestamp(System.currentTimeMillis());
+        this.codigo = gerarCodigoIngresso();
+    }
+
+    public IngressoModerno(Ingresso ingresso, Evento evento, Sessao sessao, Area area) {
+        this.id = ingresso.getId();
+        this.eventoNome = evento.getNome();
+        this.horario = sessao.getTipoSessao().getDescricao();
+        this.dataSessao = sessao.getData();
+        this.areaNome = area.getNome();
+        this.numeroPoltrona = ingresso.getNumeroPoltrona();
+        this.valor = area.getPreco();
+        this.dataCompra = ingresso.getDataCompra();
+        this.codigo = ingresso.getCodigo();
+    }
+
+    private String gerarCodigoIngresso() {
+        return UUID.randomUUID().toString().substring(0, 8).toUpperCase();
     }
 
     public Long getId() {
@@ -36,36 +67,44 @@ public class IngressoModerno {
         this.id = id;
     }
 
-    public Usuario getUsuario() {
-        return usuario;
+    public String getEventoNome() {
+        return eventoNome;
     }
 
-    public void setUsuario(Usuario usuario) {
-        this.usuario = usuario;
+    public void setEventoNome(String eventoNome) {
+        this.eventoNome = eventoNome;
     }
 
-    public Sessao getSessao() {
-        return sessao;
+    public String getHorario() {
+        return horario;
     }
 
-    public void setSessao(Sessao sessao) {
-        this.sessao = sessao;
+    public void setHorario(String horario) {
+        this.horario = horario;
     }
 
-    public Area getArea() {
-        return area;
+    public Timestamp getDataSessao() {
+        return dataSessao;
     }
 
-    public void setArea(Area area) {
-        this.area = area;
+    public void setDataSessao(Timestamp dataSessao) {
+        this.dataSessao = dataSessao;
     }
 
-    public Poltrona getPoltrona() {
-        return poltrona;
+    public String getAreaNome() {
+        return areaNome;
     }
 
-    public void setPoltrona(Poltrona poltrona) {
-        this.poltrona = poltrona;
+    public void setAreaNome(String areaNome) {
+        this.areaNome = areaNome;
+    }
+
+    public int getNumeroPoltrona() {
+        return numeroPoltrona;
+    }
+
+    public void setNumeroPoltrona(int numeroPoltrona) {
+        this.numeroPoltrona = numeroPoltrona;
     }
 
     public double getValor() {
@@ -83,11 +122,11 @@ public class IngressoModerno {
     public void setDataCompra(Timestamp dataCompra) {
         this.dataCompra = dataCompra;
     }
-    
+
     public String getCodigo() {
         return codigo;
     }
-    
+
     public void setCodigo(String codigo) {
         this.codigo = codigo;
     }
@@ -97,15 +136,13 @@ public class IngressoModerno {
      */
     public Ingresso toIngresso() {
         Ingresso ingresso = new Ingresso();
-        ingresso.setUsuarioId(usuario.getId());
-        ingresso.setSessaoId(sessao.getId());
-        ingresso.setAreaId(area.getId());
-        ingresso.setNumeroPoltrona(poltrona.getNumero());
+        ingresso.setEventoNome(eventoNome);
+        ingresso.setHorario(horario);
+        ingresso.setDataSessao(dataSessao);
+        ingresso.setAreaNome(areaNome);
+        ingresso.setNumeroPoltrona(numeroPoltrona);
         ingresso.setValor(valor);
         ingresso.setDataCompra(dataCompra);
-        ingresso.setEventoNome(sessao.getNome());
-        ingresso.setHorario(sessao.getHorario());
-        ingresso.setAreaNome(area.getNome());
         ingresso.setCodigo(codigo);
         return ingresso;
     }

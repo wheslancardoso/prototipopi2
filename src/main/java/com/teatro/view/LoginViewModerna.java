@@ -171,7 +171,7 @@ public class LoginViewModerna {
             
             // Inicializa o teatro se necessário
             if (teatro == null) {
-                teatro = new Teatro();
+                teatro = Teatro.getInstance();
             }
             
             // Tenta autenticar o usuário

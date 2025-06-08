@@ -1,332 +1,317 @@
 package com.teatro.model;
 
-import com.teatro.dao.UsuarioDAO;
-import com.teatro.dao.IngressoDAO;
-import com.teatro.dao.AreaDAO;
-import java.util.*;
+import com.teatro.service.IngressoService;
+import com.teatro.service.UsuarioService;
+import com.teatro.util.TeatroLogger;
+import com.teatro.util.Validator;
+import com.teatro.exception.TeatroException;
+import com.teatro.exception.UsuarioNaoEncontradoException;
+import com.teatro.exception.SessaoNaoEncontradaException;
+import com.teatro.exception.PoltronaOcupadaException;
+import java.util.List;
+import java.util.ArrayList;
+import java.util.Optional;
 
+/**
+ * Classe principal do sistema, implementando o padrão Façade.
+ */
 public class Teatro {
-    private UsuarioDAO usuarioDAO;
-    private IngressoDAO ingressoDAO;
+    private static Teatro instance;
+    private final TeatroLogger logger = TeatroLogger.getInstance();
+    private final UsuarioService usuarioService;
+    private final IngressoService ingressoService;
+    private List<Area> areas;
     private List<Evento> eventos;
-    private Map<String, Area> areas;
-
-    public Teatro() {
-        this.usuarioDAO = new UsuarioDAO();
-        this.ingressoDAO = new IngressoDAO();
+    
+    private Teatro() {
+        this.usuarioService = UsuarioService.getInstance();
+        this.ingressoService = IngressoService.getInstance();
+        this.areas = new ArrayList<>();
         this.eventos = new ArrayList<>();
-        this.areas = new HashMap<>();
-        
         inicializarAreas();
-        inicializarEventos();
     }
-
-    private void inicializarAreas() {
-        AreaDAO areaDAO = new AreaDAO();
-        List<Area> listaAreas = areaDAO.listarTodas();
-        areas.clear();
-        for (Area area : listaAreas) {
-            System.out.println("[DEBUG] Area carregada: id=" + area.getId() + ", nome=" + area.getNome());
-            areas.put(area.getNome(), area);
+    
+    public static synchronized Teatro getInstance() {
+        if (instance == null) {
+            instance = new Teatro();
+        }
+        return instance;
+    }
+    
+    public UsuarioService getUsuarioService() {
+        return usuarioService;
+    }
+    
+    public IngressoService getIngressoService() {
+        return ingressoService;
+    }
+    
+    public List<Ingresso> buscarIngressosPorCpf(String cpf) {
+        try {
+            Validator.validarCpf(cpf);
+            Optional<Usuario> usuario = usuarioService.buscarPorCpf(cpf);
+            if (usuario.isPresent()) {
+                return ingressoService.buscarIngressosPorUsuario(usuario.get().getId());
+            }
+            return new ArrayList<>();
+        } catch (TeatroException e) {
+            logger.error("Erro ao buscar ingressos por CPF: " + e.getMessage());
+            throw e;
+        } catch (Exception e) {
+            logger.error("Erro inesperado ao buscar ingressos por CPF: " + e.getMessage());
+            throw new TeatroException("Erro ao buscar ingressos por CPF", e);
+        }
+    }
+    
+    public List<Ingresso> buscarIngressosPorUsuario(Long usuarioId) {
+        try {
+            Validator.validarNaoNulo(usuarioId, "ID do Usuário");
+            return ingressoService.buscarIngressosPorUsuario(usuarioId);
+        } catch (TeatroException e) {
+            logger.error("Erro ao buscar ingressos do usuário: " + e.getMessage());
+            throw e;
+        } catch (Exception e) {
+            logger.error("Erro inesperado ao buscar ingressos do usuário: " + e.getMessage());
+            throw new TeatroException("Erro ao buscar ingressos do usuário", e);
+        }
+    }
+    
+    public List<Ingresso> buscarIngressosPorSessao(Long sessaoId) {
+        try {
+            Validator.validarNaoNulo(sessaoId, "ID da Sessão");
+            return ingressoService.buscarIngressosPorSessao(sessaoId);
+        } catch (TeatroException e) {
+            logger.error("Erro ao buscar ingressos da sessão: " + e.getMessage());
+            throw e;
+        } catch (Exception e) {
+            logger.error("Erro inesperado ao buscar ingressos da sessão: " + e.getMessage());
+            throw new TeatroException("Erro ao buscar ingressos da sessão", e);
+        }
+    }
+    
+    public void cancelarIngresso(Long ingressoId) {
+        try {
+            Validator.validarNaoNulo(ingressoId, "ID do Ingresso");
+            ingressoService.cancelarIngresso(ingressoId);
+        } catch (TeatroException e) {
+            logger.error("Erro ao cancelar ingresso: " + e.getMessage());
+            throw e;
+        } catch (Exception e) {
+            logger.error("Erro inesperado ao cancelar ingresso: " + e.getMessage());
+            throw new TeatroException("Erro ao cancelar ingresso", e);
         }
     }
 
-    private void inicializarEventos() {
-        String[] nomesEventos = {"Hamlet", "O Fantasma da Opera", "O Auto da Compadecida"};
-        String[] horariosSessoes = {"Manhã", "Tarde", "Noite"};
-        long sessaoId = 1; // Contador para IDs das sessões
+    private void inicializarAreas() {
+        // Plateia A: 25 poltronas, R$ 40,00
+        areas.add(new Area(1L, "Plateia A", 40.00, 25));
+        // Plateia B: 100 poltronas, R$ 60,00
+        areas.add(new Area(2L, "Plateia B", 60.00, 100));
+        // Camarotes (1 a 5): 10 poltronas cada, R$ 80,00
+        for (int i = 1; i <= 5; i++) {
+            areas.add(new Area((long)(i + 2), "Camarote " + i, 80.00, 10));
+        }
+        // Frisas (1 a 6): 5 poltronas cada, R$ 120,00
+        for (int i = 1; i <= 6; i++) {
+            areas.add(new Area((long)(i + 7), "Frisa " + i, 120.00, 5));
+        }
+        // Balcão Nobre: 50 poltronas, R$ 250,00
+        areas.add(new Area(14L, "Balcão Nobre", 250.00, 50));
+    }
 
-        for (String nomeEvento : nomesEventos) {
-            Evento evento = new Evento(nomeEvento);
-            
-            for (String horario : horariosSessoes) {
-                Sessao sessao = new Sessao(horario);
-                sessao.setNome(nomeEvento);
-                sessao.setId(sessaoId); // Define um ID único para cada sessão
-                System.out.println("[DEBUG] Criando sessão: id=" + sessaoId + ", evento=" + nomeEvento + ", horario=" + horario);
-                
-                // Adiciona todas as áreas à sessão
-                for (Area area : areas.values()) {
-                    Area areaClone = new Area(area.getId(), area.getNome(), area.getPreco(), area.getCapacidadeTotal(), sessaoId);
-                    System.out.println("[DEBUG]  - Associando área à sessão: areaId=" + area.getId() + ", nome=" + area.getNome());
-                    // Carrega as poltronas ocupadas do banco de dados usando o ID real da área
-                    List<Integer> poltronasOcupadas = ingressoDAO.buscarPoltronasOcupadas(sessaoId, area.getId());
-                    System.out.println("[DEBUG]    - Poltronas ocupadas retornadas: " + poltronasOcupadas);
-                    areaClone.carregarPoltronasOcupadas(poltronasOcupadas);
-                    sessao.addArea(areaClone);
-                }
-                evento.addSessao(sessao);
-                sessaoId++; // Incrementa o ID para a próxima sessão
-            }
-            eventos.add(evento);
+    public List<Area> getAreas() {
+        return areas;
+    }
+
+    public Optional<Usuario> autenticarUsuario(String cpf, String senha) {
+        try {
+            Validator.validarCpf(cpf);
+            Validator.validarStringNaoVazia(senha, "Senha");
+            return usuarioService.autenticar(cpf, senha);
+        } catch (TeatroException e) {
+            logger.error("Erro ao autenticar usuário: " + e.getMessage());
+            throw e;
+        } catch (Exception e) {
+            logger.error("Erro inesperado ao autenticar usuário: " + e.getMessage());
+            throw new TeatroException("Erro ao autenticar usuário", e);
         }
     }
 
     public boolean cadastrarUsuario(Usuario usuario) {
-        return usuarioDAO.cadastrar(usuario);
-    }
-
-    public Optional<Usuario> autenticarUsuario(String cpf, String senha) {
-        System.out.println("Tentando autenticar usuário com CPF: " + cpf);
-        Optional<Usuario> usuarioOpt = usuarioDAO.buscarPorCpf(cpf);
-        
-        if (usuarioOpt.isPresent()) {
-            Usuario usuario = usuarioOpt.get();
-            System.out.println("Senha fornecida: " + senha);
-            System.out.println("Senha armazenada: " + usuario.getSenha());
-            if (usuario.getSenha().equals(senha)) {
-                System.out.println("Autenticação bem-sucedida!");
-                return Optional.of(usuario);
-            } else {
-                System.out.println("Senha incorreta!");
-            }
-        } else {
-            System.out.println("Usuário não encontrado!");
+        try {
+            Validator.validarNaoNulo(usuario, "Usuário");
+            usuarioService.salvar(usuario);
+            return true;
+        } catch (TeatroException e) {
+            logger.error("Erro ao cadastrar usuário: " + e.getMessage());
+            throw e;
+        } catch (Exception e) {
+            logger.error("Erro inesperado ao cadastrar usuário: " + e.getMessage());
+            throw new TeatroException("Erro ao cadastrar usuário", e);
         }
-        return Optional.empty();
     }
 
     public List<Evento> getEventos() {
         return eventos;
     }
 
+    public List<Area> getAreasDisponiveis(Sessao sessao) {
+        try {
+            Validator.validarNaoNulo(sessao, "Sessão");
+            List<Area> areasDisponiveis = new ArrayList<>();
+            
+            for (Area area : areas) {
+                // Busca as poltronas ocupadas para esta área na sessão
+                List<Integer> poltronasOcupadas = ingressoService.getPoltronasOcupadas(sessao.getId(), area.getId());
+                
+                // Cria uma cópia da área com as poltronas ocupadas
+                Area areaAtualizada = new Area(area.getId(), area.getNome(), area.getPreco(), area.getCapacidadeTotal());
+                areaAtualizada.carregarPoltronasOcupadas(poltronasOcupadas);
+                
+                // Adiciona apenas se houver poltronas disponíveis
+                if (areaAtualizada.getPoltronasDisponiveis() > 0) {
+                    areasDisponiveis.add(areaAtualizada);
+                }
+            }
+            
+            return areasDisponiveis;
+        } catch (TeatroException e) {
+            logger.error("Erro ao buscar áreas disponíveis: " + e.getMessage());
+            throw e;
+        } catch (Exception e) {
+            logger.error("Erro inesperado ao buscar áreas disponíveis: " + e.getMessage());
+            throw new TeatroException("Erro ao buscar áreas disponíveis", e);
+        }
+    }
+    
+    public Area getAreaAtualizada(Long areaId) {
+        try {
+            Validator.validarNaoNulo(areaId, "ID da Área");
+            
+            // Busca a área original
+            Optional<Area> areaOriginal = areas.stream()
+                .filter(a -> a.getId().equals(areaId))
+                .findFirst();
+                
+            if (areaOriginal.isEmpty()) {
+                throw new TeatroException("Área não encontrada");
+            }
+            
+            // Busca as poltronas ocupadas para esta área
+            List<Integer> poltronasOcupadas = ingressoService.getPoltronasOcupadas(null, areaId);
+            
+            // Cria uma cópia da área com as poltronas ocupadas
+            Area areaAtualizada = new Area(
+                areaOriginal.get().getId(),
+                areaOriginal.get().getNome(),
+                areaOriginal.get().getPreco(),
+                areaOriginal.get().getCapacidadeTotal()
+            );
+            areaAtualizada.carregarPoltronasOcupadas(poltronasOcupadas);
+            
+            return areaAtualizada;
+        } catch (TeatroException e) {
+            logger.error("Erro ao buscar área atualizada: " + e.getMessage());
+            throw e;
+        } catch (Exception e) {
+            logger.error("Erro inesperado ao buscar área atualizada: " + e.getMessage());
+            throw new TeatroException("Erro ao buscar área atualizada", e);
+        }
+    }
+    
+    public List<Integer> getPoltronasDisponiveis(Sessao sessao, Area area) {
+        try {
+            Validator.validarNaoNulo(sessao, "Sessão");
+            Validator.validarNaoNulo(area, "Área");
+            
+            // Busca as poltronas ocupadas para esta área na sessão
+            List<Integer> poltronasOcupadas = ingressoService.getPoltronasOcupadas(sessao.getId(), area.getId());
+            
+            // Cria uma lista com todas as poltronas disponíveis
+            List<Integer> poltronasDisponiveis = new ArrayList<>();
+            for (int i = 1; i <= area.getCapacidadeTotal(); i++) {
+                if (!poltronasOcupadas.contains(i)) {
+                    poltronasDisponiveis.add(i);
+                }
+            }
+            
+            return poltronasDisponiveis;
+        } catch (TeatroException e) {
+            logger.error("Erro ao buscar poltronas disponíveis: " + e.getMessage());
+            throw e;
+        } catch (Exception e) {
+            logger.error("Erro inesperado ao buscar poltronas disponíveis: " + e.getMessage());
+            throw new TeatroException("Erro ao buscar poltronas disponíveis", e);
+        }
+    }
+    
+    public boolean verificarPoltronaDisponivel(Sessao sessao, Area area, int numeroPoltrona) {
+        try {
+            Validator.validarNaoNulo(sessao, "Sessão");
+            Validator.validarNaoNulo(area, "Área");
+            Validator.validarNumeroPositivo(numeroPoltrona, "Número da Poltrona");
+            
+            if (numeroPoltrona > area.getCapacidadeTotal()) {
+                throw new TeatroException("Número da poltrona inválido para esta área");
+            }
+            
+            // Verifica se a poltrona está ocupada
+            return !ingressoService.poltronaOcupada(sessao.getId(), area.getId(), numeroPoltrona);
+        } catch (TeatroException e) {
+            logger.error("Erro ao verificar disponibilidade da poltrona: " + e.getMessage());
+            throw e;
+        } catch (Exception e) {
+            logger.error("Erro inesperado ao verificar disponibilidade da poltrona: " + e.getMessage());
+            throw new TeatroException("Erro ao verificar disponibilidade da poltrona", e);
+        }
+    }
+
     public Optional<IngressoModerno> comprarIngresso(String cpf, Evento evento, Sessao sessao, Area area, int numeroPoltrona) {
-        // Validação inicial
-        if (cpf == null || evento == null || sessao == null || area == null || numeroPoltrona <= 0) {
-            System.err.println("Parâmetros inválidos na compra de ingresso");
-            return Optional.empty();
-        }
+        try {
+            Validator.validarCpf(cpf);
+            Validator.validarNaoNulo(evento, "Evento");
+            Validator.validarNaoNulo(sessao, "Sessão");
+            Validator.validarNaoNulo(area, "Área");
+            Validator.validarNumeroPositivo(numeroPoltrona, "Número da Poltrona");
 
-        // Verifica se a sessão pertence ao evento
-        if (!evento.getSessoes().contains(sessao)) {
-            System.err.println("Sessão não pertence ao evento especificado");
-            return Optional.empty();
-        }
-
-        // Verifica se a área pertence à sessão
-        if (!sessao.getAreas().stream().anyMatch(a -> a.getNome().equals(area.getNome()))) {
-            System.err.println("Área não pertence à sessão especificada");
-            return Optional.empty();
-        }
-
-        Optional<Usuario> usuario = usuarioDAO.buscarPorCpf(cpf);
-        if (usuario.isEmpty()) {
-            System.err.println("Usuário não encontrado: " + cpf);
-            return Optional.empty();
-        }
-
-        // Verifica se a poltrona está disponível
-        Optional<Area> areaEvento = sessao.getAreas().stream()
-                .filter(a -> a.getNome().equals(area.getNome()))
-                .findFirst();
-
-        if (areaEvento.isEmpty()) {
-            System.err.println("Área não encontrada na sessão: " + area.getNome());
-            return Optional.empty();
-        }
-
-        // Verifica se a poltrona está dentro do limite da área
-        if (numeroPoltrona > areaEvento.get().getCapacidadeTotal()) {
-            System.err.println("Número da poltrona inválido: " + numeroPoltrona);
-            return Optional.empty();
-        }
-
-        // Verifica se a poltrona já está ocupada
-        if (ingressoDAO.isPoltronaOcupada(sessao.getId(), area.getId(), numeroPoltrona)) {
-            System.err.println("Poltrona já ocupada: " + numeroPoltrona);
-            return Optional.empty();
-        }
-
-        if (areaEvento.get().ocuparPoltrona(numeroPoltrona)) {
-            // Cria o ingresso moderno
-            IngressoModerno ingresso = new IngressoModerno(sessao, area, new Poltrona(numeroPoltrona), usuario.get());
-            ingresso.setCodigo(gerarCodigoIngresso(cpf));
-            
-            // Converte para o formato antigo para salvar no banco
-            Ingresso ingressoAntigo = ingresso.toIngresso();
-            
-            if (ingressoDAO.salvar(ingressoAntigo)) {
-                if (ingressoDAO.atualizarStatusPoltrona(sessao.getId(), area.getId(), numeroPoltrona, true)) {
-                    return Optional.of(ingresso);
-                } else {
-                    // Se falhar ao atualizar o status, tenta reverter a ocupação
-                    areaEvento.get().ocuparPoltrona(numeroPoltrona);
-                    System.err.println("Falha ao atualizar status da poltrona");
-                }
+            Optional<Usuario> usuario = usuarioService.buscarPorCpf(cpf);
+            if (usuario.isEmpty()) {
+                throw new UsuarioNaoEncontradoException(cpf);
             }
-        }
 
-        return Optional.empty();
-    }
-
-    private String gerarCodigoIngresso(String cpf) {
-        // Gera um código único para o ingresso usando timestamp, CPF e número aleatório
-        return String.format("ING-%d-%s-%d", 
-            System.currentTimeMillis(),
-            cpf.substring(0, 3), // Primeiros 3 dígitos do CPF
-            (int)(Math.random() * 1000));
-    }
-
-    public List<IngressoModerno> buscarIngressosPorCpf(String cpf) {
-        Optional<Usuario> usuario = usuarioDAO.buscarPorCpf(cpf);
-        if (usuario.isEmpty()) {
-            return new ArrayList<>();
-        }
-        
-        List<Ingresso> ingressosAntigos = ingressoDAO.buscarPorUsuarioId(usuario.get().getId());
-        List<IngressoModerno> ingressosModernos = new ArrayList<>();
-        
-        for (Ingresso ingressoAntigo : ingressosAntigos) {
-            // Busca a sessão
-            Optional<Sessao> sessao = eventos.stream()
-                .flatMap(e -> e.getSessoes().stream())
-                .filter(s -> s.getId().equals(ingressoAntigo.getSessaoId()))
-                .findFirst();
-                
-            if (sessao.isPresent()) {
-                // Busca a área (comparando id como Long)
-                Optional<Area> area = sessao.get().getAreas().stream()
-                    .filter(a -> a.getId().equals(ingressoAntigo.getAreaId()))
-                    .findFirst();
-                    
-                if (area.isPresent()) {
-                    // Cria o ingresso moderno
-                    IngressoModerno ingressoModerno = new IngressoModerno(
-                        sessao.get(),
-                        area.get(),
-                        new Poltrona(ingressoAntigo.getNumeroPoltrona()),
-                        usuario.get()
-                    );
-                    ingressoModerno.setId(ingressoAntigo.getId());
-                    ingressoModerno.setDataCompra(ingressoAntigo.getDataCompra());
-                    ingressoModerno.setCodigo(ingressoAntigo.getCodigo());
-                    ingressosModernos.add(ingressoModerno);
-                }
+            if (!eventos.contains(evento)) {
+                throw new TeatroException("Evento não encontrado");
             }
-        }
-        
-        return ingressosModernos;
-    }
 
-    public Map<String, Integer> getEstatisticasVendas() {
-        Map<String, Integer> estatisticas = new HashMap<>();
-        
-        // Evento com mais ingressos vendidos
-        Map<String, Long> vendasPorEvento = new HashMap<>();
-        List<IngressoModerno> todosIngressos = new ArrayList<>();
-        
-        // Busca todos os ingressos de todos os usuários
-        for (Evento evento : eventos) {
-            for (Sessao sessao : evento.getSessoes()) {
-                for (Area area : sessao.getAreas()) {
-                    List<Integer> poltronasOcupadas = ingressoDAO.buscarPoltronasOcupadas(sessao.getId(), area.getId());
-                    for (Integer numeroPoltrona : poltronasOcupadas) {
-                        IngressoModerno ingresso = new IngressoModerno(
-                            sessao,
-                            area,
-                            new Poltrona(numeroPoltrona),
-                            new Usuario() // Usuário temporário apenas para estatísticas
-                        );
-                        todosIngressos.add(ingresso);
-                    }
-                }
+            if (!evento.getSessoes().contains(sessao)) {
+                throw new SessaoNaoEncontradaException(evento.getNome(), sessao.getHorario().toString());
             }
-        }
-        
-        for (IngressoModerno ingresso : todosIngressos) {
-            String eventoNome = eventos.stream()
-                .filter(e -> e.getSessoes().stream()
-                    .anyMatch(s -> s.getId().equals(ingresso.getSessao().getId())))
-                .findFirst()
-                .map(Evento::getNome)
-                .orElse("Desconhecido");
-            vendasPorEvento.merge(eventoNome, 1L, Long::sum);
-        }
-        
-        if (!vendasPorEvento.isEmpty()) {
-            String eventoMaisVendido = Collections.max(vendasPorEvento.entrySet(), Map.Entry.comparingByValue()).getKey();
-            String eventoMenosVendido = Collections.min(vendasPorEvento.entrySet(), Map.Entry.comparingByValue()).getKey();
-            
-            estatisticas.put("eventoMaisVendido", vendasPorEvento.get(eventoMaisVendido).intValue());
-            estatisticas.put("eventoMenosVendido", vendasPorEvento.get(eventoMenosVendido).intValue());
-        }
-        
-        // Sessão com maior ocupação
-        Map<String, Long> ocupacaoPorSessao = new HashMap<>();
-        for (IngressoModerno ingresso : todosIngressos) {
-            ocupacaoPorSessao.merge(ingresso.getSessao().getHorario(), 1L, Long::sum);
-        }
-        
-        if (!ocupacaoPorSessao.isEmpty()) {
-            String sessaoMaisOcupada = Collections.max(ocupacaoPorSessao.entrySet(), Map.Entry.comparingByValue()).getKey();
-            String sessaoMenosOcupada = Collections.min(ocupacaoPorSessao.entrySet(), Map.Entry.comparingByValue()).getKey();
-            
-            estatisticas.put("sessaoMaisOcupada", ocupacaoPorSessao.get(sessaoMaisOcupada).intValue());
-            estatisticas.put("sessaoMenosOcupada", ocupacaoPorSessao.get(sessaoMenosOcupada).intValue());
-        }
-        
-        return estatisticas;
-    }
 
-    public Map<String, Double> getEstatisticasLucratividade() {
-        Map<String, Double> estatisticas = new HashMap<>();
-        
-        // Lucratividade por evento/sessão
-        Map<String, Double> lucroPorEvento = new HashMap<>();
-        Map<String, Double> lucroPorSessao = new HashMap<>();
-        
-        // Busca todos os ingressos de todos os usuários
-        List<IngressoModerno> todosIngressos = new ArrayList<>();
-        for (Evento evento : eventos) {
-            for (Sessao sessao : evento.getSessoes()) {
-                for (Area area : sessao.getAreas()) {
-                    List<Integer> poltronasOcupadas = ingressoDAO.buscarPoltronasOcupadas(sessao.getId(), area.getId());
-                    for (Integer numeroPoltrona : poltronasOcupadas) {
-                        IngressoModerno ingresso = new IngressoModerno(
-                            sessao,
-                            area,
-                            new Poltrona(numeroPoltrona),
-                            new Usuario() // Usuário temporário apenas para estatísticas
-                        );
-                        todosIngressos.add(ingresso);
-                    }
-                }
+            if (!areas.contains(area)) {
+                throw new TeatroException("Área não encontrada");
             }
+
+            if (numeroPoltrona > area.getCapacidadeTotal()) {
+                throw new TeatroException("Número da poltrona inválido para esta área");
+            }
+
+            if (ingressoService.poltronaOcupada(sessao.getId(), area.getId(), numeroPoltrona)) {
+                throw new PoltronaOcupadaException(numeroPoltrona, area.getNome());
+            }
+
+            Ingresso ingresso = ingressoService.comprarIngresso(cpf, sessao.getId(), area.getId(), numeroPoltrona);
+            IngressoModerno ingressoModerno = new IngressoModerno(ingresso, evento, sessao, area);
+            return Optional.ofNullable(ingressoModerno);
+        } catch (TeatroException e) {
+            logger.error("Erro ao comprar ingresso: " + e.getMessage());
+            throw e;
+        } catch (Exception e) {
+            logger.error("Erro inesperado ao comprar ingresso: " + e.getMessage());
+            throw new TeatroException("Erro ao comprar ingresso", e);
         }
-        
-        for (IngressoModerno ingresso : todosIngressos) {
-            String eventoNome = eventos.stream()
-                .filter(e -> e.getSessoes().stream()
-                    .anyMatch(s -> s.getId().equals(ingresso.getSessao().getId())))
-                .findFirst()
-                .map(Evento::getNome)
-                .orElse("Desconhecido");
-                
-            lucroPorEvento.merge(eventoNome, ingresso.getValor(), Double::sum);
-            lucroPorSessao.merge(ingresso.getSessao().getHorario(), ingresso.getValor(), Double::sum);
-        }
-        
-        if (!lucroPorEvento.isEmpty()) {
-            String eventoMaisLucrativo = Collections.max(lucroPorEvento.entrySet(), Map.Entry.comparingByValue()).getKey();
-            String eventoMenosLucrativo = Collections.min(lucroPorEvento.entrySet(), Map.Entry.comparingByValue()).getKey();
-            
-            estatisticas.put("eventoMaisLucrativo", lucroPorEvento.get(eventoMaisLucrativo));
-            estatisticas.put("eventoMenosLucrativo", lucroPorEvento.get(eventoMenosLucrativo));
-        }
-        
-        if (!lucroPorSessao.isEmpty()) {
-            String sessaoMaisLucrativa = Collections.max(lucroPorSessao.entrySet(), Map.Entry.comparingByValue()).getKey();
-            String sessaoMenosLucrativa = Collections.min(lucroPorSessao.entrySet(), Map.Entry.comparingByValue()).getKey();
-            
-            estatisticas.put("sessaoMaisLucrativa", lucroPorSessao.get(sessaoMaisLucrativa));
-            estatisticas.put("sessaoMenosLucrativa", lucroPorSessao.get(sessaoMenosLucrativa));
-        }
-        
-        return estatisticas;
     }
 
-    public boolean isPoltronaOcupada(Long sessaoId, Long areaId, int numeroPoltrona) {
-        List<Integer> poltronasOcupadas = ingressoDAO.buscarPoltronasOcupadas(sessaoId, areaId);
-        return poltronasOcupadas.contains(numeroPoltrona);
+    private String gerarCodigoIngresso() {
+        return String.format("%06d", (int)(Math.random() * 1000000));
     }
 } 

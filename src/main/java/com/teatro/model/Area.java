@@ -12,6 +12,10 @@ public class Area implements Comparable<Area> {
     private double faturamento;
     private Long sessaoId;
 
+    public Area() {
+        // Construtor padrão
+    }
+
     public Area(Long id, String nome, double preco, int capacidadeTotal) {
         this.id = id;
         this.nome = nome;
@@ -49,16 +53,32 @@ public class Area implements Comparable<Area> {
         return id;
     }
 
+    public void setId(Long id) {
+        this.id = id;
+    }
+
     public String getNome() {
         return nome;
+    }
+
+    public void setNome(String nome) {
+        this.nome = nome;
     }
 
     public double getPreco() {
         return preco;
     }
 
+    public void setPreco(double preco) {
+        this.preco = preco;
+    }
+
     public int getCapacidadeTotal() {
         return capacidadeTotal;
+    }
+
+    public void setCapacidadeTotal(int capacidadeTotal) {
+        this.capacidadeTotal = capacidadeTotal;
     }
 
     public double getFaturamento() {
@@ -108,7 +128,7 @@ public class Area implements Comparable<Area> {
 
     @Override
     public String toString() {
-        return String.format("%s - R$%.2f", nome, preco);
+        return nome + " - R$ " + String.format("%.2f", preco);
     }
 
     @Override

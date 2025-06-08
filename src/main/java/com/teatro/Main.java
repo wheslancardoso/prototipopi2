@@ -27,11 +27,11 @@ public class Main extends Application {
     @Override
     public void init() {
         // Inicializa o sistema
-        teatro = new Teatro();
+        teatro = Teatro.getInstance();
         
         // Verifica a conexão com o banco de dados
         try {
-            DatabaseConnection.getConnection();
+            DatabaseConnection.getInstance().getConnection();
             System.out.println("Conexão com o banco de dados estabelecida com sucesso.");
         } catch (Exception e) {
             System.err.println("Erro ao conectar ao banco de dados: " + e.getMessage());

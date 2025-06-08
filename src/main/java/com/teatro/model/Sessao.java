@@ -1,152 +1,85 @@
 package com.teatro.model;
 
-import java.time.LocalDate;
-import java.time.LocalTime;
-import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
+import java.sql.Timestamp;
 import java.util.List;
+import java.util.ArrayList;
 
 public class Sessao {
     private Long id;
-    private String horario; // Manhã, Tarde, Noite
-    private List<Area> areas;
-    private double faturamento;
     private String nome;
-    private String dataFormatada;
-    private double valorIngresso;
-    private LocalDate dataSessao;
-    private HorarioDisponivel horarioEspecifico;
+    private TipoSessao tipoSessao;
+    private Timestamp data;
+    private List<Area> areas;
+    private Evento evento;
     
-    private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("dd/MM/yyyy");
-
-    public Sessao(String horario) {
-        this.horario = horario;
+    public Sessao() {
         this.areas = new ArrayList<>();
-        this.faturamento = 0.0;
-        this.dataSessao = LocalDate.now();
-        this.dataFormatada = dataSessao.format(DATE_FORMATTER);
-        this.valorIngresso = 0.0;
     }
     
-    public Sessao(String horario, LocalDate dataSessao) {
-        this.horario = horario;
+    public Sessao(String eventoNome, TipoSessao tipoSessao, Timestamp data) {
+        this.nome = eventoNome;
+        this.tipoSessao = tipoSessao;
+        this.data = data;
         this.areas = new ArrayList<>();
-        this.faturamento = 0.0;
-        this.dataSessao = dataSessao;
-        this.dataFormatada = dataSessao.format(DATE_FORMATTER);
-        this.valorIngresso = 0.0;
     }
-
+    
     public Long getId() {
         return id;
     }
-
+    
     public void setId(Long id) {
         this.id = id;
     }
-
-    public String getHorario() {
-        return horario;
-    }
-
-    public void setHorario(String horario) {
-        this.horario = horario;
-    }
-
-    public List<Area> getAreas() {
-        return areas;
-    }
-
-    public void addArea(Area area) {
-        this.areas.add(area);
-    }
-
-    public double getFaturamento() {
-        return faturamento;
-    }
-
-    public void setFaturamento(double faturamento) {
-        this.faturamento = faturamento;
-    }
-
-    public void atualizarFaturamento() {
-        this.faturamento = areas.stream()
-                .mapToDouble(Area::getFaturamento)
-                .sum();
-    }
     
-    /**
-     * Adiciona um valor ao faturamento da sessão
-     * @param valor Valor a ser adicionado ao faturamento
-     */
-    public void adicionarFaturamento(double valor) {
-        this.faturamento += valor;
-    }
-
     public String getNome() {
         return nome;
     }
-
+    
     public void setNome(String nome) {
         this.nome = nome;
     }
-
-    public String getDataFormatada() {
-        return dataFormatada;
-    }
-
-    public void setDataFormatada(String dataFormatada) {
-        this.dataFormatada = dataFormatada;
-    }
-
-    public double getValorIngresso() {
-        return valorIngresso;
-    }
-
-    public void setValorIngresso(double valorIngresso) {
-        this.valorIngresso = valorIngresso;
+    
+    public TipoSessao getTipoSessao() {
+        return tipoSessao;
     }
     
-    public LocalDate getDataSessao() {
-        return dataSessao;
+    public void setTipoSessao(TipoSessao tipoSessao) {
+        this.tipoSessao = tipoSessao;
     }
     
-    public void setDataSessao(LocalDate dataSessao) {
-        this.dataSessao = dataSessao;
-        this.dataFormatada = dataSessao.format(DATE_FORMATTER);
+    public Timestamp getData() {
+        return data;
     }
     
-    public HorarioDisponivel getHorarioEspecifico() {
-        return horarioEspecifico;
+    public void setData(Timestamp data) {
+        this.data = data;
     }
     
-    public void setHorarioEspecifico(HorarioDisponivel horarioEspecifico) {
-        this.horarioEspecifico = horarioEspecifico;
+    public String getHorario() {
+        return tipoSessao.getDescricao();
     }
     
-    /**
-     * Retorna o horário formatado completo (período + horário específico)
-     * @return String com o horário formatado
-     */
-    public String getHorarioCompleto() {
-        if (horarioEspecifico != null) {
-            return horario + " - " + horarioEspecifico.getHorarioFormatado();
-        }
-        return horario;
+    public List<Area> getAreas() {
+        return areas;
     }
     
-    /**
-     * Verifica se o horário específico está disponível para a data da sessão
-     * @param horaAtual Hora atual do sistema
-     * @param dataAtual Data atual do sistema
-     * @return true se o horário estiver disponível, false caso contrário
-     */
-    public boolean isHorarioDisponivel(LocalTime horaAtual, LocalDate dataAtual) {
-        if (horarioEspecifico == null) {
-            return true;
-        }
-        
-        boolean isDataAtual = dataSessao.equals(dataAtual);
-        return horarioEspecifico.isDisponivel(horaAtual, isDataAtual);
+    public void setAreas(List<Area> areas) {
+        this.areas = areas;
+    }
+    
+    public Evento getEvento() {
+        return evento;
+    }
+    
+    public void setEvento(Evento evento) {
+        this.evento = evento;
+    }
+    
+    @Override
+    public String toString() {
+        return String.format("%s - %s - %s", 
+            nome, 
+            data.toString(), 
+            tipoSessao.getDescricao());
     }
 }

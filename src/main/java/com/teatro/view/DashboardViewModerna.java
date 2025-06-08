@@ -1,7 +1,7 @@
 package com.teatro.view;
 
 import com.teatro.model.*;
-import com.teatro.dao.IngressoDAO;
+import com.teatro.service.IngressoService;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
@@ -14,6 +14,7 @@ import javafx.scene.text.FontWeight;
 import javafx.stage.Stage;
 import java.util.Map;
 import java.util.List;
+import java.util.ArrayList;
 
 /**
  * Versão modernizada da tela de dashboard do sistema.
@@ -22,7 +23,7 @@ public class DashboardViewModerna {
     private Teatro teatro;
     private Usuario usuarioLogado;
     private Stage stage;
-    private IngressoDAO ingressoDAO;
+    private IngressoService ingressoService;
     
     private static final double WINDOW_WIDTH = 1024;
     private static final double WINDOW_HEIGHT = 768;
@@ -38,7 +39,7 @@ public class DashboardViewModerna {
         this.teatro = teatro;
         this.usuarioLogado = usuarioLogado;
         this.stage = stage;
-        this.ingressoDAO = new IngressoDAO();
+        this.ingressoService = IngressoService.getInstance();
     }
 
     public void show() {
@@ -173,8 +174,24 @@ public class DashboardViewModerna {
         
         btnComprar.setOnAction(e -> new SessoesViewModerna(teatro, usuarioLogado, stage).show());
         btnImprimir.setOnAction(e -> {
-            List<IngressoModerno> ingressos = teatro.buscarIngressosPorCpf(usuarioLogado.getCpf());
-            new ImpressaoIngressoViewModerna(teatro, usuarioLogado, stage, ingressos).show();
+            List<Ingresso> ingressos = ingressoService.buscarPorUsuario(usuarioLogado.getCpf());
+            List<IngressoModerno> ingressosModernos = new ArrayList<>();
+            
+            for (Ingresso ingresso : ingressos) {
+                ingressosModernos.add(new IngressoModerno(
+                    ingresso.getId(),
+                    ingresso.getEventoNome(),
+                    ingresso.getTipoSessao().getDescricao(),
+                    ingresso.getDataSessao(),
+                    ingresso.getAreaNome(),
+                    ingresso.getNumeroPoltrona(),
+                    ingresso.getValor(),
+                    ingresso.getDataCompra(),
+                    ingresso.getCodigo()
+                ));
+            }
+            
+            new ImpressaoIngressoViewModerna(teatro, usuarioLogado, stage, ingressosModernos).show();
         });
         
         botoesAcao.getChildren().addAll(btnComprar, btnImprimir);
@@ -206,8 +223,16 @@ public class DashboardViewModerna {
         VBox area = new VBox(20);
         area.setPadding(new Insets(20));
 
-        // Buscar estatísticas
-        Map<String, Object> estatisticas = ingressoDAO.buscarEstatisticasVendas();
+        // Estatísticas padrão
+        Map<String, Object> estatisticas = Map.of(
+            "pecaMaisVendida", Map.of("nome", "N/A", "totalVendas", 0),
+            "pecaMenosVendida", Map.of("nome", "N/A", "totalVendas", 0),
+            "sessaoMaiorOcupacao", Map.of("nome", "N/A", "data", "N/A", "horario", "N/A", "ocupacao", "0%"),
+            "sessaoMenorOcupacao", Map.of("nome", "N/A", "data", "N/A", "horario", "N/A", "ocupacao", "0%"),
+            "pecaMaisLucrativa", Map.of("nome", "N/A", "faturamento", "R$ 0,00"),
+            "pecaMenosLucrativa", Map.of("nome", "N/A", "faturamento", "R$ 0,00"),
+            "lucroMedioPorPeca", List.of()
+        );
 
         // Seção de Vendas
         VBox secaoVendas = criarCardSecao(
