@@ -11,6 +11,8 @@ import javafx.scene.paint.Color;
 import javafx.scene.text.Font;
 import javafx.scene.text.FontWeight;
 import javafx.stage.Stage;
+import javafx.fxml.FXMLLoader;
+import javafx.scene.Node;
 
 /**
  * Versão modernizada da tela de seleção de sessões.
@@ -132,96 +134,19 @@ public class SessoesViewModerna {
         return topBar;
     }
 
-    private VBox criarCardEvento(Evento evento) {
-        VBox card = new VBox();
-        card.setStyle(
-            "-fx-background-color: " + CARD_BACKGROUND + ";" +
-            "-fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.1), 10, 0, 0, 0);" +
-            "-fx-background-radius: 8;" +
-            "-fx-padding: 20px;" +
-            "-fx-spacing: 15px;");
-
-        // Título do evento
-        Label titulo = new Label(evento.getNome());
-        titulo.setFont(Font.font("System", FontWeight.BOLD, 22));
-        titulo.setTextFill(Color.web(TEXT_COLOR));
-        
-        // Separador
-        Separator separator = new Separator();
-        separator.setStyle("-fx-background-color: #e0e0e0;");
-        
-        // Container para os controles de seleção
-        VBox selectionBox = new VBox(15);
-        selectionBox.setAlignment(Pos.CENTER_LEFT);
-        
-        // Sessões disponíveis
-        Label sessoesLabel = new Label("Sessões Disponíveis:");
-        sessoesLabel.setFont(Font.font("System", FontWeight.BOLD, 14));
-        
-        // Botões para cada sessão disponível
-        HBox sessoesContainer = new HBox(10);
-        sessoesContainer.setAlignment(Pos.CENTER_LEFT);
-        
-        // Adiciona botões para cada sessão (Manhã, Tarde, Noite)
-        for (String horario : new String[]{"Manhã", "Tarde", "Noite"}) {
-            Button btnSessao = new Button(horario);
-            btnSessao.setStyle(
-                "-fx-background-color: " + PRIMARY_COLOR + ";" +
-                "-fx-text-fill: white;" +
-                "-fx-font-weight: bold;" +
-                "-fx-padding: 8px 20px;" +
-                "-fx-cursor: hand;" +
-                "-fx-background-radius: 4;");
-                
-            // Cria uma cópia final da variável horario para usar dentro da lambda
-            final String horarioFinal = horario;
-            
-            btnSessao.setOnAction(e -> {
-                // Encontra a sessão correspondente no evento
-                Sessao sessaoDoEvento = evento.getSessoes().stream()
-                    .filter(s -> s.getHorario().equalsIgnoreCase(horarioFinal))
-                    .findFirst()
-                    .orElse(null);
-                    
-                if (sessaoDoEvento != null) {
-                    System.out.println("Sessão encontrada: " + sessaoDoEvento.getHorario() + " com " + 
-                                      sessaoDoEvento.getAreas().size() + " áreas");
-                    new CompraIngressoViewModerna(teatro, usuario, stage, sessaoDoEvento).show();
-                } else {
-                    System.err.println("Sessão não encontrada para o horário: " + horarioFinal);
-                    // Mostra uma mensagem de erro para o usuário
-                    Alert alert = new Alert(Alert.AlertType.ERROR);
-                    alert.setTitle("Erro");
-                    alert.setHeaderText(null);
-                    alert.setContentText("Sessão não encontrada para o horário: " + horarioFinal);
-                    alert.showAndWait();
-                }
-            });
-            
-            // Verifica se existe uma sessão para este horário
-            boolean sessaoExiste = evento.getSessoes().stream()
-                .anyMatch(s -> s.getHorario().equalsIgnoreCase(horario));
-                
-            if (!sessaoExiste) {
-                btnSessao.setDisable(true);
-                btnSessao.setStyle(
-                    "-fx-background-color: #cccccc;" +
-                    "-fx-text-fill: #666666;" +
-                    "-fx-font-weight: bold;" +
-                    "-fx-padding: 8px 20px;" +
-                    "-fx-cursor: default;" +
-                    "-fx-background-radius: 4;");
-            }
-            
-            sessoesContainer.getChildren().add(btnSessao);
+    private Node criarCardEvento(Evento evento) {
+        try {
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/com/teatro/view/EventoItem.fxml"));
+            loader.setController(new EventoItemController());
+            HBox eventoItem = loader.load();
+            EventoItemController controller = loader.getController();
+            controller.configurarEvento(evento, teatro, usuario, stage);
+            return eventoItem;
+        } catch (Exception e) {
+            e.printStackTrace();
+            HBox card = new HBox();
+            card.getChildren().add(new Label(evento.getNome()));
+            return card;
         }
-        
-        // Adiciona os elementos ao container de seleção
-        selectionBox.getChildren().addAll(sessoesLabel, sessoesContainer);
-        
-        // Adiciona os elementos ao card
-        card.getChildren().addAll(titulo, separator, selectionBox);
-        
-        return card;
     }
 }
