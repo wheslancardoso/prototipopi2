@@ -9,6 +9,11 @@ import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import com.teatro.dao.SessaoDAO;
+import com.teatro.database.DatabaseConnection;
+import com.teatro.model.Sessao;
+import com.teatro.dao.EventoDAO;
+import com.teatro.model.Evento;
 
 /**
  * Implementação do DAO para a entidade Ingresso.
@@ -227,6 +232,28 @@ public class IngressoDAO implements DAO<Ingresso, Long> {
         ingresso.setValor(rs.getDouble("valor"));
         ingresso.setDataCompra(rs.getTimestamp("data_compra"));
         ingresso.setCodigo(rs.getString("codigo"));
+        // Preencher tipoSessao buscando a sessão
+        try {
+            SessaoDAO sessaoDAO = new SessaoDAO(DatabaseConnection.getInstance().getConnection());
+            Long sessaoId = rs.getLong("sessao_id");
+            Optional<Sessao> sessaoOpt = sessaoDAO.buscarPorId(sessaoId);
+            if (sessaoOpt.isPresent()) {
+                Sessao sessao = sessaoOpt.get();
+                ingresso.setTipoSessao(sessao.getTipoSessao());
+                // Buscar evento e preencher nome
+                Long eventoId = sessao.getEventoId();
+                if (eventoId != null) {
+                    EventoDAO eventoDAO = new EventoDAO(DatabaseConnection.getInstance().getConnection());
+                    Evento evento = eventoDAO.buscarPorId(eventoId);
+                    if (evento != null) {
+                        ingresso.setEventoNome(evento.getNome());
+                    }
+                }
+            }
+        } catch (Exception e) {
+            // Logar mas não interromper
+            logger.error("Erro ao preencher tipoSessao/nome do evento do ingresso: " + e.getMessage());
+        }
         return ingresso;
     }
 } 

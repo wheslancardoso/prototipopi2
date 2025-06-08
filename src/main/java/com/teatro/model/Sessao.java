@@ -11,6 +11,7 @@ public class Sessao {
     private Timestamp data;
     private List<Area> areas;
     private Evento evento;
+    private Long eventoId;
     
     public Sessao() {
         this.areas = new ArrayList<>();
@@ -73,6 +74,14 @@ public class Sessao {
     
     public void setEvento(Evento evento) {
         this.evento = evento;
+    }
+    
+    public Long getEventoId() {
+        return eventoId;
+    }
+    
+    public void setEventoId(Long eventoId) {
+        this.eventoId = eventoId;
     }
     
     @Override

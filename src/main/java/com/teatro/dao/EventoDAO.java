@@ -31,4 +31,20 @@ public class EventoDAO {
         }
         return eventos;
     }
+
+    public Evento buscarPorId(Long id) {
+        String sql = "SELECT id, nome FROM eventos WHERE id = ?";
+        try (PreparedStatement stmt = connection.prepareStatement(sql)) {
+            stmt.setLong(1, id);
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (rs.next()) {
+                    return new Evento(rs.getLong("id"), rs.getString("nome"));
+                }
+            }
+        } catch (SQLException e) {
+            logger.error("Erro ao buscar evento por id: " + e.getMessage());
+            throw new TeatroException("Erro ao buscar evento por id", e);
+        }
+        return null;
+    }
 } 

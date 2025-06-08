@@ -121,6 +121,7 @@ public class SessaoDAO implements DAO<Sessao, Long> {
     private Sessao montarSessao(ResultSet rs) throws SQLException {
         Sessao sessao = new Sessao();
         sessao.setId(rs.getLong("id"));
+        sessao.setEventoId(rs.getLong("evento_id"));
         String horarioStr = rs.getString("horario");
         TipoSessao tipoSessao = null;
         for (TipoSessao ts : TipoSessao.values()) {
