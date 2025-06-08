@@ -22,10 +22,18 @@ public interface UsuarioDAO extends DAO<Usuario, Long> {
     Optional<Usuario> buscarPorEmail(String email);
 
     /**
-     * Autentica um usuário pelo CPF e senha.
-     * @param cpf CPF do usuário
+     * Autentica um usuário pelo CPF ou email e senha.
+     * @param identificador CPF ou email do usuário
      * @param senha Senha do usuário
      * @return Optional contendo o usuário se autenticado com sucesso
      */
-    Optional<Usuario> autenticar(String cpf, String senha);
+    Optional<Usuario> autenticar(String identificador, String senha);
+
+    /**
+     * Autentica um usuário pelo email e senha.
+     * @param email Email do usuário
+     * @param senha Senha do usuário
+     * @return Optional contendo o usuário se autenticado com sucesso
+     */
+    Optional<Usuario> autenticarPorEmail(String email, String senha);
 } 

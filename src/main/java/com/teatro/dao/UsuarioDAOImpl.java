@@ -60,13 +60,14 @@ public class UsuarioDAOImpl implements UsuarioDAO {
     }
 
     @Override
-    public Optional<Usuario> autenticar(String cpf, String senha) {
-        String sql = "SELECT * FROM usuarios WHERE cpf = ? AND senha = ?";
+    public Optional<Usuario> autenticar(String identificador, String senha) {
+        String sql = "SELECT * FROM usuarios WHERE (cpf = ? OR email = ?) AND senha = ?";
         try (Connection conn = dbConnection.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
             
-            stmt.setString(1, cpf);
-            stmt.setString(2, senha);
+            stmt.setString(1, identificador);
+            stmt.setString(2, identificador);
+            stmt.setString(3, senha);
             ResultSet rs = stmt.executeQuery();
             
             if (rs.next()) {
@@ -76,6 +77,26 @@ public class UsuarioDAOImpl implements UsuarioDAO {
         } catch (SQLException e) {
             logger.error("Erro ao autenticar usuário: " + e.getMessage());
             throw new RuntimeException("Erro ao autenticar usuário", e);
+        }
+    }
+
+    @Override
+    public Optional<Usuario> autenticarPorEmail(String email, String senha) {
+        String sql = "SELECT * FROM usuarios WHERE email = ? AND senha = ?";
+        try (Connection conn = dbConnection.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            
+            stmt.setString(1, email);
+            stmt.setString(2, senha);
+            ResultSet rs = stmt.executeQuery();
+            
+            if (rs.next()) {
+                return Optional.of(montarUsuario(rs));
+            }
+            return Optional.empty();
+        } catch (SQLException e) {
+            logger.error("Erro ao autenticar usuário por email: " + e.getMessage());
+            throw new RuntimeException("Erro ao autenticar usuário por email", e);
         }
     }
 

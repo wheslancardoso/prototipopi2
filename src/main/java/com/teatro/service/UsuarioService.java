@@ -58,8 +58,12 @@ public class UsuarioService extends AbstractService<Usuario, Long, UsuarioDAO> {
         return usuarioDAO.buscarPorEmail(email);
     }
 
-    public Optional<Usuario> autenticar(String cpf, String senha) {
-        return usuarioDAO.autenticar(cpf, senha);
+    public Optional<Usuario> autenticar(String identificador, String senha) {
+        return usuarioDAO.autenticar(identificador, senha);
+    }
+
+    public Optional<Usuario> autenticarPorEmail(String email, String senha) {
+        return usuarioDAO.autenticarPorEmail(email, senha);
     }
 
     @Override

@@ -93,22 +93,22 @@ public class LoginViewModerna {
         VBox loginForm = new VBox(15);
         loginForm.setAlignment(Pos.CENTER);
         
-        // Campo de CPF
-        VBox cpfBox = new VBox(5);
-        Label cpfLabel = new Label("CPF");
-        cpfLabel.setFont(Font.font("System", FontWeight.BOLD, 14));
+        // Campo de CPF/Email
+        VBox identificadorBox = new VBox(5);
+        Label identificadorLabel = new Label("CPF ou Email");
+        identificadorLabel.setFont(Font.font("System", FontWeight.BOLD, 14));
         
-        TextField cpfField = new TextField();
-        cpfField.setPromptText("Digite seu CPF");
-        cpfField.setPrefHeight(40);
-        cpfField.setStyle("""
+        TextField identificadorField = new TextField();
+        identificadorField.setPromptText("Digite seu CPF ou email");
+        identificadorField.setPrefHeight(40);
+        identificadorField.setStyle("""
             -fx-background-color: white;
             -fx-border-color: #e0e0e0;
             -fx-border-radius: 4;
             -fx-padding: 8;
             """);
         
-        cpfBox.getChildren().addAll(cpfLabel, cpfField);
+        identificadorBox.getChildren().addAll(identificadorLabel, identificadorField);
         
         // Campo de senha
         VBox senhaBox = new VBox(5);
@@ -129,9 +129,8 @@ public class LoginViewModerna {
         
         // Botão de login
         Button loginButton = new Button("Entrar");
-        loginButton.setPrefHeight(45);
-        loginButton.setPrefWidth(200);
-        loginButton.setFont(Font.font("System", FontWeight.BOLD, 14));
+        loginButton.setPrefHeight(40);
+        loginButton.setMaxWidth(Double.MAX_VALUE);
         loginButton.setStyle(
             "-fx-background-color: " + PRIMARY_COLOR + ";" +
             "-fx-text-fill: white;" +
@@ -162,10 +161,10 @@ public class LoginViewModerna {
         cadastrarButton.setOnAction(e -> mostrarTelaCadastro());
         
         loginButton.setOnAction(e -> {
-            String cpf = cpfField.getText();
+            String identificador = identificadorField.getText();
             String senha = senhaField.getText();
             
-            if (cpf.isEmpty() || senha.isEmpty()) {
+            if (identificador.isEmpty() || senha.isEmpty()) {
                 errorLabel.setText("Por favor, preencha todos os campos.");
                 errorLabel.setVisible(true);
                 return;
@@ -177,7 +176,7 @@ public class LoginViewModerna {
             }
             
             // Tenta autenticar o usuário
-            Optional<Usuario> usuarioOpt = teatro.autenticarUsuario(cpf, senha);
+            Optional<Usuario> usuarioOpt = teatro.autenticarUsuario(identificador, senha);
             
             if (usuarioOpt.isPresent()) {
                 Usuario usuario = usuarioOpt.get();
@@ -190,12 +189,12 @@ public class LoginViewModerna {
                     new SessoesViewModerna(teatro, usuario, stage).show();
                 }
             } else {
-                errorLabel.setText("CPF ou senha incorretos.");
+                errorLabel.setText("CPF/Email ou senha incorretos.");
                 errorLabel.setVisible(true);
             }
         });
         
-        loginForm.getChildren().addAll(cpfBox, senhaBox, loginButton, cadastrarButton, errorLabel);
+        loginForm.getChildren().addAll(identificadorBox, senhaBox, loginButton, cadastrarButton, errorLabel);
         
         card.getChildren().addAll(title, subtitle, separator, loginForm);
         return card;

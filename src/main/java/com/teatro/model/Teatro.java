@@ -139,11 +139,20 @@ public class Teatro {
         return areas;
     }
 
-    public Optional<Usuario> autenticarUsuario(String cpf, String senha) {
+    public Optional<Usuario> autenticarUsuario(String identificador, String senha) {
         try {
-            Validator.validarCpf(cpf);
+            Validator.validarStringNaoVazia(identificador, "Identificador (CPF ou Email)");
             Validator.validarStringNaoVazia(senha, "Senha");
-            return usuarioService.autenticar(cpf, senha);
+            
+            // Se o identificador parece ser um email, valida como email
+            if (identificador.contains("@")) {
+                Validator.validarEmail(identificador);
+            } else {
+                // Caso contrário, valida como CPF
+                Validator.validarCpf(identificador);
+            }
+            
+            return usuarioService.autenticar(identificador, senha);
         } catch (TeatroException e) {
             logger.error("Erro ao autenticar usuário: " + e.getMessage());
             throw e;
