@@ -12,6 +12,8 @@ import javafx.scene.paint.Color;
 import javafx.scene.text.Font;
 import javafx.scene.text.FontWeight;
 import javafx.stage.Stage;
+import com.teatro.model.factory.UsuarioFactory;
+import com.teatro.model.factory.UsuarioComumFactory;
 
 /**
  * Versão modernizada da tela de login.
@@ -372,13 +374,15 @@ public class LoginViewModerna {
                 return;
             }
 
-            Usuario novoUsuario = new Usuario(
+            // Substituir criação direta por Factory Method
+            UsuarioFactory factory = new UsuarioComumFactory();
+            Usuario novoUsuario = factory.criarUsuario(
                 nomeField.getText(),
                 cpfField.getText(),
-                enderecoField.getText(),
-                telefoneField.getText(),
                 emailField.getText(),
-                senhaField.getText()
+                senhaField.getText(),
+                enderecoField.getText(),
+                telefoneField.getText()
             );
 
             if (!novoUsuario.validarCPF()) {
