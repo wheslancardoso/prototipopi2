@@ -15,6 +15,7 @@ import com.teatro.dao.EventoDAO;
 import com.teatro.database.DatabaseConnection;
 import java.sql.Connection;
 import com.teatro.dao.SessaoDAO;
+import com.teatro.dao.AreaDAO;
 
 /**
  * Classe principal do sistema, implementando o padrão Façade.
@@ -32,7 +33,7 @@ public class Teatro {
         this.ingressoService = IngressoService.getInstance();
         this.areas = new ArrayList<>();
         this.eventos = new ArrayList<>();
-        inicializarAreas();
+        carregarAreasDoBanco();
         carregarEventosDoBanco();
     }
     
@@ -107,21 +108,14 @@ public class Teatro {
         }
     }
 
-    private void inicializarAreas() {
-        // Plateia A: 25 poltronas, R$ 40,00
-        areas.add(new Area(1L, "Plateia A", 40.00, 25));
-        // Plateia B: 100 poltronas, R$ 60,00
-        areas.add(new Area(2L, "Plateia B", 60.00, 100));
-        // Camarotes (1 a 5): 10 poltronas cada, R$ 80,00
-        for (int i = 1; i <= 5; i++) {
-            areas.add(new Area((long)(i + 2), "Camarote " + i, 80.00, 10));
+    private void carregarAreasDoBanco() {
+        try {
+            java.sql.Connection conn = com.teatro.database.DatabaseConnection.getInstance().getConnection();
+            AreaDAO areaDAO = new AreaDAO(conn);
+            this.areas = areaDAO.listarTodos();
+        } catch (Exception e) {
+            logger.error("Erro ao carregar áreas do banco: " + e.getMessage());
         }
-        // Frisas (1 a 6): 5 poltronas cada, R$ 120,00
-        for (int i = 1; i <= 6; i++) {
-            areas.add(new Area((long)(i + 7), "Frisa " + i, 120.00, 5));
-        }
-        // Balcão Nobre: 50 poltronas, R$ 250,00
-        areas.add(new Area(14L, "Balcão Nobre", 250.00, 50));
     }
 
     private void carregarEventosDoBanco() {
@@ -180,22 +174,21 @@ public class Teatro {
     public List<Area> getAreasDisponiveis(Sessao sessao) {
         try {
             Validator.validarNaoNulo(sessao, "Sessão");
+            java.sql.Connection conn = DatabaseConnection.getInstance().getConnection();
+            AreaDAO areaDAO = new AreaDAO(conn);
+            List<Area> areasDaSessao = areaDAO.buscarPorSessao(sessao.getId());
             List<Area> areasDisponiveis = new ArrayList<>();
-            
-            for (Area area : areas) {
+            for (Area area : areasDaSessao) {
                 // Busca as poltronas ocupadas para esta área na sessão
                 List<Integer> poltronasOcupadas = ingressoService.getPoltronasOcupadas(sessao.getId(), area.getId());
-                
                 // Cria uma cópia da área com as poltronas ocupadas
                 Area areaAtualizada = new Area(area.getId(), area.getNome(), area.getPreco(), area.getCapacidadeTotal());
                 areaAtualizada.carregarPoltronasOcupadas(poltronasOcupadas);
-                
                 // Adiciona apenas se houver poltronas disponíveis
                 if (areaAtualizada.getPoltronasDisponiveis() > 0) {
                     areasDisponiveis.add(areaAtualizada);
                 }
             }
-            
             return areasDisponiveis;
         } catch (TeatroException e) {
             logger.error("Erro ao buscar áreas disponíveis: " + e.getMessage());

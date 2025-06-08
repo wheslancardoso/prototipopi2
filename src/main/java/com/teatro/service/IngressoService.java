@@ -110,6 +110,13 @@ public class IngressoService extends AbstractService<Ingresso, Long, IngressoDAO
             ingresso.setNumeroPoltrona(numeroPoltrona);
             ingresso.setDataCompra(new Timestamp(System.currentTimeMillis()));
             ingresso.setCodigo(gerarCodigoIngresso());
+            // Buscar o valor da área e setar no ingresso
+            Optional<Area> areaOpt = areaDAO.buscarPorId(areaId);
+            if (areaOpt.isPresent()) {
+                ingresso.setValor(areaOpt.get().getPreco());
+            } else {
+                ingresso.setValor(0.0); // fallback, mas ideal lançar exceção
+            }
             
             if (dao.poltronaOcupada(sessaoId, areaId, numeroPoltrona)) {
                 Optional<Area> area = areaDAO.buscarPorId(areaId);
