@@ -99,14 +99,14 @@ public class IngressoModerno {
         Ingresso ingresso = new Ingresso();
         ingresso.setUsuarioId(usuario.getId());
         ingresso.setSessaoId(sessao.getId());
-        // O ID da área é String, então precisamos converter para Long para o Ingresso
-        ingresso.setAreaId(Long.valueOf(area.getId()));
+        ingresso.setAreaId(area.getId());
         ingresso.setNumeroPoltrona(poltrona.getNumero());
         ingresso.setValor(valor);
         ingresso.setDataCompra(dataCompra);
         ingresso.setEventoNome(sessao.getNome());
         ingresso.setHorario(sessao.getHorario());
         ingresso.setAreaNome(area.getNome());
+        ingresso.setCodigo(codigo);
         return ingresso;
     }
 }

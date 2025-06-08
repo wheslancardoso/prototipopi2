@@ -1,6 +1,8 @@
 package com.teatro.view;
 
-import com.teatro.model.*;
+import com.teatro.model.IngressoModerno;
+import com.teatro.model.Teatro;
+import com.teatro.model.Usuario;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
@@ -12,7 +14,6 @@ import javafx.scene.text.FontWeight;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
 
-import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 
@@ -84,15 +85,6 @@ public class ImpressaoIngressoViewModerna {
         botoesBox.setAlignment(Pos.CENTER_RIGHT);
         botoesBox.setPadding(new Insets(20, 0, 0, 0));
         
-        Button voltarButton = new Button("Voltar ao Início");
-        voltarButton.setStyle("-fx-background-color: " + PRIMARY_COLOR + "; -fx-text-fill: white; -fx-padding: 10 20; -fx-font-size: 14; -fx-cursor: hand; -fx-background-radius: 4; -fx-font-weight: bold;");
-        
-        voltarButton.setOnAction(e -> {
-            new SessoesViewModerna(teatro, usuario, stage).show();
-        });
-        
-        botoesBox.getChildren().add(voltarButton);
-        
         contentContainer.getChildren().addAll(pageTitle, mensagemSucesso, ingressosContainer, botoesBox);
         scrollPane.setContent(contentContainer);
         root.setCenter(scrollPane);
@@ -112,6 +104,13 @@ public class ImpressaoIngressoViewModerna {
         Label systemTitle = new Label("Sistema de Teatro");
         systemTitle.setFont(Font.font("System", FontWeight.BOLD, 20));
         systemTitle.setTextFill(Color.WHITE);
+        
+        // Botão Dashboard
+        Button dashboardButton = new Button("Dashboard");
+        dashboardButton.setStyle("-fx-background-color: white; -fx-text-fill: " + PRIMARY_COLOR + "; -fx-font-weight: bold; -fx-cursor: hand;");
+        dashboardButton.setOnAction(e -> {
+            new DashboardViewModerna(teatro, usuario, stage).show();
+        });
         
         // Informações do usuário
         HBox userInfo = new HBox();
@@ -134,42 +133,38 @@ public class ImpressaoIngressoViewModerna {
         Region spacer = new Region();
         HBox.setHgrow(spacer, Priority.ALWAYS);
         
-        topBar.getChildren().addAll(systemTitle, spacer, userInfo);
+        topBar.getChildren().addAll(systemTitle, dashboardButton, spacer, userInfo);
         
         return topBar;
     }
     
     private VBox criarCardIngresso(IngressoModerno ingresso) {
         VBox card = new VBox(15);
-        card.setPadding(new Insets(25));
-        card.setStyle("-fx-background-color: " + CARD_BACKGROUND + "; -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.1), 10, 0, 0, 0); -fx-background-radius: 8; -fx-border-color: #e0e0e0; -fx-border-radius: 8;");
+        card.setPadding(new Insets(20));
+        card.setStyle("-fx-background-color: " + CARD_BACKGROUND + "; -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.1), 10, 0, 0, 0); -fx-background-radius: 8;");
         
         // Título do evento
         Label eventoLabel = new Label(ingresso.getSessao().getNome());
-        eventoLabel.setFont(Font.font("System", FontWeight.BOLD, 22));
+        eventoLabel.setFont(Font.font("System", FontWeight.BOLD, 20));
         eventoLabel.setTextFill(Color.web(TEXT_COLOR));
         
         // Separador
         Separator separator = new Separator();
-        separator.setPadding(new Insets(5, 0, 15, 0));
         
         // Grid com informações do ingresso
         GridPane infoGrid = new GridPane();
-        infoGrid.setHgap(30);
-        infoGrid.setVgap(15);
+        infoGrid.setHgap(20);
+        infoGrid.setVgap(10);
         
-        // Estilos para os labels
-        String titleStyle = "-fx-font-weight: bold; -fx-font-size: 14px;";
-        String valueStyle = "-fx-font-size: 14px;";
+        String titleStyle = "-fx-font-weight: bold; -fx-text-fill: " + TEXT_COLOR + ";";
+        String valueStyle = "-fx-text-fill: " + TEXT_COLOR + ";";
         
-        // Data e Horário
-        Label dataLabel = new Label("Data e Horário:");
-        dataLabel.setStyle(titleStyle);
+        // Horário
+        Label horarioLabel = new Label("Horário:");
+        horarioLabel.setStyle(titleStyle);
         
-        Sessao sessao = ingresso.getSessao();
-        String dataHorario = sessao.getDataFormatada() + " - " + sessao.getHorarioCompleto();
-        Label dataValor = new Label(dataHorario);
-        dataValor.setStyle(valueStyle);
+        Label horarioValor = new Label(ingresso.getSessao().getHorario());
+        horarioValor.setStyle(valueStyle);
         
         // Área
         Label areaLabel = new Label("Área:");
@@ -189,21 +184,19 @@ public class ImpressaoIngressoViewModerna {
         Label valorLabel = new Label("Valor:");
         valorLabel.setStyle(titleStyle);
         
-        Label valorValor = new Label("R$ " + String.format("%.2f", ingresso.getArea().getPreco()));
+        Label valorValor = new Label(String.format("R$ %.2f", ingresso.getValor()));
         valorValor.setStyle(valueStyle);
         
-        // Código do ingresso
+        // Código
         Label codigoLabel = new Label("Código:");
         codigoLabel.setStyle(titleStyle);
         
-        // Gera um código alfanumérico para o ingresso
-        String codigo = gerarCodigoIngresso();
-        Label codigoValor = new Label(codigo);
-        codigoValor.setStyle(valueStyle);
+        Label codigoValor = new Label(ingresso.getCodigo());
+        codigoValor.setStyle("-fx-font-family: monospace; " + valueStyle);
         
-        // Adiciona os componentes ao grid
-        infoGrid.add(dataLabel, 0, 0);
-        infoGrid.add(dataValor, 1, 0);
+        // Adiciona os itens ao grid
+        infoGrid.add(horarioLabel, 0, 0);
+        infoGrid.add(horarioValor, 1, 0);
         infoGrid.add(areaLabel, 0, 1);
         infoGrid.add(areaValor, 1, 1);
         infoGrid.add(poltronaLabel, 0, 2);
@@ -221,15 +214,13 @@ public class ImpressaoIngressoViewModerna {
         buttonBox.setAlignment(Pos.CENTER_RIGHT);
         buttonBox.getChildren().add(imprimirButton);
         
-        imprimirButton.setOnAction(e -> {
-            imprimirIngresso(ingresso, codigo);
-        });
+        imprimirButton.setOnAction(e -> imprimirIngresso(ingresso));
         
         card.getChildren().addAll(eventoLabel, separator, infoGrid, buttonBox);
         return card;
     }
     
-    private void imprimirIngresso(IngressoModerno ingresso, String codigo) {
+    private void imprimirIngresso(IngressoModerno ingresso) {
         // Cria uma nova janela para simular a impressão
         Stage impressaoStage = new Stage();
         impressaoStage.initModality(Modality.APPLICATION_MODAL);
@@ -252,46 +243,47 @@ public class ImpressaoIngressoViewModerna {
         sb.append("========================================\n");
         sb.append("           INGRESSO DE TEATRO           \n");
         sb.append("========================================\n\n");
+        
         sb.append("Evento: ").append(ingresso.getSessao().getNome()).append("\n");
-        sb.append("Data: ").append(ingresso.getSessao().getDataFormatada()).append("\n");
-        sb.append("Horário: ").append(ingresso.getSessao().getHorarioCompleto()).append("\n");
+        sb.append("Horário: ").append(ingresso.getSessao().getHorario()).append("\n");
         sb.append("Área: ").append(ingresso.getArea().getNome()).append("\n");
         sb.append("Poltrona: ").append(ingresso.getPoltrona().getNumero()).append("\n");
-        sb.append("Valor: R$ ").append(String.format("%.2f", ingresso.getArea().getPreco())).append("\n\n");
-        sb.append("Código: ").append(codigo).append("\n\n");
-        sb.append("Data de emissão: ").append(LocalDateTime.now().format(DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm:ss"))).append("\n");
-        sb.append("========================================\n");
-        sb.append("      APRESENTE ESTE INGRESSO NA       \n");
-        sb.append("            ENTRADA DO TEATRO          \n");
+        sb.append("Valor: R$ ").append(String.format("%.2f", ingresso.getValor())).append("\n");
+        sb.append("Código: ").append(ingresso.getCodigo()).append("\n");
+        
+        try {
+            sb.append("Data da Compra: ").append(
+                ingresso.getDataCompra().toLocalDateTime().format(
+                    DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm")
+                )
+            ).append("\n");
+        } catch (Exception e) {
+            sb.append("Data da Compra: Não disponível\n");
+        }
+        
+        sb.append("\nObrigado pela sua compra!\n");
         sb.append("========================================\n");
         
         ingressoTexto.setText(sb.toString());
         
-        // Botão para fechar
+        // Botão de fechar
         Button fecharButton = new Button("Fechar");
-        fecharButton.setStyle("-fx-background-color: " + PRIMARY_COLOR + "; -fx-text-fill: white; -fx-padding: 10 20; -fx-font-size: 14; -fx-cursor: hand; -fx-background-radius: 4;");
+        fecharButton.setStyle(
+            "-fx-background-color: " + SECONDARY_COLOR + "; " +
+            "-fx-text-fill: white; " +
+            "-fx-padding: 10 20; " +
+            "-fx-font-size: 14; " +
+            "-fx-cursor: hand; " +
+            "-fx-background-radius: 4;"
+        );
+        fecharButton.setOnAction(e -> impressaoStage.close());
         
-        fecharButton.setOnAction(e -> {
-            impressaoStage.close();
-        });
+        // Adiciona os componentes ao layout
+        root.getChildren().addAll(ingressoTexto, fecharButton);
         
-        root.getChildren().addAll(new Label("Ingresso impresso com sucesso!"), ingressoTexto, fecharButton);
-        
+        // Configura e exibe a cena
         Scene scene = new Scene(root, 460, 500);
         impressaoStage.setScene(scene);
-        impressaoStage.showAndWait();
-    }
-    
-    private String gerarCodigoIngresso() {
-        // Gera um código alfanumérico para o ingresso
-        String caracteres = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
-        StringBuilder codigo = new StringBuilder();
-        
-        for (int i = 0; i < 10; i++) {
-            int index = (int) (Math.random() * caracteres.length());
-            codigo.append(caracteres.charAt(index));
-        }
-        
-        return codigo.toString();
+        impressaoStage.show();
     }
 }

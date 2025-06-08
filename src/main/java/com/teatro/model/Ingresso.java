@@ -15,6 +15,7 @@ public class Ingresso {
     private String eventoNome;
     private String horario;
     private String areaNome;
+    private String codigo;
 
     public Ingresso() {
     }
@@ -105,6 +106,14 @@ public class Ingresso {
 
     public void setAreaNome(String areaNome) {
         this.areaNome = areaNome;
+    }
+
+    public String getCodigo() {
+        return codigo;
+    }
+
+    public void setCodigo(String codigo) {
+        this.codigo = codigo;
     }
 
     @Override

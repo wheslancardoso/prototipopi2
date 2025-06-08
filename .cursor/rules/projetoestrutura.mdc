@@ -1,0 +1,105 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+# Regras do Projeto: Sistema de Venda de Ingressos de Teatro
+
+## 1. Visão Geral do Projeto
+
+Este documento descreve as regras e a arquitetura para um sistema de venda de ingressos de teatro desenvolvido em Java com JavaFX para a interface gráfica. O sistema gerencia eventos, sessões, áreas do teatro e a venda de ingressos, persistindo os dados em um banco de dados MySQL/MariaDB.
+
+O projeto é destinado a estudantes de Análise e Desenvolvimento de Sistemas (ADS) no 3º período, com foco na aplicação de conceitos de Programação Orientada a Objetos (POO), Estruturas de Dados e Padrões de Projeto.
+
+## 2. Estrutura de Pacotes
+
+O código-fonte está organizado nos seguintes pacotes:
+
+-   `com.teatro.model`: Contém as classes de domínio (entidades) que representam os objetos de negócio do sistema, como `Usuario`, `Evento`, `Sessao`, `Area`, `Poltrona` e `Ingresso`.
+-   `com.teatro.dao`: Contém as classes de Acesso a Dados (DAO - Data Access Object). Cada classe é responsável pela persistência (CRUD - Create, Read, Update, Delete) de uma entidade específica no banco de dados. Ex: `UsuarioDAO`, `IngressoDAO`.
+-   `com.teatro.database`: Inclui a classe `DatabaseConnection`, responsável por gerenciar a conexão com o banco de dados MySQL.
+-   `com.teatro.view`: Contém as classes da interface gráfica do usuário (GUI), construídas com JavaFX. Elas são responsáveis por exibir as informações e capturar as interações do usuário.
+-   `com.teatro.controller`: Contém classes controladoras que medeiam a comunicação entre as Views (interface) e os Models (regras de negócio e dados).
+
+## 3. Modelo de Dados e Regras de Negócio
+
+### 3.1. Entidades Principais
+
+-   **Usuario**: Representa um cliente ou administrador do sistema.
+    -   Atributos: `id`, `nome`, `cpf`, `endereco`, `telefone`, `email`, `senha`, `tipoUsuario` ('COMUM' ou 'ADMIN').
+    -   Regra: O CPF deve ser único e válido.
+-   **Evento**: Representa uma peça de teatro.
+    -   Atributos: `nome`, `sessoes`.
+    -   Nomes dos Eventos: "Hamlet", "O Fantasma da Opera", "O Auto da Compadecida".
+-   **Sessao**: Representa um horário específico de um evento.
+    -   Atributos: `id`, `horario` ("Manhã", "Tarde", "Noite"), `dataSessao`, `areas`.
+-   **Area**: Representa uma seção do teatro (ex: Plateia A, Camarote).
+    -   Atributos: `id`, `nome`, `preco`, `capacidadeTotal`, `poltronas`.
+    -   **Configuração das Áreas e Preços**:
+        -   **Plateia A**: 25 poltronas, R$ 40,00
+        -   **Plateia B**: 100 poltronas, R$ 60,00
+        -   **Camarotes (1 a 5)**: 10 poltronas cada, R$ 80,00
+        -   **Frisas (1 a 6)**: 5 poltronas cada, R$ 120,00
+        -   **Balcão Nobre**: 50 poltronas, R$ 250,00
+-   **Poltrona**: Representa um assento individual em uma área.
+    -   Atributos: `numero`, `ocupada`.
+-   **Ingresso**: Representa o ticket comprado por um usuário.
+    -   Atributos: `id`, `usuario`, `sessao`, `area`, `poltrona`, `valor`, `dataCompra`, `codigo`.
+    -   Regra: Uma vez que uma poltrona é comprada para uma determinada `Sessao` e `Area`, ela se torna indisponível para outras compras na *mesma* `Sessao` e `Area`. A disponibilidade é independente entre sessões/áreas diferentes.
+
+### 3.2. Impressão de Ingresso
+
+A impressão de um ingresso deve gerar um `toString()` formatado da seguinte maneira:
+
+
+        =========================================
+        INGRESSO - TEATRO
+        =========================================
+        Evento: %s
+        Sessão: %s
+        Área: %s
+        Poltrona: %d
+        Valor: R$ %.2f
+        Data da Compra: %s
+        =========================================
+
+
+## 4. Persistência de Dados (Banco de Dados)
+
+-   **SGBD**: MySQL (ou MariaDB).
+-   **Driver JDBC**: `com.mysql.cj.jdbc.Driver`.
+-   **URL de Conexão**: `jdbc:mysql://localhost:3306/teatro_db`.
+-   **Usuário**: `root`.
+-   **Senha**: `root`.
+
+A classe `DatabaseConnection` utiliza o padrão **Singleton** para garantir uma única instância de conexão com o banco de dados, melhorando a performance e o gerenciamento de recursos.
+
+## 5. Padrões de Projeto e Estruturas de Dados
+
+O projeto deve empregar os seguintes padrões e estruturas de dados para garantir um código bem estruturado, manutenível e performático.
+
+### 5.1. Padrões de Projeto
+
+-   **DAO (Data Access Object)**: Utilizado para abstrair a lógica de persistência de dados. As classes no pacote `com.teatro.dao` implementam este padrão.
+-   **Singleton**: Aplicado na classe `DatabaseConnection` para garantir uma única instância de conexão com o banco de dados.
+-   **MVC (Model-View-Controller)**: A arquitetura geral do projeto segue este padrão.
+    -   **Model**: Pacote `com.teatro.model`.
+    -   **View**: Pacote `com.teatro.view`.
+    -   **Controller**: Pacote `com.teatro.controller` e a classe `Teatro` atuando como **Façade**.
+-   **Façade**: A classe `Teatro` atua como uma fachada, simplificando a interface para as operações complexas do sistema, como `comprarIngresso`, `cadastrarUsuario`, etc.
+-   **Factory Method (sugestão)**: Pode ser usado para criar diferentes tipos de `Usuario` (COMUM, ADMIN).
+-   **Iterator**: Utilizado implicitamente ao percorrer as listas de eventos, sessões e áreas.
+-   **State (sugestão)**: O estado de uma `Poltrona` (`disponível`, `ocupada`, `selecionada`) pode ser gerenciado com o padrão State para um controle mais robusto.
+
+### 5.2. Estruturas de Dados
+
+-   **List (ArrayList)**: Usada extensivamente para armazenar coleções de objetos, como `sessoes` em um `Evento` ou `areas` em uma `Sessao`.
+-   **Map (HashMap)**: Utilizado na classe `Teatro` para armazenar as `areas` e para coletar as estatísticas de vendas e lucratividade, oferecendo acesso rápido (O(1) em média) aos dados.
+
+## 6. Diretrizes de Implementação
+
+-   **Performance**: Utilizar as estruturas de dados adequadas para cada cenário. `HashMap` para buscas rápidas e `ArrayList` para iterações. Otimizar as consultas SQL no DAO para retornar apenas os dados necessários.
+-   **Boas Práticas de POO**: Manter o encapsulamento, a coesão e o baixo acoplamento entre as classes.
+-   **Tratamento de Exceções**: Implementar tratamento de exceções adequado, especialmente nas interações com o banco de dados e na validação de entradas do usuário.
+-   **Interface Gráfica**: Construir as telas em JavaFX de forma intuitiva e responsiva, conforme os arquivos `*ViewModerna.java` fornecidos.
+

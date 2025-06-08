@@ -1,6 +1,13 @@
 package com.teatro.view;
 
-import com.teatro.model.*;
+import com.teatro.controller.SessaoController;
+import com.teatro.model.Area;
+import com.teatro.model.Evento;
+import com.teatro.model.IngressoModerno;
+import com.teatro.model.Poltrona;
+import com.teatro.model.Sessao;
+import com.teatro.model.Teatro;
+import com.teatro.model.Usuario;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
@@ -14,6 +21,7 @@ import javafx.stage.Stage;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 /**
  * Versão modernizada da tela de seleção de poltronas.
@@ -25,6 +33,11 @@ public class SelecionarPoltronaViewModerna {
     private Sessao sessao;
     private Area area;
     private List<Poltrona> poltronasSelecionadas;
+    
+    // Componentes da interface que precisam ser acessados em múltiplos métodos
+    private Label qtdValor;
+    private Label valorTotalValor;
+    private Button confirmarButton;
     
     private static final double WINDOW_WIDTH = 1024;
     private static final double WINDOW_HEIGHT = 768;
@@ -88,9 +101,9 @@ public class SelecionarPoltronaViewModerna {
         
         // Informações da sessão
         VBox sessaoInfo = new VBox(5);
-        Label sessaoLabel = new Label("Sessão:");
+        Label sessaoLabel = new Label("Horário:");
         sessaoLabel.setFont(Font.font("System", FontWeight.BOLD, 14));
-        Label sessaoHorario = new Label(sessao.getDataFormatada() + " - " + sessao.getHorarioCompleto());
+        Label sessaoHorario = new Label(sessao.getHorario());
         sessaoHorario.setFont(Font.font("System", 14));
         sessaoInfo.getChildren().addAll(sessaoLabel, sessaoHorario);
         
@@ -171,28 +184,34 @@ public class SelecionarPoltronaViewModerna {
         poltronasGrid.setVgap(10);
         
         // Número de linhas e colunas para o grid
-        int numLinhas = 5;
         int numColunas = 10;
-        
+        int capacidade = area.getCapacidadeTotal();
+        int numLinhas = (int) Math.ceil((double) capacidade / numColunas);
+
         // Cria as poltronas
         for (int i = 0; i < numLinhas; i++) {
             for (int j = 0; j < numColunas; j++) {
                 int numero = i * numColunas + j + 1;
-                
+                if (numero > capacidade) break;
+
                 // Cria a poltrona
                 Button poltrona = new Button(String.valueOf(numero));
                 poltrona.setPrefSize(50, 50);
                 poltrona.setFont(Font.font("System", FontWeight.BOLD, 14));
-                
+
                 // Verifica se a poltrona está ocupada
-                boolean ocupada = Math.random() < 0.3; // Simulação de ocupação
-                
+                boolean ocupada = false;
+                if (area != null) {
+                    // O estado das poltronas está em area.getPoltronasDisponiveisList()
+                    List<Integer> disponiveis = area.getPoltronasDisponiveisList();
+                    ocupada = !disponiveis.contains(numero);
+                }
+
                 if (ocupada) {
                     poltrona.setStyle("-fx-background-color: " + POLTRONA_OCUPADA + "; -fx-text-fill: white; -fx-background-radius: 5;");
                     poltrona.setDisable(true);
                 } else {
                     poltrona.setStyle("-fx-background-color: " + POLTRONA_DISPONIVEL + "; -fx-text-fill: white; -fx-background-radius: 5;");
-                    
                     // Adiciona evento de clique
                     poltrona.setOnAction(e -> {
                         if (poltrona.getStyle().contains(POLTRONA_DISPONIVEL)) {
@@ -204,12 +223,9 @@ public class SelecionarPoltronaViewModerna {
                             poltrona.setStyle("-fx-background-color: " + POLTRONA_DISPONIVEL + "; -fx-text-fill: white; -fx-background-radius: 5;");
                             poltronasSelecionadas.removeIf(p -> p.getNumero() == numero);
                         }
-                        
-                        // Atualiza o resumo
                         atualizarResumo();
                     });
                 }
-                
                 poltronasGrid.add(poltrona, j, i);
             }
         }
@@ -230,9 +246,9 @@ public class SelecionarPoltronaViewModerna {
         qtdBox.setAlignment(Pos.CENTER_LEFT);
         Label qtdLabel = new Label("Quantidade de ingressos:");
         qtdLabel.setFont(Font.font("System", FontWeight.BOLD, 14));
-        Label qtdValor = new Label("0");
-        qtdValor.setFont(Font.font("System", 14));
-        qtdBox.getChildren().addAll(qtdLabel, qtdValor);
+        this.qtdValor = new Label("0");
+        this.qtdValor.setFont(Font.font("System", 14));
+        qtdBox.getChildren().addAll(qtdLabel, this.qtdValor);
         
         // Valor unitário
         HBox valorUnitBox = new HBox(10);
@@ -248,10 +264,10 @@ public class SelecionarPoltronaViewModerna {
         valorTotalBox.setAlignment(Pos.CENTER_LEFT);
         Label valorTotalLabel = new Label("Valor total:");
         valorTotalLabel.setFont(Font.font("System", FontWeight.BOLD, 14));
-        Label valorTotalValor = new Label("R$ 0,00");
-        valorTotalValor.setFont(Font.font("System", FontWeight.BOLD, 16));
-        valorTotalValor.setTextFill(Color.web(SECONDARY_COLOR));
-        valorTotalBox.getChildren().addAll(valorTotalLabel, valorTotalValor);
+        this.valorTotalValor = new Label("R$ 0,00");
+        this.valorTotalValor.setFont(Font.font("System", FontWeight.BOLD, 16));
+        this.valorTotalValor.setTextFill(Color.web(SECONDARY_COLOR));
+        valorTotalBox.getChildren().addAll(valorTotalLabel, this.valorTotalValor);
         
         // Botões
         HBox botoesBox = new HBox(15);
@@ -265,30 +281,68 @@ public class SelecionarPoltronaViewModerna {
             new CompraIngressoViewModerna(teatro, usuario, stage, sessao).show();
         });
         
-        Button confirmarButton = new Button("Confirmar Compra");
-        confirmarButton.setStyle("-fx-background-color: " + SECONDARY_COLOR + "; -fx-text-fill: white; -fx-padding: 10 20; -fx-font-size: 14; -fx-cursor: hand; -fx-background-radius: 4; -fx-font-weight: bold;");
-        confirmarButton.setDisable(true);
+        this.confirmarButton = new Button("Confirmar Compra");
+        this.confirmarButton.setStyle("-fx-background-color: " + SECONDARY_COLOR + "; -fx-text-fill: white; -fx-padding: 10 20; -fx-font-size: 14; -fx-cursor: hand; -fx-background-radius: 4; -fx-font-weight: bold;");
+        this.confirmarButton.setDisable(true);
         
-        confirmarButton.setOnAction(e -> {
-            // Cria os ingressos modernos
-            List<IngressoModerno> ingressosModernos = new ArrayList<>();
+        this.confirmarButton.setOnAction(e -> {
+            // Cria os ingressos
+            List<IngressoModerno> ingressos = new ArrayList<>();
+            boolean todosSalvos = true;
+            
             for (Poltrona poltrona : poltronasSelecionadas) {
+                // Cria o ingresso moderno
                 IngressoModerno ingresso = new IngressoModerno(sessao, area, poltrona, usuario);
-                ingressosModernos.add(ingresso);
+                ingresso.setCodigo(gerarCodigoIngresso());
+                
+                // Busca o evento da sessão
+                Evento evento = teatro.getEventos().stream()
+                    .filter(evt -> evt.getSessoes().contains(sessao))
+                    .findFirst()
+                    .orElse(null);
+                
+                if (evento == null) {
+                    todosSalvos = false;
+                    Alert alert = new Alert(Alert.AlertType.ERROR);
+                    alert.setTitle("Erro");
+                    alert.setHeaderText("Erro ao comprar ingresso");
+                    alert.setContentText("Não foi possível encontrar o evento da sessão. Tente novamente.");
+                    alert.showAndWait();
+                    break;
+                }
+                
+                // Tenta salvar o ingresso no banco de dados
+                Optional<IngressoModerno> ingressoSalvo = teatro.comprarIngresso(usuario.getCpf(), evento, sessao, area, poltrona.getNumero());
+                if (ingressoSalvo.isPresent()) {
+                    // Adiciona o ingresso ao usuário
+                    ingressos.add(ingressoSalvo.get());
+                } else {
+                    todosSalvos = false;
+                    Alert alert = new Alert(Alert.AlertType.ERROR);
+                    alert.setTitle("Erro");
+                    alert.setHeaderText("Erro ao comprar ingresso");
+                    alert.setContentText("Não foi possível comprar o ingresso para a poltrona " + poltrona.getNumero() + ". Tente novamente.");
+                    alert.showAndWait();
+                    break;
+                }
             }
             
-            // Adiciona os ingressos ao usuário
-            usuario.adicionarIngressos(ingressosModernos);
-            
-            // Atualiza o faturamento da sessão
-            double valorTotal = poltronasSelecionadas.size() * area.getPreco();
-            sessao.adicionarFaturamento(valorTotal);
-            
-            // Mostra a tela de impressão de ingressos
-            new ImpressaoIngressoViewModerna(teatro, usuario, stage, ingressosModernos).show();
+            if (todosSalvos && !ingressos.isEmpty()) {
+                // Adiciona os ingressos ao usuário
+                usuario.adicionarIngressos(ingressos);
+                
+                // Mostra a tela de impressão
+                new ImpressaoIngressoViewModerna(teatro, usuario, stage, ingressos).show();
+            } else if (ingressos.isEmpty()) {
+                Alert alert = new Alert(Alert.AlertType.ERROR);
+                alert.setTitle("Erro");
+                alert.setHeaderText("Nenhum ingresso foi comprado");
+                alert.setContentText("Ocorreu um erro ao processar sua compra. Por favor, tente novamente.");
+                alert.showAndWait();
+            }
         });
         
-        botoesBox.getChildren().addAll(voltarButton, confirmarButton);
+        botoesBox.getChildren().addAll(voltarButton, this.confirmarButton);
         
         resumoContainer.getChildren().addAll(resumoTitulo, qtdBox, valorUnitBox, valorTotalBox, botoesBox);
         
@@ -300,10 +354,7 @@ public class SelecionarPoltronaViewModerna {
         stage.setScene(scene);
         
         // Atualiza o resumo inicial
-        qtdValor.setText(String.valueOf(poltronasSelecionadas.size()));
-        double valorTotal = poltronasSelecionadas.size() * area.getPreco();
-        valorTotalValor.setText("R$ " + String.format("%.2f", valorTotal));
-        confirmarButton.setDisable(poltronasSelecionadas.isEmpty());
+        atualizarResumo();
     }
     
     private HBox createTopBar() {
@@ -353,8 +404,19 @@ public class SelecionarPoltronaViewModerna {
     }
     
     private void atualizarResumo() {
-        // Este método é um placeholder para a funcionalidade de atualização do resumo
-        // A implementação real está inline no método show() para acesso direto às variáveis locais
-        // Este método é mantido para compatibilidade com possíveis chamadas externas
+        // Atualiza a quantidade de ingressos selecionados
+        qtdValor.setText(String.valueOf(poltronasSelecionadas.size()));
+        
+        // Calcula o valor total
+        double valorTotal = poltronasSelecionadas.size() * area.getPreco();
+        valorTotalValor.setText("R$ " + String.format("%.2f", valorTotal));
+        
+        // Habilita/desabilita o botão de confirmar com base na seleção de poltronas
+        confirmarButton.setDisable(poltronasSelecionadas.isEmpty());
+    }
+
+    private String gerarCodigoIngresso() {
+        // Gera um código único para o ingresso usando timestamp e número aleatório
+        return String.format("ING-%d-%d", System.currentTimeMillis(), (int)(Math.random() * 1000));
     }
 }

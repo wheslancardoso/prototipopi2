@@ -2,25 +2,39 @@ package com.teatro.view;
 
 import com.teatro.model.*;
 import com.teatro.dao.IngressoDAO;
-import com.teatro.view.ImpressaoIngressoViewModerna;
-import com.teatro.view.LoginViewModerna;
-import com.teatro.view.SessoesViewModerna;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
+import javafx.scene.Node;
 import javafx.scene.control.*;
 import javafx.scene.layout.*;
+import javafx.scene.paint.Color;
+import javafx.scene.text.Font;
+import javafx.scene.text.FontWeight;
 import javafx.stage.Stage;
 import java.util.Map;
 import java.util.List;
 
-public class DashboardView {
+/**
+ * Versão modernizada da tela de dashboard do sistema.
+ */
+public class DashboardViewModerna {
     private Teatro teatro;
     private Usuario usuarioLogado;
     private Stage stage;
     private IngressoDAO ingressoDAO;
+    
+    private static final double WINDOW_WIDTH = 1024;
+    private static final double WINDOW_HEIGHT = 768;
+    
+    // Cores do tema
+    private static final String PRIMARY_COLOR = "#3498db";
+    private static final String SECONDARY_COLOR = "#2ecc71";
+    private static final String BACKGROUND_COLOR = "#f8f9fa";
+    private static final String TEXT_COLOR = "#2c3e50";
+    private static final String CARD_BACKGROUND = "white";
 
-    public DashboardView(Teatro teatro, Usuario usuarioLogado, Stage stage) {
+    public DashboardViewModerna(Teatro teatro, Usuario usuarioLogado, Stage stage) {
         this.teatro = teatro;
         this.usuarioLogado = usuarioLogado;
         this.stage = stage;
@@ -30,73 +44,83 @@ public class DashboardView {
     public void show() {
         stage.setTitle("Sistema de Teatro - Dashboard");
 
-        // Layout principal
+        // Container principal
         BorderPane root = new BorderPane();
-        root.setPadding(new Insets(20));
+        root.setStyle("-fx-background-color: " + BACKGROUND_COLOR + ";");
 
-        // Menu lateral
-        VBox menuLateral = criarMenuLateral();
-        root.setLeft(menuLateral);
-
-        // Área principal
+        // Barra superior
+        HBox topBar = createTopBar();
+        root.setTop(topBar);
+        
+        // Container central com scroll
         ScrollPane scrollPane = new ScrollPane();
         scrollPane.setFitToWidth(true);
+        scrollPane.setStyle("-fx-background-color: transparent;");
         
-        // Verifica se é admin para mostrar estatísticas ou tela padrão
+        VBox contentContainer = new VBox(30);
+        contentContainer.setPadding(new Insets(30, 40, 40, 40));
+        
+        // Título da página
+        Label pageTitle = new Label("Dashboard");
+        pageTitle.setFont(Font.font("System", FontWeight.BOLD, 28));
+        pageTitle.setTextFill(Color.web(TEXT_COLOR));
+        
+        // Conteúdo principal baseado no tipo de usuário
         if ("ADMIN".equals(usuarioLogado.getTipoUsuario())) {
-            scrollPane.setContent(criarAreaPrincipalAdmin());
+            contentContainer.getChildren().addAll(pageTitle, criarAreaPrincipalAdmin());
         } else {
-            scrollPane.setContent(criarAreaPrincipalUsuario());
+            contentContainer.getChildren().addAll(pageTitle, criarAreaPrincipalUsuario());
         }
         
+        scrollPane.setContent(contentContainer);
         root.setCenter(scrollPane);
 
-        Scene scene = new Scene(root, 1200, 700);
+        Scene scene = new Scene(root, WINDOW_WIDTH, WINDOW_HEIGHT);
         stage.setScene(scene);
         stage.show();
     }
-
-    private VBox criarMenuLateral() {
-        VBox menu = new VBox(10);
-        menu.setPadding(new Insets(10));
-        menu.setStyle("-fx-background-color: #2c3e50;");
-        menu.setPrefWidth(200);
-
-        Button btnDashboard = new Button("Dashboard");
-        Button btnComprar = new Button("Comprar Ingresso");
-        Button btnImprimir = new Button("Imprimir Ingresso");
-        Button btnSair = new Button("Sair");
-
-        // Estilização dos botões
-        String buttonStyle = """
-            -fx-background-color: #3498db;
-            -fx-text-fill: white;
-            -fx-min-width: 180;
-            -fx-min-height: 40;
-            -fx-cursor: hand;
-            """;
-
-        btnDashboard.setStyle(buttonStyle);
-        btnComprar.setStyle(buttonStyle);
-        btnImprimir.setStyle(buttonStyle);
-        btnSair.setStyle(buttonStyle.replace("#3498db", "#e74c3c"));
-
-        menu.getChildren().addAll(btnDashboard, btnComprar, btnImprimir, btnSair);
-
-        // Ações dos botões
-        btnDashboard.setOnAction(e -> mostrarDashboard());
-        btnComprar.setOnAction(e -> mostrarTelaCompra());
-        btnImprimir.setOnAction(e -> mostrarTelaImpressao());
-        btnSair.setOnAction(e -> {
-            new LoginViewModerna(stage).show();
+    
+    private HBox createTopBar() {
+        HBox topBar = new HBox();
+        topBar.setAlignment(Pos.CENTER_LEFT);
+        topBar.setPadding(new Insets(15, 40, 15, 40));
+        topBar.setSpacing(20);
+        topBar.setStyle("-fx-background-color: " + PRIMARY_COLOR + ";");
+        
+        // Logo ou título do sistema
+        Label systemTitle = new Label("Sistema de Teatro");
+        systemTitle.setFont(Font.font("System", FontWeight.BOLD, 20));
+        systemTitle.setTextFill(Color.WHITE);
+        
+        // Informações do usuário
+        HBox userInfo = new HBox();
+        userInfo.setAlignment(Pos.CENTER_RIGHT);
+        userInfo.setSpacing(10);
+        
+        Label userName = new Label(usuarioLogado.getNome());
+        userName.setTextFill(Color.WHITE);
+        
+        Button logoutButton = new Button("Sair");
+        logoutButton.setStyle("-fx-background-color: transparent; -fx-text-fill: white; -fx-border-color: white; -fx-border-radius: 3; -fx-cursor: hand;");
+        
+        logoutButton.setOnAction(e -> {
+            new LoginViewModerna(teatro, stage).show();
         });
-
-        return menu;
+        
+        userInfo.getChildren().addAll(userName, logoutButton);
+        
+        // Espaçador para empurrar o userInfo para a direita
+        Region spacer = new Region();
+        HBox.setHgrow(spacer, Priority.ALWAYS);
+        
+        topBar.getChildren().addAll(systemTitle, spacer, userInfo);
+        
+        return topBar;
     }
 
     private VBox criarAreaPrincipalUsuario() {
         VBox area = new VBox(20);
-        area.setPadding(new Insets(10));
+        area.setPadding(new Insets(20));
         area.setAlignment(Pos.CENTER);
 
         // Mensagem de boas-vindas
@@ -127,8 +151,35 @@ public class DashboardView {
         );
 
         cardInstrucoes.getChildren().addAll(lblInstrucoes, listaInstrucoes);
-        area.getChildren().addAll(lblBoasVindas, cardInstrucoes);
-
+        
+        // Botões de ação
+        HBox botoesAcao = new HBox(20);
+        botoesAcao.setAlignment(Pos.CENTER);
+        
+        Button btnComprar = new Button("Comprar Ingresso");
+        Button btnImprimir = new Button("Imprimir Ingresso");
+        
+        String buttonStyle = """
+            -fx-background-color: %s;
+            -fx-text-fill: white;
+            -fx-font-weight: bold;
+            -fx-padding: 10 20;
+            -fx-background-radius: 5;
+            -fx-cursor: hand;
+            """;
+        
+        btnComprar.setStyle(String.format(buttonStyle, PRIMARY_COLOR));
+        btnImprimir.setStyle(String.format(buttonStyle, SECONDARY_COLOR));
+        
+        btnComprar.setOnAction(e -> new SessoesViewModerna(teatro, usuarioLogado, stage).show());
+        btnImprimir.setOnAction(e -> {
+            List<IngressoModerno> ingressos = teatro.buscarIngressosPorCpf(usuarioLogado.getCpf());
+            new ImpressaoIngressoViewModerna(teatro, usuarioLogado, stage, ingressos).show();
+        });
+        
+        botoesAcao.getChildren().addAll(btnComprar, btnImprimir);
+        
+        area.getChildren().addAll(lblBoasVindas, cardInstrucoes, botoesAcao);
         return area;
     }
 
@@ -137,7 +188,7 @@ public class DashboardView {
         item.setAlignment(Pos.CENTER_LEFT);
 
         Label lblBullet = new Label("•");
-        lblBullet.setStyle("-fx-font-size: 20; -fx-text-fill: #3498db;");
+        lblBullet.setStyle("-fx-font-size: 20; -fx-text-fill: " + PRIMARY_COLOR + ";");
 
         VBox textos = new VBox(5);
         Label lblTitulo = new Label(titulo);
@@ -153,24 +204,14 @@ public class DashboardView {
 
     private VBox criarAreaPrincipalAdmin() {
         VBox area = new VBox(20);
-        area.setPadding(new Insets(10));
+        area.setPadding(new Insets(20));
 
         // Buscar estatísticas
         Map<String, Object> estatisticas = ingressoDAO.buscarEstatisticasVendas();
 
-        // Título do Dashboard Admin
-        Label lblTituloDashboard = new Label("Dashboard Administrativo");
-        lblTituloDashboard.setStyle("""
-            -fx-font-size: 24;
-            -fx-font-weight: bold;
-            -fx-text-fill: #2c3e50;
-            -fx-padding: 0 0 20 0;
-            """);
-
         // Seção de Vendas
-        VBox secaoVendas = new VBox(10);
-        secaoVendas.getChildren().addAll(
-            criarTituloSecao("Estatísticas de Vendas"),
+        VBox secaoVendas = criarCardSecao(
+            "Estatísticas de Vendas",
             criarGridEstatisticas(
                 new String[][] {
                     {"Peça Mais Vendida", formatarEstatistica(estatisticas, "pecaMaisVendida")},
@@ -180,9 +221,8 @@ public class DashboardView {
         );
 
         // Seção de Ocupação
-        VBox secaoOcupacao = new VBox(10);
-        secaoOcupacao.getChildren().addAll(
-            criarTituloSecao("Estatísticas de Ocupação"),
+        VBox secaoOcupacao = criarCardSecao(
+            "Estatísticas de Ocupação",
             criarGridEstatisticas(
                 new String[][] {
                     {"Sessão com Maior Ocupação", formatarEstatistica(estatisticas, "sessaoMaiorOcupacao")},
@@ -192,9 +232,8 @@ public class DashboardView {
         );
 
         // Seção de Faturamento
-        VBox secaoFaturamento = new VBox(10);
-        secaoFaturamento.getChildren().addAll(
-            criarTituloSecao("Estatísticas de Faturamento"),
+        VBox secaoFaturamento = criarCardSecao(
+            "Estatísticas de Faturamento",
             criarGridEstatisticas(
                 new String[][] {
                     {"Peça Mais Lucrativa", formatarEstatistica(estatisticas, "pecaMaisLucrativa")},
@@ -204,31 +243,63 @@ public class DashboardView {
         );
 
         // Seção de Lucro Médio
-        VBox secaoLucroMedio = new VBox(10);
-        secaoLucroMedio.getChildren().addAll(
-            criarTituloSecao("Lucro Médio por Peça"),
+        VBox secaoLucroMedio = criarCardSecao(
+            "Lucro Médio por Peça",
             criarTabelaLucroMedio((List<Map<String, Object>>) estatisticas.get("lucroMedioPorPeca"))
         );
 
+        // Botões de ação
+        HBox botoesAcao = new HBox(20);
+        botoesAcao.setAlignment(Pos.CENTER);
+        
+        Button btnComprar = new Button("Comprar Ingresso");
+        Button btnImprimir = new Button("Imprimir Ingresso");
+        
+        String buttonStyle = """
+            -fx-background-color: %s;
+            -fx-text-fill: white;
+            -fx-font-weight: bold;
+            -fx-padding: 10 20;
+            -fx-background-radius: 5;
+            -fx-cursor: hand;
+            """;
+        
+        btnComprar.setStyle(String.format(buttonStyle, PRIMARY_COLOR));
+        btnImprimir.setStyle(String.format(buttonStyle, SECONDARY_COLOR));
+        
+        btnComprar.setOnAction(e -> new SessoesViewModerna(teatro, usuarioLogado, stage).show());
+        btnImprimir.setOnAction(e -> new ImpressaoIngressoViewModerna(teatro, usuarioLogado, stage, List.of()).show());
+        
+        botoesAcao.getChildren().addAll(btnComprar, btnImprimir);
+
         area.getChildren().addAll(
-            lblTituloDashboard,
             secaoVendas,
             secaoOcupacao,
             secaoFaturamento,
-            secaoLucroMedio
+            secaoLucroMedio,
+            botoesAcao
         );
         return area;
     }
 
-    private Label criarTituloSecao(String titulo) {
-        Label label = new Label(titulo);
-        label.setStyle("""
+    private VBox criarCardSecao(String titulo, Node conteudo) {
+        VBox card = new VBox(15);
+        card.setPadding(new Insets(20));
+        card.setStyle("""
+            -fx-background-color: white;
+            -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.1), 10, 0, 0, 0);
+            -fx-background-radius: 5;
+            """);
+
+        Label lblTitulo = new Label(titulo);
+        lblTitulo.setStyle("""
             -fx-font-size: 20;
             -fx-font-weight: bold;
             -fx-text-fill: #2c3e50;
-            -fx-padding: 10 0 5 0;
             """);
-        return label;
+
+        card.getChildren().addAll(lblTitulo, conteudo);
+        return card;
     }
 
     private GridPane criarGridEstatisticas(String[][] dados) {
@@ -236,11 +307,6 @@ public class DashboardView {
         grid.setHgap(20);
         grid.setVgap(10);
         grid.setPadding(new Insets(10));
-        grid.setStyle("""
-            -fx-background-color: white;
-            -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.1), 10, 0, 0, 0);
-            -fx-background-radius: 5;
-            """);
 
         for (int i = 0; i < dados.length; i++) {
             Label titulo = new Label(dados[i][0]);
@@ -319,17 +385,5 @@ public class DashboardView {
             default:
                 return "Formato não suportado";
         }
-    }
-
-    private void mostrarDashboard() {
-        show();
-    }
-
-    private void mostrarTelaCompra() {
-        new SessoesViewModerna(teatro, usuarioLogado, stage).show();
-    }
-
-    private void mostrarTelaImpressao() {
-        new ImpressaoIngressoViewModerna(teatro, usuarioLogado, stage, List.of()).show();
     }
 } 

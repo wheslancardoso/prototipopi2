@@ -1,38 +1,30 @@
 package com.teatro.view;
 
-import com.teatro.controller.SessaoController;
 import com.teatro.model.*;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.layout.*;
+import javafx.scene.control.Alert;
 import javafx.scene.paint.Color;
 import javafx.scene.text.Font;
 import javafx.scene.text.FontWeight;
 import javafx.stage.Stage;
-import javafx.util.StringConverter;
-
-import java.time.LocalDate;
-import java.time.format.DateTimeFormatter;
-import java.util.List;
 
 /**
  * Versão modernizada da tela de seleção de sessões.
  */
 public class SessoesViewModerna {
-    private Teatro teatro;
-    private Usuario usuario;
-    private Stage stage;
-    private SessaoController sessaoController;
+    private final Teatro teatro;
+    private final Usuario usuario;
+    private final Stage stage;
     
     private static final double WINDOW_WIDTH = 1024;
     private static final double WINDOW_HEIGHT = 768;
-    private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("dd/MM/yyyy");
     
     // Cores do tema
     private static final String PRIMARY_COLOR = "#3498db";
-    private static final String SECONDARY_COLOR = "#2ecc71";
     private static final String BACKGROUND_COLOR = "#f8f9fa";
     private static final String TEXT_COLOR = "#2c3e50";
     private static final String CARD_BACKGROUND = "white";
@@ -41,7 +33,6 @@ public class SessoesViewModerna {
         this.teatro = teatro;
         this.usuario = usuario;
         this.stage = stage;
-        this.sessaoController = new SessaoController();
     }
 
     public void show() {
@@ -116,7 +107,7 @@ public class SessoesViewModerna {
         homeButton.setStyle("-fx-background-color: white; -fx-text-fill: " + PRIMARY_COLOR + "; -fx-font-weight: bold; -fx-cursor: hand;");
         
         homeButton.setOnAction(e -> {
-            new DashboardView(teatro, usuario, stage).show();
+            new DashboardViewModerna(teatro, usuario, stage).show();
         });
         
         // Espaçador para empurrar o userInfo para a direita
@@ -147,162 +138,77 @@ public class SessoesViewModerna {
         separator.setStyle("-fx-background-color: #e0e0e0;");
         
         // Container para os controles de seleção
-        GridPane selectionGrid = new GridPane();
-        selectionGrid.setHgap(15);
-        selectionGrid.setVgap(15);
-        selectionGrid.setAlignment(Pos.CENTER_LEFT);
+        VBox selectionBox = new VBox(15);
+        selectionBox.setAlignment(Pos.CENTER_LEFT);
         
-        // Data da sessão
-        Label dataLabel = new Label("Data:");
-        dataLabel.setFont(Font.font("System", FontWeight.BOLD, 14));
+        // Sessões disponíveis
+        Label sessoesLabel = new Label("Sessões Disponíveis:");
+        sessoesLabel.setFont(Font.font("System", FontWeight.BOLD, 14));
         
-        DatePicker datePicker = new DatePicker(LocalDate.now());
-        datePicker.setStyle(
-            "-fx-pref-width: 200;" +
-            "-fx-background-color: white;" +
-            "-fx-border-color: #e0e0e0;" +
-            "-fx-border-radius: 4;");
+        // Botões para cada sessão disponível
+        HBox sessoesContainer = new HBox(10);
+        sessoesContainer.setAlignment(Pos.CENTER_LEFT);
         
-        // Converter para formatar a data no padrão brasileiro
-        StringConverter<LocalDate> converter = new StringConverter<LocalDate>() {
-            @Override
-            public String toString(LocalDate date) {
-                if (date != null) {
-                    return date.format(DATE_FORMATTER);
-                }
-                return "";
-            }
-
-            @Override
-            public LocalDate fromString(String string) {
-                if (string != null && !string.isEmpty()) {
-                    return LocalDate.parse(string, DATE_FORMATTER);
-                }
-                return null;
-            }
-        };
-        
-        datePicker.setConverter(converter);
-        datePicker.setPromptText("Selecione uma data");
-        
-        // Tipo de sessão (Manhã, Tarde, Noite)
-        Label sessaoLabel = new Label("Sessão:");
-        sessaoLabel.setFont(Font.font("System", FontWeight.BOLD, 14));
-        
-        ComboBox<String> sessaoComboBox = new ComboBox<>();
-        sessaoComboBox.getItems().addAll("Manhã", "Tarde", "Noite");
-        sessaoComboBox.setPromptText("Selecione uma sessão");
-        sessaoComboBox.setStyle("-fx-pref-width: 200; -fx-background-color: white; -fx-border-color: #e0e0e0; -fx-border-radius: 4;");
-        
-        // Horário específico
-        Label horarioLabel = new Label("Horário:");
-        horarioLabel.setFont(Font.font("System", FontWeight.BOLD, 14));
-        
-        ComboBox<HorarioDisponivel> horarioComboBox = new ComboBox<>();
-        horarioComboBox.setPromptText("Selecione um horário");
-        horarioComboBox.setDisable(true); // Inicialmente desabilitado
-        horarioComboBox.setStyle(
-            "-fx-pref-width: 200;" +
-            "-fx-background-color: white;" +
-            "-fx-border-color: #e0e0e0;" +
-            "-fx-border-radius: 4;");
-        
-        // Atualiza os horários disponíveis quando o tipo de sessão é selecionado
-        sessaoComboBox.setOnAction(e -> {
-            String tipoSessao = sessaoComboBox.getValue();
-            if (tipoSessao != null) {
-                LocalDate dataSelecionada = datePicker.getValue() != null ? datePicker.getValue() : LocalDate.now();
+        // Adiciona botões para cada sessão (Manhã, Tarde, Noite)
+        for (String horario : new String[]{"Manhã", "Tarde", "Noite"}) {
+            Button btnSessao = new Button(horario);
+            btnSessao.setStyle(
+                "-fx-background-color: " + PRIMARY_COLOR + ";" +
+                "-fx-text-fill: white;" +
+                "-fx-font-weight: bold;" +
+                "-fx-padding: 8px 20px;" +
+                "-fx-cursor: hand;" +
+                "-fx-background-radius: 4;");
                 
-                // Busca os horários disponíveis para o tipo de sessão
-                List<HorarioDisponivel> horarios = sessaoController.buscarHorariosPorTipoSessao(tipoSessao);
-                
-                // Filtra os horários disponíveis de acordo com a data selecionada
-                horarios = sessaoController.filtrarHorariosDisponiveis(horarios, dataSelecionada);
-                
-                horarioComboBox.getItems().clear();
-                if (!horarios.isEmpty()) {
-                    horarioComboBox.getItems().addAll(horarios);
-                    horarioComboBox.setDisable(false);
-                } else {
-                    horarioComboBox.setDisable(true);
-                    horarioComboBox.setPromptText("Nenhum horário disponível");
-                }
-            } else {
-                horarioComboBox.getItems().clear();
-                horarioComboBox.setDisable(true);
-                horarioComboBox.setPromptText("Selecione um horário");
-            }
-        });
-        
-        // Atualiza os horários quando a data é alterada
-        datePicker.setOnAction(e -> {
-            String tipoSessao = sessaoComboBox.getValue();
-            if (tipoSessao != null) {
-                LocalDate dataSelecionada = datePicker.getValue() != null ? datePicker.getValue() : LocalDate.now();
-                
-                // Busca os horários disponíveis para o tipo de sessão
-                List<HorarioDisponivel> horarios = sessaoController.buscarHorariosPorTipoSessao(tipoSessao);
-                
-                // Filtra os horários disponíveis de acordo com a data selecionada
-                horarios = sessaoController.filtrarHorariosDisponiveis(horarios, dataSelecionada);
-                
-                horarioComboBox.getItems().clear();
-                if (!horarios.isEmpty()) {
-                    horarioComboBox.getItems().addAll(horarios);
-                    horarioComboBox.setDisable(false);
-                } else {
-                    horarioComboBox.setDisable(true);
-                    horarioComboBox.setPromptText("Nenhum horário disponível");
-                }
-            }
-        });
-        
-        // Botão para continuar
-        Button continuarButton = new Button("Continuar");
-        continuarButton.setStyle("-fx-background-color: " + SECONDARY_COLOR + "; -fx-text-fill: white; -fx-font-weight: bold; -fx-padding: 10 20; -fx-background-radius: 4; -fx-cursor: hand;");
-        continuarButton.setDisable(true);
-        
-        // Habilita o botão quando todos os campos estão preenchidos
-        horarioComboBox.setOnAction(e -> {
-            continuarButton.setDisable(horarioComboBox.getValue() == null);
-        });
-        
-        continuarButton.setOnAction(e -> {
-            LocalDate dataSelecionada = datePicker.getValue();
-            String tipoSessao = sessaoComboBox.getValue();
-            HorarioDisponivel horarioSelecionado = horarioComboBox.getValue();
+            // Cria uma cópia final da variável horario para usar dentro da lambda
+            final String horarioFinal = horario;
             
-            if (dataSelecionada != null && tipoSessao != null && horarioSelecionado != null) {
-                // Busca a sessão correspondente ao evento e tipo de sessão
-                Sessao sessaoSelecionada = null;
-                for (Sessao sessao : evento.getSessoes()) {
-                    if (sessao.getHorario().equals(tipoSessao)) {
-                        sessaoSelecionada = sessao;
-                        break;
-                    }
-                }
-                
-                if (sessaoSelecionada != null) {
-                    // Atualiza a data e o horário específico da sessão
-                    sessaoSelecionada.setDataSessao(dataSelecionada);
-                    sessaoSelecionada.setHorarioEspecifico(horarioSelecionado);
+            btnSessao.setOnAction(e -> {
+                // Encontra a sessão correspondente no evento
+                Sessao sessaoDoEvento = evento.getSessoes().stream()
+                    .filter(s -> s.getHorario().equalsIgnoreCase(horarioFinal))
+                    .findFirst()
+                    .orElse(null);
                     
-                    // Abre a tela de compra de ingressos
-                    new CompraIngressoViewModerna(teatro, usuario, stage, sessaoSelecionada).show();
+                if (sessaoDoEvento != null) {
+                    System.out.println("Sessão encontrada: " + sessaoDoEvento.getHorario() + " com " + 
+                                      sessaoDoEvento.getAreas().size() + " áreas");
+                    new CompraIngressoViewModerna(teatro, usuario, stage, sessaoDoEvento).show();
+                } else {
+                    System.err.println("Sessão não encontrada para o horário: " + horarioFinal);
+                    // Mostra uma mensagem de erro para o usuário
+                    Alert alert = new Alert(Alert.AlertType.ERROR);
+                    alert.setTitle("Erro");
+                    alert.setHeaderText(null);
+                    alert.setContentText("Sessão não encontrada para o horário: " + horarioFinal);
+                    alert.showAndWait();
                 }
+            });
+            
+            // Verifica se existe uma sessão para este horário
+            boolean sessaoExiste = evento.getSessoes().stream()
+                .anyMatch(s -> s.getHorario().equalsIgnoreCase(horario));
+                
+            if (!sessaoExiste) {
+                btnSessao.setDisable(true);
+                btnSessao.setStyle(
+                    "-fx-background-color: #cccccc;" +
+                    "-fx-text-fill: #666666;" +
+                    "-fx-font-weight: bold;" +
+                    "-fx-padding: 8px 20px;" +
+                    "-fx-cursor: default;" +
+                    "-fx-background-radius: 4;");
             }
-        });
+            
+            sessoesContainer.getChildren().add(btnSessao);
+        }
         
-        // Adiciona os componentes ao grid
-        selectionGrid.add(dataLabel, 0, 0);
-        selectionGrid.add(datePicker, 1, 0);
-        selectionGrid.add(sessaoLabel, 0, 1);
-        selectionGrid.add(sessaoComboBox, 1, 1);
-        selectionGrid.add(horarioLabel, 0, 2);
-        selectionGrid.add(horarioComboBox, 1, 2);
-        selectionGrid.add(continuarButton, 1, 3);
+        // Adiciona os elementos ao container de seleção
+        selectionBox.getChildren().addAll(sessoesLabel, sessoesContainer);
         
-        card.getChildren().addAll(titulo, separator, selectionGrid);
+        // Adiciona os elementos ao card
+        card.getChildren().addAll(titulo, separator, selectionBox);
+        
         return card;
     }
 }

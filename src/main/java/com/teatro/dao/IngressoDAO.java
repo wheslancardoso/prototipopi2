@@ -11,7 +11,7 @@ import java.util.HashMap;
 public class IngressoDAO {
     
     public boolean salvar(Ingresso ingresso) {
-        String sql = "INSERT INTO ingressos (usuario_id, sessao_id, area_id, numero_poltrona, valor) VALUES (?, ?, ?, ?, ?)";
+        String sql = "INSERT INTO ingressos (usuario_id, sessao_id, area_id, numero_poltrona, valor, codigo) VALUES (?, ?, ?, ?, ?, ?)";
         
         try (Connection conn = DatabaseConnection.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
@@ -21,6 +21,7 @@ public class IngressoDAO {
             stmt.setLong(3, ingresso.getAreaId());
             stmt.setInt(4, ingresso.getNumeroPoltrona());
             stmt.setDouble(5, ingresso.getValor());
+            stmt.setString(6, ingresso.getCodigo());
             
             return stmt.executeUpdate() > 0;
         } catch (SQLException e) {
@@ -52,11 +53,14 @@ public class IngressoDAO {
     
     public List<Ingresso> buscarPorUsuarioId(Long usuarioId) {
         String sql = """
-            SELECT i.*, e.nome as evento_nome, s.horario, a.nome as area_nome 
+            SELECT i.*, e.nome as evento_nome, s.horario, a.nome as area_nome, 
+                   u.nome as usuario_nome, u.cpf as usuario_cpf, u.email as usuario_email,
+                   u.telefone as usuario_telefone, u.tipo_usuario as usuario_tipo
             FROM ingressos i
             JOIN sessoes s ON i.sessao_id = s.id
             JOIN eventos e ON s.evento_id = e.id
             JOIN areas a ON i.area_id = a.id
+            JOIN usuarios u ON i.usuario_id = u.id
             WHERE i.usuario_id = ?
             ORDER BY i.data_compra DESC
             """;
@@ -106,21 +110,25 @@ public class IngressoDAO {
         }
     }
     
-    public boolean atualizarFaturamento(Long sessaoId, Long areaId, double valor) {
-        String sql = "UPDATE sessoes_areas SET faturamento = faturamento + ? WHERE sessao_id = ? AND area_id = ?";
+    public boolean isPoltronaOcupada(Long sessaoId, Long areaId, int numeroPoltrona) {
+        String sql = "SELECT COUNT(*) FROM ingressos WHERE sessao_id = ? AND area_id = ? AND numero_poltrona = ?";
         
         try (Connection conn = DatabaseConnection.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
             
-            stmt.setDouble(1, valor);
-            stmt.setLong(2, sessaoId);
-            stmt.setLong(3, areaId);
+            stmt.setLong(1, sessaoId);
+            stmt.setLong(2, areaId);
+            stmt.setInt(3, numeroPoltrona);
             
-            return stmt.executeUpdate() > 0;
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getInt(1) > 0;
+                }
+            }
         } catch (SQLException e) {
             e.printStackTrace();
-            return false;
         }
+        return false;
     }
     
     public Map<String, Object> buscarEstatisticasVendas() {

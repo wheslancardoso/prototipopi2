@@ -4,7 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class Area implements Comparable<Area> {
-    private String id;
+    private Long id;
     private String nome;
     private double preco;
     private int capacidadeTotal;
@@ -12,7 +12,7 @@ public class Area implements Comparable<Area> {
     private double faturamento;
     private Long sessaoId;
 
-    public Area(String id, String nome, double preco, int capacidadeTotal) {
+    public Area(Long id, String nome, double preco, int capacidadeTotal) {
         this.id = id;
         this.nome = nome;
         this.preco = preco;
@@ -26,7 +26,7 @@ public class Area implements Comparable<Area> {
         }
     }
 
-    public Area(String id, String nome, double preco, int capacidadeTotal, Long sessaoId) {
+    public Area(Long id, String nome, double preco, int capacidadeTotal, Long sessaoId) {
         this(id, nome, preco, capacidadeTotal);
         this.sessaoId = sessaoId;
     }
@@ -45,7 +45,7 @@ public class Area implements Comparable<Area> {
         }
     }
 
-    public String getId() {
+    public Long getId() {
         return id;
     }
 

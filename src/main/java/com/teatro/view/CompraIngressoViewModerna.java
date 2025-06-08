@@ -140,23 +140,17 @@ public class CompraIngressoViewModerna {
         eventoNome.setFont(Font.font("System", FontWeight.BOLD, 24));
         eventoNome.setTextFill(Color.web(TEXT_COLOR));
         
-        // Informações da sessão (data e horário)
-        HBox sessaoInfo = new HBox(15);
+        // Informações da sessão (horário apenas)
+        HBox sessaoInfo = new HBox(10);
         sessaoInfo.setAlignment(Pos.CENTER_LEFT);
-        
-        Label dataLabel = new Label("Data:");
-        dataLabel.setFont(Font.font("System", FontWeight.BOLD, 14));
-        
-        Label dataValor = new Label(sessao.getDataFormatada());
-        dataValor.setFont(Font.font("System", 14));
         
         Label horarioLabel = new Label("Horário:");
         horarioLabel.setFont(Font.font("System", FontWeight.BOLD, 14));
         
-        Label horarioValor = new Label(sessao.getHorarioCompleto());
+        Label horarioValor = new Label(sessao.getHorario());
         horarioValor.setFont(Font.font("System", 14));
         
-        sessaoInfo.getChildren().addAll(dataLabel, dataValor, horarioLabel, horarioValor);
+        sessaoInfo.getChildren().addAll(horarioLabel, horarioValor);
         
         eventInfo.getChildren().addAll(eventoNome, sessaoInfo);
         
@@ -250,7 +244,7 @@ public class CompraIngressoViewModerna {
         );
         continuarButton.setOnAction(e -> {
             if (areaSelecionada != null) {
-                new SelecionarPoltronaView(teatro, usuario, stage, sessao, areaSelecionada).show();
+                new SelecionarPoltronaViewModerna(teatro, usuario, stage, sessao, areaSelecionada).show();
             } else {
                 Alert alert = new Alert(Alert.AlertType.WARNING);
                 alert.setTitle("Atenção");
