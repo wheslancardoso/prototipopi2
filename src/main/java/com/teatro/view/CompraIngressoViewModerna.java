@@ -159,7 +159,13 @@ public class CompraIngressoViewModerna {
         // Informações do evento
         VBox eventInfo = new VBox(5);
         
-        Label eventoNome = new Label(sessao.getNome());
+        // Buscar o evento correspondente à sessão
+        Evento evento = teatro.getEventos().stream()
+            .filter(evt -> evt.getSessoes().contains(sessao))
+            .findFirst()
+            .orElse(null);
+
+        Label eventoNome = new Label(evento != null ? evento.getNome() : "Evento desconhecido");
         eventoNome.setFont(Font.font("System", FontWeight.BOLD, 24));
         eventoNome.setTextFill(Color.web(TEXT_COLOR));
         
