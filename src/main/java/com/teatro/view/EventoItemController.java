@@ -30,7 +30,7 @@ public class EventoItemController {
 
     public void configurarEvento(Evento evento, Teatro teatro, Usuario usuario, Stage stage) {
         labelNomeEvento.setText(evento.getNome());
-        String posterFile = EVENTO_POSTER_MAP.getOrDefault(evento.getNome(), "default.jpg");
+        String posterFile = evento.getPoster() != null ? evento.getPoster() : "default.jpg";
         InputStream imgStream = getClass().getResourceAsStream("/posters/" + posterFile);
         if (imgStream != null) {
             posterImageView.setImage(new Image(imgStream));
