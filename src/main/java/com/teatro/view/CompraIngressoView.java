@@ -18,7 +18,7 @@ import java.util.List;
 /**
  * Versão modernizada da tela de compra de ingressos.
  */
-public class CompraIngressoViewModerna {
+public class CompraIngressoView {
     private Teatro teatro;
     private Usuario usuario;
     private Stage stage;
@@ -37,7 +37,7 @@ public class CompraIngressoViewModerna {
     private static final String CARD_BACKGROUND = "white";
 
 
-    public CompraIngressoViewModerna(Teatro teatro, Usuario usuario, Stage stage, Sessao sessao) {
+    public CompraIngressoView(Teatro teatro, Usuario usuario, Stage stage, Sessao sessao) {
         this.teatro = teatro;
         this.usuario = usuario;
         this.stage = stage;
@@ -52,7 +52,7 @@ public class CompraIngressoViewModerna {
                 alert.setHeaderText("Nenhuma área disponível");
                 alert.setContentText("Não há áreas disponíveis para esta sessão.");
                 alert.showAndWait();
-                new SessoesViewModerna(teatro, usuario, stage).show();
+                new SessoesView(teatro, usuario, stage).show();
                 return;
             }
         } catch (Exception e) {
@@ -61,7 +61,7 @@ public class CompraIngressoViewModerna {
             alert.setHeaderText("Erro ao buscar áreas disponíveis");
             alert.setContentText("Ocorreu um erro ao buscar as áreas disponíveis. Por favor, tente novamente.");
             alert.showAndWait();
-            new SessoesViewModerna(teatro, usuario, stage).show();
+            new SessoesView(teatro, usuario, stage).show();
             return;
         }
     }
@@ -125,7 +125,7 @@ public class CompraIngressoViewModerna {
         logoutButton.setStyle("-fx-background-color: transparent; -fx-text-fill: white; -fx-border-color: white; -fx-border-radius: 3; -fx-cursor: hand;");
         
         logoutButton.setOnAction(e -> {
-            new LoginViewModerna(stage).show();
+            new LoginView(stage).show();
         });
         
         userInfo.getChildren().addAll(userName, logoutButton);
@@ -135,7 +135,7 @@ public class CompraIngressoViewModerna {
         backButton.setStyle("-fx-background-color: white; -fx-text-fill: " + PRIMARY_COLOR + "; -fx-font-weight: bold; -fx-cursor: hand;");
         
         backButton.setOnAction(e -> {
-            new SessoesViewModerna(teatro, usuario, stage).show();
+            new SessoesView(teatro, usuario, stage).show();
         });
         
         // Espaçador para empurrar o userInfo para a direita
@@ -289,7 +289,7 @@ public class CompraIngressoViewModerna {
             -fx-background-radius: 4;
             """);
         voltarButton.setOnAction(e -> {
-            new SessoesViewModerna(teatro, usuario, stage).show();
+            new SessoesView(teatro, usuario, stage).show();
         });
         
         Button continuarButton = new Button("Escolher Poltrona");
@@ -304,7 +304,7 @@ public class CompraIngressoViewModerna {
         );
         continuarButton.setOnAction(e -> {
             if (areaSelecionada != null) {
-                new SelecionarPoltronaViewModerna(teatro, usuario, stage, sessao, areaSelecionada).show();
+                new SelecionarPoltronaView(teatro, usuario, stage, sessao, areaSelecionada).show();
             } else {
                 Alert alert = new Alert(Alert.AlertType.WARNING);
                 alert.setTitle("Atenção");

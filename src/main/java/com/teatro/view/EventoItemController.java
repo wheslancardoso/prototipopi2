@@ -43,7 +43,7 @@ public class EventoItemController {
             btn.setStyle("-fx-background-color: #3498db; -fx-text-fill: white; -fx-font-weight: bold; -fx-background-radius: 6; -fx-padding: 8 22; -fx-font-size: 15px; -fx-cursor: hand;");
             btn.setOnMouseEntered(e -> btn.setStyle("-fx-background-color: #217dbb; -fx-text-fill: white; -fx-font-weight: bold; -fx-background-radius: 6; -fx-padding: 8 22; -fx-font-size: 15px; -fx-cursor: hand;"));
             btn.setOnMouseExited(e -> btn.setStyle("-fx-background-color: #3498db; -fx-text-fill: white; -fx-font-weight: bold; -fx-background-radius: 6; -fx-padding: 8 22; -fx-font-size: 15px; -fx-cursor: hand;"));
-            btn.setOnAction(e -> new CompraIngressoViewModerna(teatro, usuario, stage, sessao).show());
+            btn.setOnAction(e -> new CompraIngressoView(teatro, usuario, stage, sessao).show());
             sessoesBox.getChildren().add(btn);
         }
     }

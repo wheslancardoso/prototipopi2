@@ -18,7 +18,7 @@ import com.teatro.model.factory.UsuarioComumFactory;
 /**
  * Versão modernizada da tela de login.
  */
-public class LoginViewModerna {
+public class LoginView {
     private Teatro teatro;
     private Stage stage;
     
@@ -32,12 +32,12 @@ public class LoginViewModerna {
     private static final String TEXT_COLOR = "#2c3e50";
     private static final String CARD_BACKGROUND = "white";
 
-    public LoginViewModerna(Teatro teatro, Stage stage) {
+    public LoginView(Teatro teatro, Stage stage) {
         this.teatro = teatro;
         this.stage = stage;
     }
     
-    public LoginViewModerna(Stage stage) {
+    public LoginView(Stage stage) {
         this.stage = stage;
     }
 
@@ -76,9 +76,9 @@ public class LoginViewModerna {
         );
         
         // Título do sistema
-        Label title = new Label("Sistema de Teatro");
-        title.setFont(Font.font("System", FontWeight.BOLD, 28));
-        title.setTextFill(Color.web(PRIMARY_COLOR));
+        Label titulo = new Label("Ingresso Fácil");
+        titulo.setFont(Font.font("System", FontWeight.BOLD, 28));
+        titulo.setTextFill(Color.web(PRIMARY_COLOR));
         
         // Subtítulo
         Label subtitle = new Label("Faça login para continuar");
@@ -207,7 +207,7 @@ public class LoginViewModerna {
         
         loginForm.getChildren().addAll(identificadorBox, senhaBox, loginButton, esqueceuSenhaButton, cadastrarButton, errorLabel);
         
-        card.getChildren().addAll(title, subtitle, separator, loginForm);
+        card.getChildren().addAll(titulo, subtitle, separator, loginForm);
         return card;
     }
     

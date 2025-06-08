@@ -1,6 +1,5 @@
 package com.teatro.view;
 
-import com.teatro.controller.SessaoController;
 import com.teatro.model.Area;
 import com.teatro.model.Evento;
 import com.teatro.model.IngressoModerno;
@@ -26,7 +25,7 @@ import java.util.Optional;
 /**
  * Versão modernizada da tela de seleção de poltronas.
  */
-public class SelecionarPoltronaViewModerna {
+public class SelecionarPoltronaView {
     private Teatro teatro;
     private Usuario usuario;
     private Stage stage;
@@ -55,7 +54,7 @@ public class SelecionarPoltronaViewModerna {
     private static final String POLTRONA_OCUPADA = "#e74c3c";
     private static final String POLTRONA_SELECIONADA = "#3498db";
 
-    public SelecionarPoltronaViewModerna(Teatro teatro, Usuario usuario, Stage stage, Sessao sessao, Area area) {
+    public SelecionarPoltronaView(Teatro teatro, Usuario usuario, Stage stage, Sessao sessao, Area area) {
         this.teatro = teatro;
         this.usuario = usuario;
         this.stage = stage;
@@ -73,7 +72,7 @@ public class SelecionarPoltronaViewModerna {
                 alert.setHeaderText("Área lotada");
                 alert.setContentText("Esta área não possui mais poltronas disponíveis.");
                 alert.showAndWait();
-                new CompraIngressoViewModerna(teatro, usuario, stage, sessao).show();
+                new CompraIngressoView(teatro, usuario, stage, sessao).show();
                 return;
             }
         } catch (Exception e) {
@@ -82,7 +81,7 @@ public class SelecionarPoltronaViewModerna {
             alert.setHeaderText("Erro ao buscar poltronas disponíveis");
             alert.setContentText("Ocorreu um erro ao buscar as poltronas disponíveis. Por favor, tente novamente.");
             alert.showAndWait();
-            new CompraIngressoViewModerna(teatro, usuario, stage, sessao).show();
+            new CompraIngressoView(teatro, usuario, stage, sessao).show();
             return;
         }
     }
@@ -322,7 +321,7 @@ public class SelecionarPoltronaViewModerna {
         voltarButton.setStyle("-fx-background-color: #95a5a6; -fx-text-fill: white; -fx-padding: 10 20; -fx-font-size: 14; -fx-cursor: hand; -fx-background-radius: 4;");
         
         voltarButton.setOnAction(e -> {
-            new CompraIngressoViewModerna(teatro, usuario, stage, sessao).show();
+            new CompraIngressoView(teatro, usuario, stage, sessao).show();
         });
         
         this.confirmarButton = new Button("Confirmar Compra");
@@ -393,7 +392,7 @@ public class SelecionarPoltronaViewModerna {
                     usuario.adicionarIngressos(ingressos);
                     
                     // Mostra a tela de impressão
-                    new ImpressaoIngressoViewModerna(teatro, usuario, stage, ingressos).show();
+                    new ImpressaoIngressoView(teatro, usuario, stage, ingressos).show();
                 } else if (ingressos.isEmpty()) {
                     Alert alert = new Alert(Alert.AlertType.ERROR);
                     alert.setTitle("Erro");
@@ -449,7 +448,7 @@ public class SelecionarPoltronaViewModerna {
         logoutButton.setStyle("-fx-background-color: transparent; -fx-text-fill: white; -fx-border-color: white; -fx-border-radius: 3; -fx-cursor: hand;");
         
         logoutButton.setOnAction(e -> {
-            new LoginViewModerna(stage).show();
+            new LoginView(stage).show();
         });
         
         userInfo.getChildren().addAll(userName, logoutButton);
@@ -459,7 +458,7 @@ public class SelecionarPoltronaViewModerna {
         backButton.setStyle("-fx-background-color: white; -fx-text-fill: " + PRIMARY_COLOR + "; -fx-font-weight: bold; -fx-cursor: hand;");
         
         backButton.setOnAction(e -> {
-            new CompraIngressoViewModerna(teatro, usuario, stage, sessao).show();
+            new CompraIngressoView(teatro, usuario, stage, sessao).show();
         });
         
         // Espaçador para empurrar o userInfo para a direita

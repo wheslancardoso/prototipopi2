@@ -20,7 +20,7 @@ import java.util.List;
 /**
  * Versão modernizada da tela de impressão de ingressos.
  */
-public class ImpressaoIngressoViewModerna {
+public class ImpressaoIngressoView {
     private Teatro teatro;
     private Usuario usuario;
     private Stage stage;
@@ -36,7 +36,7 @@ public class ImpressaoIngressoViewModerna {
     private static final String TEXT_COLOR = "#2c3e50";
     private static final String CARD_BACKGROUND = "white";
 
-    public ImpressaoIngressoViewModerna(Teatro teatro, Usuario usuario, Stage stage, List<IngressoModerno> ingressos) {
+    public ImpressaoIngressoView(Teatro teatro, Usuario usuario, Stage stage, List<IngressoModerno> ingressos) {
         this.teatro = teatro;
         this.usuario = usuario;
         this.stage = stage;
@@ -110,7 +110,7 @@ public class ImpressaoIngressoViewModerna {
         Button dashboardButton = new Button("Dashboard");
         dashboardButton.setStyle("-fx-background-color: white; -fx-text-fill: " + PRIMARY_COLOR + "; -fx-font-weight: bold; -fx-cursor: hand;");
         dashboardButton.setOnAction(e -> {
-            new DashboardViewModerna(teatro, usuario, stage).show();
+            new DashboardView(teatro, usuario, stage).show();
         });
         
         // Informações do usuário
@@ -125,7 +125,7 @@ public class ImpressaoIngressoViewModerna {
         logoutButton.setStyle("-fx-background-color: transparent; -fx-text-fill: white; -fx-border-color: white; -fx-border-radius: 3; -fx-cursor: hand;");
         
         logoutButton.setOnAction(e -> {
-            new LoginViewModerna(stage).show();
+            new LoginView(stage).show();
         });
         
         userInfo.getChildren().addAll(userName, logoutButton);

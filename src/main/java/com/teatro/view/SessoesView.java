@@ -16,7 +16,7 @@ import javafx.scene.Node;
 /**
  * Versão modernizada da tela de seleção de sessões.
  */
-public class SessoesViewModerna {
+public class SessoesView {
     private final Teatro teatro;
     private final Usuario usuario;
     private final Stage stage;
@@ -32,14 +32,14 @@ public class SessoesViewModerna {
 
     private Evento eventoSelecionado;
 
-    public SessoesViewModerna(Teatro teatro, Usuario usuario, Stage stage) {
+    public SessoesView(Teatro teatro, Usuario usuario, Stage stage) {
         this.teatro = teatro;
         this.usuario = usuario;
         this.stage = stage;
         this.eventoSelecionado = null;
     }
 
-    public SessoesViewModerna(Teatro teatro, Usuario usuario, Stage stage, Evento eventoSelecionado) {
+    public SessoesView(Teatro teatro, Usuario usuario, Stage stage, Evento eventoSelecionado) {
         this.teatro = teatro;
         this.usuario = usuario;
         this.stage = stage;
@@ -111,7 +111,7 @@ public class SessoesViewModerna {
         logoutButton.setStyle("-fx-background-color: transparent; -fx-text-fill: white; -fx-border-color: white; -fx-border-radius: 3; -fx-cursor: hand;");
         
         logoutButton.setOnAction(e -> {
-            new LoginViewModerna(stage).show();
+            new LoginView(stage).show();
         });
         
         userInfo.getChildren().addAll(userName, logoutButton);

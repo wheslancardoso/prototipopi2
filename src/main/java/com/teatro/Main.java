@@ -2,7 +2,7 @@ package com.teatro;
 
 import com.teatro.database.DatabaseConnection;
 import com.teatro.model.Teatro;
-import com.teatro.view.LoginViewModerna;
+import com.teatro.view.LoginView;
 import javafx.application.Application;
 import javafx.application.Platform;
 import javafx.stage.Stage;
@@ -47,7 +47,7 @@ public class Main extends Application {
         primaryStage.setMinHeight(768);
         
         // Inicia com a tela de login modernizada
-        new LoginViewModerna(teatro, primaryStage).show();
+        new LoginView(teatro, primaryStage).show();
     }
 
 }

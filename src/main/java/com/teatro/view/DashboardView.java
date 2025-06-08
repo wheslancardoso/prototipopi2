@@ -19,7 +19,7 @@ import java.util.ArrayList;
 /**
  * Versão modernizada da tela de dashboard do sistema.
  */
-public class DashboardViewModerna {
+public class DashboardView {
     private Teatro teatro;
     private Usuario usuarioLogado;
     private Stage stage;
@@ -35,7 +35,7 @@ public class DashboardViewModerna {
     private static final String TEXT_COLOR = "#2c3e50";
     private static final String CARD_BACKGROUND = "white";
 
-    public DashboardViewModerna(Teatro teatro, Usuario usuarioLogado, Stage stage) {
+    public DashboardView(Teatro teatro, Usuario usuarioLogado, Stage stage) {
         this.teatro = teatro;
         this.usuarioLogado = usuarioLogado;
         this.stage = stage;
@@ -105,7 +105,7 @@ public class DashboardViewModerna {
         logoutButton.setStyle("-fx-background-color: transparent; -fx-text-fill: white; -fx-border-color: white; -fx-border-radius: 3; -fx-cursor: hand;");
         
         logoutButton.setOnAction(e -> {
-            new LoginViewModerna(teatro, stage).show();
+            new LoginView(teatro, stage).show();
         });
         
         userInfo.getChildren().addAll(userName, logoutButton);
@@ -172,7 +172,7 @@ public class DashboardViewModerna {
         btnComprar.setStyle(String.format(buttonStyle, PRIMARY_COLOR));
         btnImprimir.setStyle(String.format(buttonStyle, SECONDARY_COLOR));
         
-        btnComprar.setOnAction(e -> new SessoesViewModerna(teatro, usuarioLogado, stage).show());
+        btnComprar.setOnAction(e -> new SessoesView(teatro, usuarioLogado, stage).show());
         btnImprimir.setOnAction(e -> {
             List<Ingresso> ingressos = ingressoService.buscarPorUsuario(usuarioLogado.getCpf());
             List<IngressoModerno> ingressosModernos = new ArrayList<>();
@@ -191,7 +191,7 @@ public class DashboardViewModerna {
                 ));
             }
             
-            new ImpressaoIngressoViewModerna(teatro, usuarioLogado, stage, ingressosModernos).show();
+            new ImpressaoIngressoView(teatro, usuarioLogado, stage, ingressosModernos).show();
         });
         
         botoesAcao.getChildren().addAll(btnComprar, btnImprimir);
@@ -292,8 +292,8 @@ public class DashboardViewModerna {
         btnComprar.setStyle(String.format(buttonStyle, PRIMARY_COLOR));
         btnImprimir.setStyle(String.format(buttonStyle, SECONDARY_COLOR));
         
-        btnComprar.setOnAction(e -> new SessoesViewModerna(teatro, usuarioLogado, stage).show());
-        btnImprimir.setOnAction(e -> new ImpressaoIngressoViewModerna(teatro, usuarioLogado, stage, List.of()).show());
+        btnComprar.setOnAction(e -> new SessoesView(teatro, usuarioLogado, stage).show());
+        btnImprimir.setOnAction(e -> new ImpressaoIngressoView(teatro, usuarioLogado, stage, List.of()).show());
         
         botoesAcao.getChildren().addAll(btnComprar, btnImprimir);
 
