@@ -230,7 +230,7 @@ public class CompraIngressoViewModerna {
             if (areaSelecionada != null) {
                 try {
                     // Atualiza as informações da área
-                    Area areaAtualizada = teatro.getAreaAtualizada(areaSelecionada.getId());
+                    Area areaAtualizada = teatro.getAreaAtualizada(sessao.getId(), areaSelecionada.getId());
                     if (areaAtualizada != null) {
                         precoValor.setText(String.format("R$ %.2f", areaAtualizada.getPreco()));
                         disponibilidadeValor.setText(areaAtualizada.getPoltronasDisponiveis() + " de " + areaAtualizada.getCapacidadeTotal());

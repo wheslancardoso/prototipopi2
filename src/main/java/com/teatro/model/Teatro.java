@@ -199,22 +199,19 @@ public class Teatro {
         }
     }
     
-    public Area getAreaAtualizada(Long areaId) {
+    public Area getAreaAtualizada(Long sessaoId, Long areaId) {
         try {
             Validator.validarNaoNulo(areaId, "ID da Área");
-            
+            Validator.validarNaoNulo(sessaoId, "ID da Sessão");
             // Busca a área original
             Optional<Area> areaOriginal = areas.stream()
                 .filter(a -> a.getId().equals(areaId))
                 .findFirst();
-                
             if (areaOriginal.isEmpty()) {
                 throw new TeatroException("Área não encontrada");
             }
-            
-            // Busca as poltronas ocupadas para esta área
-            List<Integer> poltronasOcupadas = ingressoService.getPoltronasOcupadas(null, areaId);
-            
+            // Busca as poltronas ocupadas para esta área NA SESSÃO CORRETA
+            List<Integer> poltronasOcupadas = ingressoService.getPoltronasOcupadas(sessaoId, areaId);
             // Cria uma cópia da área com as poltronas ocupadas
             Area areaAtualizada = new Area(
                 areaOriginal.get().getId(),
@@ -223,7 +220,6 @@ public class Teatro {
                 areaOriginal.get().getCapacidadeTotal()
             );
             areaAtualizada.carregarPoltronasOcupadas(poltronasOcupadas);
-            
             return areaAtualizada;
         } catch (TeatroException e) {
             logger.error("Erro ao buscar área atualizada: " + e.getMessage());
