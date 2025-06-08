@@ -2,6 +2,7 @@ package com.teatro.model;
 
 import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
+import com.teatro.model.state.*;
 
 public class PoltronaStateTest {
     @Test

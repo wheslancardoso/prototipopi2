@@ -1,5 +1,8 @@
 package com.teatro.model;
 
+import com.teatro.model.state.PoltronaState;
+import com.teatro.model.state.DisponivelState;
+
 public class Poltrona {
     private int numero;
     private boolean ocupada;
