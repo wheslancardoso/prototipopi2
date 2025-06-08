@@ -5,6 +5,7 @@ public class Poltrona {
     private boolean ocupada;
     private String cpfOcupante;
     private Area area; // Referência à área da poltrona
+    private PoltronaState state = new DisponivelState();
 
     public Poltrona(int numero) {
         this.numero = numero;
@@ -49,5 +50,21 @@ public class Poltrona {
     
     public void setArea(Area area) {
         this.area = area;
+    }
+
+    public void ocupar() {
+        state.ocupar(this);
+    }
+    public void liberar() {
+        state.liberar(this);
+    }
+    public void selecionar() {
+        state.selecionar(this);
+    }
+    public String getNomeEstado() {
+        return state.getNomeEstado();
+    }
+    public void setState(PoltronaState state) {
+        this.state = state;
     }
 } 

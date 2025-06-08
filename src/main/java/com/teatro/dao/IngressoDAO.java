@@ -14,6 +14,8 @@ import com.teatro.database.DatabaseConnection;
 import com.teatro.model.Sessao;
 import com.teatro.dao.EventoDAO;
 import com.teatro.model.Evento;
+import com.teatro.dao.AreaDAO;
+import com.teatro.model.Area;
 
 /**
  * Implementação do DAO para a entidade Ingresso.
@@ -250,9 +252,12 @@ public class IngressoDAO implements DAO<Ingresso, Long> {
                     }
                 }
             }
+            // Buscar área e preencher nome da área
+            AreaDAO areaDAO = new AreaDAO(DatabaseConnection.getInstance().getConnection());
+            Optional<Area> areaOpt = areaDAO.buscarPorId(ingresso.getAreaId());
+            areaOpt.ifPresent(area -> ingresso.setAreaNome(area.getNome()));
         } catch (Exception e) {
-            // Logar mas não interromper
-            logger.error("Erro ao preencher tipoSessao/nome do evento do ingresso: " + e.getMessage());
+            logger.error("Erro ao preencher tipoSessao/nome do evento/nome da área do ingresso: " + e.getMessage());
         }
         return ingresso;
     }

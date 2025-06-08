@@ -40,6 +40,7 @@ public class ImpressaoIngressoViewModerna {
         this.teatro = teatro;
         this.usuario = usuario;
         this.stage = stage;
+        ingressos.sort((a, b) -> b.getDataCompra().compareTo(a.getDataCompra()));
         this.ingressos = ingressos;
     }
 

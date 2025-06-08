@@ -73,8 +73,8 @@ public class SessoesViewModerna {
         if (eventoSelecionado != null) {
             eventsContainer.getChildren().add(criarCardEvento(eventoSelecionado));
         } else {
-            for (Evento evento : teatro.getEventos()) {
-                eventsContainer.getChildren().add(criarCardEvento(evento));
+        for (Evento evento : teatro.getEventos()) {
+            eventsContainer.getChildren().add(criarCardEvento(evento));
             }
         }
         
