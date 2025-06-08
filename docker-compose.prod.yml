@@ -1,0 +1,67 @@
+version: "3.8"
+
+services:
+    # Banco de dados MySQL para produção
+    mysql:
+        image: mysql:8.0
+        container_name: teatro_mysql_prod
+        restart: unless-stopped
+        environment:
+            MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-root}
+            MYSQL_DATABASE: teatro_db
+            MYSQL_USER: ${MYSQL_USER:-teatro_user}
+            MYSQL_PASSWORD: ${MYSQL_PASSWORD:-teatro_pass}
+        ports:
+            - "${MYSQL_PORT:-3306}:3306"
+        volumes:
+            - mysql_prod_data:/var/lib/mysql
+            - ./src/main/resources/database.sql:/docker-entrypoint-initdb.d/01-init.sql
+            - ./src/main/resources/schema.sql:/docker-entrypoint-initdb.d/02-schema.sql
+        networks:
+            - teatro_prod_network
+        healthcheck:
+            test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+            timeout: 20s
+            retries: 10
+        deploy:
+            resources:
+                limits:
+                    memory: 1G
+                reservations:
+                    memory: 512M
+
+    # Aplicação JavaFX para produção (apenas JAR)
+    teatro-prod:
+        build:
+            context: .
+            dockerfile: Dockerfile.jar
+        container_name: teatro_prod
+        restart: unless-stopped
+        depends_on:
+            mysql:
+                condition: service_healthy
+        environment:
+            - DB_HOST=mysql
+            - DB_PORT=3306
+            - DB_NAME=teatro_db
+            - DB_USER=${MYSQL_USER:-root}
+            - DB_PASSWORD=${MYSQL_ROOT_PASSWORD:-root}
+            - JAVA_OPTS=-Xmx512m -Xms256m
+        volumes:
+            - ./logs:/app/logs
+        networks:
+            - teatro_prod_network
+        deploy:
+            resources:
+                limits:
+                    memory: 1G
+                reservations:
+                    memory: 512M
+
+volumes:
+    mysql_prod_data:
+        driver: local
+
+networks:
+    teatro_prod_network:
+        driver: bridge

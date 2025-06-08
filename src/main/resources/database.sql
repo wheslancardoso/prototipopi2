@@ -16,7 +16,9 @@ CREATE TABLE IF NOT EXISTS usuarios (
 CREATE TABLE IF NOT EXISTS eventos (
     id BIGINT AUTO_INCREMENT PRIMARY KEY,
     nome VARCHAR(100) NOT NULL,
-    data_criacao TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    poster VARCHAR(255),
+    data_criacao TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE(nome)
 );
 
 CREATE TABLE IF NOT EXISTS sessoes (
@@ -61,11 +63,11 @@ CREATE TABLE IF NOT EXISTS ingressos (
 INSERT INTO usuarios (nome, cpf, senha, email, tipo_usuario) VALUES 
 ('Administrador', '000.000.000-00', 'admin123', 'admin@teatro.com', 'ADMIN');
 
--- Inserir eventos
-INSERT INTO eventos (nome) VALUES 
-('Hamlet'),
-('O Fantasma da Opera'),
-('O Auto da Compadecida');
+-- Inserir eventos com posters
+INSERT INTO eventos (nome, poster) VALUES 
+('Hamlet', 'hamletposter.jpg'),
+('O Fantasma da Opera', 'ofantasmadaoperaposter.jpg'),
+('O Auto da Compadecida', 'compadecidaposter.jpg');
 
 -- Inserir áreas com as configurações especificadas
 INSERT INTO areas (nome, preco, capacidade_total) VALUES
