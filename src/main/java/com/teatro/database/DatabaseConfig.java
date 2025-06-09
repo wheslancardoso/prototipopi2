@@ -90,4 +90,28 @@ public class DatabaseConfig {
     public int getMaxWait() {
         return Integer.parseInt(properties.getProperty("db.pool.maxWait", "5000"));
     }
+    
+    public int getMinIdle() {
+        return Integer.parseInt(properties.getProperty("db.pool.minIdle", "5"));
+    }
+    
+    public int getIdleTimeout() {
+        return Integer.parseInt(properties.getProperty("db.pool.idleTimeout", "300000"));
+    }
+    
+    public boolean getCachePrepStmts() {
+        return Boolean.parseBoolean(properties.getProperty("db.pool.cachePrepStmts", "true"));
+    }
+    
+    public int getPrepStmtCacheSize() {
+        return Integer.parseInt(properties.getProperty("db.pool.prepStmtCacheSize", "250"));
+    }
+    
+    public int getPrepStmtCacheSqlLimit() {
+        return Integer.parseInt(properties.getProperty("db.pool.prepStmtCacheSqlLimit", "2048"));
+    }
+    
+    public boolean getUseServerPrepStmts() {
+        return Boolean.parseBoolean(properties.getProperty("db.pool.useServerPrepStmts", "true"));
+    }
 } 
