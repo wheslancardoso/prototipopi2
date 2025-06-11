@@ -1,0 +1,91 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<BorderPane xmlns="http://javafx.com/javafx/11.0.1" xmlns:fx="http://javafx.com/fxml/1" 
+            fx:controller="com.teatro.view.controllers.RecuperacaoSenhaController"
+            stylesheets="@../css/recuperacao-senha.css">
+   
+   <center>
+      <VBox alignment="CENTER" spacing="20" styleClass="main-container">
+         <padding>
+            <Insets bottom="40.0" left="40.0" right="40.0" top="40.0" />
+         </padding>
+         
+         <!-- Card de Recuperação -->
+         <VBox alignment="CENTER" spacing="20" styleClass="recuperacao-card" maxWidth="400">
+            <padding>
+               <Insets bottom="30.0" left="30.0" right="30.0" top="30.0" />
+            </padding>
+            
+            <!-- Cabeçalho -->
+            <VBox alignment="CENTER" spacing="10">
+               <Label fx:id="recuperacao_lblTitulo" text="Recuperação de Senha" styleClass="title" />
+               <Label fx:id="recuperacao_lblSubtitulo" text="Digite seu CPF e email para recuperar sua senha" 
+                      styleClass="subtitle" wrapText="true" />
+               
+               <Separator>
+                  <VBox.margin>
+                     <Insets bottom="10.0" top="10.0" />
+                  </VBox.margin>
+               </Separator>
+            </VBox>
+            
+            <!-- Formulário -->
+            <VBox spacing="15" alignment="CENTER">
+               
+               <!-- CPF -->
+               <VBox spacing="5">
+                  <Label text="CPF *" styleClass="field-label" />
+                  <TextField fx:id="recuperacao_txtCpf" promptText="000.000.000-00" 
+                            styleClass="input-field" prefHeight="40" />
+               </VBox>
+               
+               <!-- Email -->
+               <VBox spacing="5">
+                  <Label text="E-mail *" styleClass="field-label" />
+                  <TextField fx:id="recuperacao_txtEmail" promptText="seu@email.com" 
+                            styleClass="input-field" prefHeight="40" />
+               </VBox>
+               
+               <!-- Nova Senha -->
+               <VBox spacing="5">
+                  <Label text="Nova Senha *" styleClass="field-label" />
+                  <PasswordField fx:id="recuperacao_txtNovaSenha" promptText="Digite sua nova senha" 
+                                styleClass="input-field" prefHeight="40" />
+               </VBox>
+               
+               <!-- Confirmar Nova Senha -->
+               <VBox spacing="5">
+                  <Label text="Confirmar Nova Senha *" styleClass="field-label" />
+                  <PasswordField fx:id="recuperacao_txtConfirmarSenha" promptText="Confirme sua nova senha" 
+                                styleClass="input-field" prefHeight="40" />
+               </VBox>
+               
+               <!-- Mensagem de Erro -->
+               <Label fx:id="recuperacao_lblErro" styleClass="error-label" visible="false" />
+               
+               <!-- Mensagem de Sucesso -->
+               <Label fx:id="recuperacao_lblSucesso" styleClass="success-label" visible="false" />
+               
+               <!-- Botões -->
+               <HBox spacing="15" alignment="CENTER">
+                  <Button fx:id="recuperacao_btnCancelar" text="Cancelar" 
+                         onAction="#handleCancelar" styleClass="secondary-button" 
+                         prefHeight="40" prefWidth="100" />
+                  
+                  <Button fx:id="recuperacao_btnRecuperar" text="Recuperar" 
+                         onAction="#handleRecuperar" styleClass="primary-button" 
+                         prefHeight="40" prefWidth="100" />
+               </HBox>
+               
+            </VBox>
+            
+         </VBox>
+         
+      </VBox>
+   </center>
+   
+</BorderPane>

@@ -1,0 +1,321 @@
+/* ===== COMPRA INGRESSO STYLES ===== */
+
+/* Cores do tema */
+.root {
+    -fx-primary-color: #3498db;
+    -fx-secondary-color: #2ecc71;
+    -fx-background-color: #f8f9fa;
+    -fx-text-color: #2c3e50;
+    -fx-card-background: white;
+    -fx-error-color: #e74c3c;
+    -fx-success-color: #27ae60;
+}
+
+/* Barra superior */
+.top-bar {
+    -fx-background-color: -fx-primary-color;
+}
+
+.logo-title {
+    -fx-font-family: "System Bold";
+    -fx-font-size: 20px;
+    -fx-font-weight: bold;
+    -fx-text-fill: white;
+}
+
+.nav-button {
+    -fx-background-color: white;
+    -fx-text-fill: -fx-primary-color;
+    -fx-font-weight: bold;
+    -fx-cursor: hand;
+    -fx-background-radius: 4;
+    -fx-padding: 8 16;
+}
+
+.nav-button:hover {
+    -fx-background-color: #ecf0f1;
+}
+
+.user-info {
+    -fx-alignment: center-right;
+}
+
+.user-name {
+    -fx-text-fill: white;
+    -fx-font-size: 14px;
+}
+
+.logout-button {
+    -fx-background-color: transparent;
+    -fx-text-fill: white;
+    -fx-border-color: white;
+    -fx-border-radius: 3;
+    -fx-cursor: hand;
+    -fx-padding: 6 12;
+}
+
+.logout-button:hover {
+    -fx-background-color: rgba(255, 255, 255, 0.1);
+}
+
+/* Conteúdo principal */
+.main-scroll {
+    -fx-background-color: transparent;
+    -fx-background: transparent;
+}
+
+.main-scroll .viewport {
+    -fx-background-color: transparent;
+}
+
+.main-scroll .content {
+    -fx-background-color: transparent;
+}
+
+.main-content {
+    -fx-background-color: -fx-background-color;
+}
+
+/* Título da página */
+.page-title {
+    -fx-font-family: "System Bold";
+    -fx-font-size: 28px;
+    -fx-font-weight: bold;
+    -fx-text-fill: -fx-text-color;
+}
+
+/* Card de informações */
+.info-card {
+    -fx-background-color: -fx-card-background;
+    -fx-effect: dropshadow(three-pass-box, rgba(0, 0, 0, 0.1), 10, 0, 0, 0);
+    -fx-background-radius: 8;
+    -fx-spacing: 20;
+}
+
+/* Informações do evento */
+.evento-info {
+    -fx-spacing: 5;
+}
+
+.evento-title {
+    -fx-font-family: "System Bold";
+    -fx-font-size: 24px;
+    -fx-font-weight: bold;
+    -fx-text-fill: -fx-text-color;
+}
+
+.info-label {
+    -fx-font-family: "System Bold";
+    -fx-font-size: 14px;
+    -fx-font-weight: bold;
+    -fx-text-fill: -fx-text-color;
+}
+
+.info-label-bold {
+    -fx-font-family: "System Bold";
+    -fx-font-size: 14px;
+    -fx-font-weight: bold;
+    -fx-text-fill: -fx-text-color;
+}
+
+.info-value {
+    -fx-font-size: 14px;
+    -fx-text-fill: -fx-text-color;
+}
+
+/* Seção de seleção de área */
+.area-selection {
+    -fx-spacing: 15;
+}
+
+.section-title {
+    -fx-font-family: "System Bold";
+    -fx-font-size: 16px;
+    -fx-font-weight: bold;
+    -fx-text-fill: -fx-text-color;
+}
+
+/* ComboBox de áreas */
+.area-combo {
+    -fx-background-color: white;
+    -fx-border-color: #e0e0e0;
+    -fx-border-radius: 4;
+    -fx-padding: 8;
+    -fx-font-size: 14px;
+    -fx-pref-width: 300;
+}
+
+.area-combo:focused {
+    -fx-border-color: -fx-primary-color;
+    -fx-border-width: 2;
+}
+
+.area-combo .list-cell {
+    -fx-padding: 8;
+    -fx-font-size: 14px;
+}
+
+.area-combo .list-cell:filled:hover {
+    -fx-background-color: #ecf0f1;
+}
+
+.area-combo .list-cell:filled:selected {
+    -fx-background-color: -fx-primary-color;
+    -fx-text-fill: white;
+}
+
+/* Informações da área */
+.area-info {
+    -fx-background-color: #f8f9fa;
+    -fx-border-color: #e0e0e0;
+    -fx-border-radius: 4;
+    -fx-padding: 15;
+    -fx-spacing: 10;
+}
+
+.price-value {
+    -fx-font-family: "System Bold";
+    -fx-font-size: 18px;
+    -fx-font-weight: bold;
+    -fx-text-fill: -fx-secondary-color;
+}
+
+.availability-value {
+    -fx-font-size: 14px;
+    -fx-text-fill: -fx-text-color;
+}
+
+/* Separador */
+.separator .line {
+    -fx-border-color: #e0e0e0;
+}
+
+/* Botões de ação */
+.action-buttons {
+    -fx-spacing: 15;
+    -fx-alignment: center-right;
+}
+
+.primary-button {
+    -fx-background-color: -fx-secondary-color;
+    -fx-text-fill: white;
+    -fx-font-weight: bold;
+    -fx-padding: 10 20;
+    -fx-background-radius: 4;
+    -fx-cursor: hand;
+    -fx-font-size: 14px;
+}
+
+.primary-button:hover {
+    -fx-background-color: #27ae60;
+}
+
+.primary-button:pressed {
+    -fx-background-color: #229954;
+}
+
+.primary-button:disabled {
+    -fx-background-color: #bdc3c7;
+    -fx-cursor: default;
+}
+
+.secondary-button {
+    -fx-background-color: #95a5a6;
+    -fx-text-fill: white;
+    -fx-font-weight: bold;
+    -fx-padding: 10 20;
+    -fx-background-radius: 4;
+    -fx-cursor: hand;
+    -fx-font-size: 14px;
+}
+
+.secondary-button:hover {
+    -fx-background-color: #7f8c8d;
+}
+
+.secondary-button:pressed {
+    -fx-background-color: #6c7b7d;
+}
+
+/* Mensagem de erro */
+.error-label {
+    -fx-text-fill: -fx-error-color;
+    -fx-font-size: 12px;
+    -fx-font-weight: bold;
+}
+
+/* Animações */
+.info-card {
+    -fx-scale-x: 1;
+    -fx-scale-y: 1;
+}
+
+.info-card:hover {
+    -fx-scale-x: 1.01;
+    -fx-scale-y: 1.01;
+}
+
+.primary-button,
+.secondary-button {
+    -fx-scale-x: 1;
+    -fx-scale-y: 1;
+}
+
+.primary-button:pressed,
+.secondary-button:pressed {
+    -fx-scale-x: 0.98;
+    -fx-scale-y: 0.98;
+}
+
+.area-combo {
+    -fx-scale-x: 1;
+    -fx-scale-y: 1;
+}
+
+.area-combo:hover {
+    -fx-scale-x: 1.02;
+    -fx-scale-y: 1.02;
+}
+
+/* Estados visuais */
+.area-info.warning {
+    -fx-background-color: #fff3cd;
+    -fx-border-color: #ffeaa7;
+}
+
+.area-info.success {
+    -fx-background-color: #d4edda;
+    -fx-border-color: #c3e6cb;
+}
+
+.area-info.error {
+    -fx-background-color: #f8d7da;
+    -fx-border-color: #f5c6cb;
+}
+
+/* Responsividade */
+@media screen and (max-width: 768px) {
+    .info-card {
+        -fx-padding: 20;
+    }
+
+    .page-title {
+        -fx-font-size: 24px;
+    }
+
+    .evento-title {
+        -fx-font-size: 20px;
+    }
+
+    .area-combo {
+        -fx-pref-width: 250;
+    }
+
+    .action-buttons {
+        -fx-alignment: center;
+    }
+
+    .price-value {
+        -fx-font-size: 16px;
+    }
+}

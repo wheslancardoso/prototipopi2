@@ -1,0 +1,113 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<BorderPane xmlns="http://javafx.com/javafx/11.0.1" xmlns:fx="http://javafx.com/fxml/1" 
+            fx:controller="com.teatro.view.controllers.CadastroController"
+            stylesheets="@../css/cadastro.css">
+   
+   <center>
+      <ScrollPane fitToWidth="true" styleClass="scroll-pane">
+         <VBox alignment="CENTER" spacing="20" styleClass="main-container">
+            <padding>
+               <Insets bottom="40.0" left="40.0" right="40.0" top="40.0" />
+            </padding>
+            
+            <!-- Card de Cadastro -->
+            <VBox alignment="CENTER" spacing="20" styleClass="cadastro-card" maxWidth="500">
+               <padding>
+                  <Insets bottom="30.0" left="30.0" right="30.0" top="30.0" />
+               </padding>
+               
+               <!-- Cabeçalho -->
+               <VBox alignment="CENTER" spacing="10">
+                  <Label fx:id="cadastro_lblTitulo" text="Cadastro de Usuário" styleClass="title" />
+                  <Label fx:id="cadastro_lblSubtitulo" text="Preencha os dados para criar sua conta" styleClass="subtitle" />
+                  
+                  <Separator>
+                     <VBox.margin>
+                        <Insets bottom="10.0" top="10.0" />
+                     </VBox.margin>
+                  </Separator>
+               </VBox>
+               
+               <!-- Formulário -->
+               <VBox spacing="15" alignment="CENTER">
+                  
+                  <!-- Nome Completo -->
+                  <VBox spacing="5">
+                     <Label text="Nome Completo *" styleClass="field-label" />
+                     <TextField fx:id="cadastro_txtNome" promptText="Digite seu nome completo" 
+                               styleClass="input-field" prefHeight="40" />
+                  </VBox>
+                  
+                  <!-- CPF -->
+                  <VBox spacing="5">
+                     <Label text="CPF *" styleClass="field-label" />
+                     <TextField fx:id="cadastro_txtCpf" promptText="000.000.000-00" 
+                               styleClass="input-field" prefHeight="40" />
+                  </VBox>
+                  
+                  <!-- Email -->
+                  <VBox spacing="5">
+                     <Label text="E-mail *" styleClass="field-label" />
+                     <TextField fx:id="cadastro_txtEmail" promptText="seu@email.com" 
+                               styleClass="input-field" prefHeight="40" />
+                  </VBox>
+                  
+                  <!-- Telefone -->
+                  <VBox spacing="5">
+                     <Label text="Telefone *" styleClass="field-label" />
+                     <TextField fx:id="cadastro_txtTelefone" promptText="(00) 00000-0000" 
+                               styleClass="input-field" prefHeight="40" />
+                  </VBox>
+                  
+                  <!-- Endereço -->
+                  <VBox spacing="5">
+                     <Label text="Endereço" styleClass="field-label" />
+                     <TextField fx:id="cadastro_txtEndereco" promptText="Seu endereço completo" 
+                               styleClass="input-field" prefHeight="40" />
+                  </VBox>
+                  
+                  <!-- Senha -->
+                  <VBox spacing="5">
+                     <Label text="Senha *" styleClass="field-label" />
+                     <PasswordField fx:id="cadastro_txtSenha" promptText="Digite uma senha segura" 
+                                   styleClass="input-field" prefHeight="40" />
+                  </VBox>
+                  
+                  <!-- Confirmar Senha -->
+                  <VBox spacing="5">
+                     <Label text="Confirmar Senha *" styleClass="field-label" />
+                     <PasswordField fx:id="cadastro_txtConfirmarSenha" promptText="Confirme sua senha" 
+                                   styleClass="input-field" prefHeight="40" />
+                  </VBox>
+                  
+                  <!-- Mensagem de Erro -->
+                  <Label fx:id="cadastro_lblErro" styleClass="error-label" visible="false" />
+                  
+                  <!-- Mensagem de Sucesso -->
+                  <Label fx:id="cadastro_lblSucesso" styleClass="success-label" visible="false" />
+                  
+                  <!-- Botões -->
+                  <HBox spacing="15" alignment="CENTER">
+                     <Button fx:id="cadastro_btnCancelar" text="Cancelar" 
+                            onAction="#handleCancelar" styleClass="secondary-button" 
+                            prefHeight="45" prefWidth="120" />
+                     
+                     <Button fx:id="cadastro_btnCadastrar" text="Criar Conta" 
+                            onAction="#handleCadastrar" styleClass="primary-button" 
+                            prefHeight="45" prefWidth="120" />
+                  </HBox>
+                  
+               </VBox>
+               
+            </VBox>
+            
+         </VBox>
+      </ScrollPane>
+   </center>
+   
+</BorderPane>

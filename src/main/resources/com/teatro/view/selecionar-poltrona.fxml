@@ -1,0 +1,157 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.shape.Rectangle?>
+
+<BorderPane xmlns="http://javafx.com/javafx/11.0.1" xmlns:fx="http://javafx.com/fxml/1" 
+            fx:controller="com.teatro.view.controllers.SelecionarPoltronaController"
+            stylesheets="@../css/selecionar-poltrona.css">
+   
+   <!-- Barra Superior -->
+   <top>
+      <HBox alignment="CENTER_LEFT" spacing="20" styleClass="top-bar">
+         <padding>
+            <Insets bottom="15.0" left="40.0" right="40.0" top="15.0" />
+         </padding>
+         
+         <!-- Logo/Título -->
+         <Label fx:id="poltrona_lblLogo" text="Sistema de Teatro" styleClass="logo-title" />
+         
+         <!-- Botão Voltar -->
+         <Button fx:id="poltrona_btnVoltar" text="Voltar para Seleção de Área" 
+                onAction="#handleVoltar" styleClass="nav-button" />
+         
+         <!-- Spacer -->
+         <Region HBox.hgrow="ALWAYS" />
+         
+         <!-- Informações do Usuário -->
+         <HBox alignment="CENTER_RIGHT" spacing="10" styleClass="user-info">
+            <Label fx:id="poltrona_lblUsuario" text="Usuário" styleClass="user-name" />
+            <Button fx:id="poltrona_btnSair" text="Sair" onAction="#handleSair" styleClass="logout-button" />
+         </HBox>
+      </HBox>
+   </top>
+   
+   <!-- Conteúdo Principal -->
+   <center>
+      <ScrollPane fitToWidth="true" styleClass="main-scroll">
+         <VBox spacing="30" styleClass="main-content">
+            <padding>
+               <Insets bottom="40.0" left="40.0" right="40.0" top="30.0" />
+            </padding>
+            
+            <!-- Título da Página -->
+            <Label fx:id="poltrona_lblTitulo" text="Seleção de Poltronas" styleClass="page-title" />
+            
+            <!-- Informações da Sessão -->
+            <HBox spacing="30" alignment="CENTER_LEFT" styleClass="session-info">
+               
+               <!-- Evento -->
+               <VBox spacing="5">
+                  <Label text="Evento:" styleClass="info-label" />
+                  <Label fx:id="poltrona_lblEvento" text="Nome do Evento" styleClass="info-value" />
+               </VBox>
+               
+               <!-- Horário -->
+               <VBox spacing="5">
+                  <Label text="Horário:" styleClass="info-label" />
+                  <Label fx:id="poltrona_lblHorario" text="Horário da Sessão" styleClass="info-value" />
+               </VBox>
+               
+               <!-- Área -->
+               <VBox spacing="5">
+                  <Label text="Área:" styleClass="info-label" />
+                  <Label fx:id="poltrona_lblArea" text="Nome da Área - Preço" styleClass="info-value" />
+               </VBox>
+               
+            </HBox>
+            
+            <!-- Legenda das Poltronas -->
+            <HBox spacing="20" alignment="CENTER" styleClass="legend-container">
+               
+               <!-- Disponível -->
+               <HBox spacing="10" alignment="CENTER_LEFT" styleClass="legend-item">
+                  <Rectangle width="20" height="20" styleClass="poltrona-disponivel-legend" />
+                  <Label text="Disponível" styleClass="legend-text" />
+               </HBox>
+               
+               <!-- Ocupada -->
+               <HBox spacing="10" alignment="CENTER_LEFT" styleClass="legend-item">
+                  <Rectangle width="20" height="20" styleClass="poltrona-ocupada-legend" />
+                  <Label text="Ocupada" styleClass="legend-text" />
+               </HBox>
+               
+               <!-- Selecionada -->
+               <HBox spacing="10" alignment="CENTER_LEFT" styleClass="legend-item">
+                  <Rectangle width="20" height="20" styleClass="poltrona-selecionada-legend" />
+                  <Label text="Selecionada" styleClass="legend-text" />
+               </HBox>
+               
+            </HBox>
+            
+            <!-- Mapa de Poltronas -->
+            <VBox alignment="CENTER" spacing="20" styleClass="mapa-container">
+               
+               <!-- Tela -->
+               <StackPane styleClass="tela-container">
+                  <Rectangle fx:id="poltrona_rectTela" width="600" height="20" styleClass="tela" />
+                  <Label text="TELA" styleClass="tela-label" />
+               </StackPane>
+               
+               <!-- Grid de Poltronas -->
+               <GridPane fx:id="poltrona_gridPoltronas" alignment="CENTER" 
+                        hgap="10" vgap="10" styleClass="poltronas-grid">
+                  <!-- As poltronas serão adicionadas dinamicamente -->
+               </GridPane>
+               
+            </VBox>
+            
+            <!-- Resumo da Compra -->
+            <VBox spacing="15" styleClass="resumo-container">
+               
+               <Label text="Resumo da Compra" styleClass="resumo-title" />
+               
+               <VBox spacing="10" styleClass="resumo-info">
+                  
+                  <!-- Quantidade -->
+                  <HBox spacing="10" alignment="CENTER_LEFT">
+                     <Label text="Quantidade de ingressos:" styleClass="resumo-label" />
+                     <Label fx:id="poltrona_lblQuantidade" text="0" styleClass="resumo-value" />
+                  </HBox>
+                  
+                  <!-- Valor Unitário -->
+                  <HBox spacing="10" alignment="CENTER_LEFT">
+                     <Label text="Valor unitário:" styleClass="resumo-label" />
+                     <Label fx:id="poltrona_lblValorUnitario" text="R$ 0,00" styleClass="resumo-value" />
+                  </HBox>
+                  
+                  <!-- Valor Total -->
+                  <HBox spacing="10" alignment="CENTER_LEFT">
+                     <Label text="Valor total:" styleClass="resumo-label-bold" />
+                     <Label fx:id="poltrona_lblValorTotal" text="R$ 0,00" styleClass="resumo-value-total" />
+                  </HBox>
+                  
+               </VBox>
+               
+               <!-- Mensagem de Erro -->
+               <Label fx:id="poltrona_lblErro" styleClass="error-label" visible="false" />
+               
+               <!-- Botões de Ação -->
+               <HBox spacing="15" alignment="CENTER_RIGHT" styleClass="action-buttons">
+                  
+                  <Button fx:id="poltrona_btnCancelar" text="Cancelar" 
+                         onAction="#handleCancelar" styleClass="secondary-button" />
+                  
+                  <Button fx:id="poltrona_btnConfirmar" text="Confirmar Compra" 
+                         onAction="#handleConfirmar" styleClass="primary-button" />
+               </HBox>
+               
+            </VBox>
+            
+         </VBox>
+      </ScrollPane>
+   </center>
+   
+</BorderPane>

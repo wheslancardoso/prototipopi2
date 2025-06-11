@@ -1,0 +1,126 @@
+/* ===== LOGIN STYLES ===== */
+
+/* Cores do tema */
+.root {
+    -fx-primary-color: #3498db;
+    -fx-background-color: #f8f9fa;
+    -fx-text-color: #2c3e50;
+    -fx-card-background: white;
+}
+
+/* Container principal */
+.main-container {
+    -fx-background-color: -fx-background-color;
+}
+
+/* Card de login */
+.login-card {
+    -fx-background-color: -fx-card-background;
+    -fx-effect: dropshadow(three-pass-box, rgba(0, 0, 0, 0.1), 10, 0, 0, 0);
+    -fx-background-radius: 8;
+}
+
+/* Títulos */
+.title {
+    -fx-font-family: "System Bold";
+    -fx-font-size: 28px;
+    -fx-text-fill: -fx-primary-color;
+    -fx-font-weight: bold;
+}
+
+.subtitle {
+    -fx-font-family: "System";
+    -fx-font-size: 16px;
+    -fx-text-fill: -fx-text-color;
+}
+
+/* Labels dos campos */
+.field-label {
+    -fx-font-family: "System Bold";
+    -fx-font-size: 14px;
+    -fx-text-fill: -fx-text-color;
+    -fx-font-weight: bold;
+}
+
+/* Campos de entrada */
+.input-field {
+    -fx-background-color: white;
+    -fx-border-color: #e0e0e0;
+    -fx-border-radius: 4;
+    -fx-padding: 8;
+    -fx-font-size: 14px;
+}
+
+.input-field:focused {
+    -fx-border-color: -fx-primary-color;
+    -fx-border-width: 2;
+}
+
+/* Botões */
+.primary-button {
+    -fx-background-color: -fx-primary-color;
+    -fx-text-fill: white;
+    -fx-background-radius: 4;
+    -fx-cursor: hand;
+    -fx-font-size: 14px;
+    -fx-font-weight: bold;
+}
+
+.primary-button:hover {
+    -fx-background-color: #217dbb;
+}
+
+.primary-button:pressed {
+    -fx-background-color: #1f6fa7;
+}
+
+.secondary-button {
+    -fx-background-color: transparent;
+    -fx-text-fill: -fx-primary-color;
+    -fx-border-color: -fx-primary-color;
+    -fx-border-radius: 4;
+    -fx-border-width: 1px;
+    -fx-cursor: hand;
+    -fx-font-size: 13px;
+}
+
+.secondary-button:hover {
+    -fx-background-color: rgba(52, 152, 219, 0.1);
+}
+
+.link-button {
+    -fx-background-color: transparent;
+    -fx-text-fill: -fx-primary-color;
+    -fx-cursor: hand;
+    -fx-underline: false;
+}
+
+.link-button:hover {
+    -fx-underline: true;
+}
+
+/* Mensagem de erro */
+.error-label {
+    -fx-text-fill: #e74c3c;
+    -fx-font-size: 12px;
+}
+
+/* Separador */
+.separator .line {
+    -fx-border-color: #e0e0e0;
+}
+
+/* Responsividade */
+@media screen and (max-width: 768px) {
+    .login-card {
+        -fx-max-width: 90%;
+    }
+
+    .title {
+        -fx-font-size: 24px;
+    }
+
+    .subtitle {
+        -fx-font-size: 14px;
+    }
+}

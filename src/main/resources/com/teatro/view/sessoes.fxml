@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<BorderPane xmlns="http://javafx.com/javafx/11.0.1" xmlns:fx="http://javafx.com/fxml/1" 
+            fx:controller="com.teatro.view.controllers.SessoesController"
+            stylesheets="@../css/sessoes.css">
+   
+   <!-- Barra Superior -->
+   <top>
+      <HBox alignment="CENTER_LEFT" spacing="20" styleClass="top-bar">
+         <padding>
+            <Insets bottom="15.0" left="40.0" right="40.0" top="15.0" />
+         </padding>
+         
+         <!-- Logo/Título -->
+         <Label fx:id="sessoes_lblLogo" text="Sistema de Teatro" styleClass="logo-title" />
+         
+         <!-- Botão Dashboard -->
+         <Button fx:id="sessoes_btnDashboard" text="Dashboard" onAction="#handleDashboard" styleClass="nav-button" />
+         
+         <!-- Spacer -->
+         <Region HBox.hgrow="ALWAYS" />
+         
+         <!-- Informações do Usuário -->
+         <HBox alignment="CENTER_RIGHT" spacing="10" styleClass="user-info">
+            <Label fx:id="sessoes_lblUsuario" text="Usuário" styleClass="user-name" />
+            <Button fx:id="sessoes_btnSair" text="Sair" onAction="#handleSair" styleClass="logout-button" />
+         </HBox>
+      </HBox>
+   </top>
+   
+   <!-- Conteúdo Principal -->
+   <center>
+      <ScrollPane fitToWidth="true" styleClass="main-scroll">
+         <VBox spacing="30" styleClass="main-content">
+            <padding>
+               <Insets bottom="40.0" left="40.0" right="40.0" top="30.0" />
+            </padding>
+            
+            <!-- Título da Página -->
+            <Label fx:id="sessoes_lblTitulo" text="Sessões Disponíveis" styleClass="page-title" />
+            
+            <!-- Container dos Eventos -->
+            <VBox fx:id="sessoes_containerEventos" spacing="25" styleClass="events-container">
+               <!-- Os eventos serão adicionados dinamicamente -->
+            </VBox>
+            
+            <!-- Mensagem quando não há eventos -->
+            <VBox fx:id="sessoes_containerVazio" alignment="CENTER" spacing="20" 
+                  styleClass="empty-container" visible="false" managed="false">
+               <Label text="Nenhum evento disponível no momento" styleClass="empty-message" />
+               <Label text="Volte em breve para conferir nossa programação!" styleClass="empty-subtitle" />
+            </VBox>
+            
+         </VBox>
+      </ScrollPane>
+   </center>
+   
+</BorderPane>

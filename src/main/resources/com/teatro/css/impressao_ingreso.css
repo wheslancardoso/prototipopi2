@@ -1,0 +1,393 @@
+/* ===== IMPRESSÃO INGRESSO STYLES ===== */
+
+/* Cores do tema */
+.root {
+    -fx-primary-color: #3498db;
+    -fx-secondary-color: #2ecc71;
+    -fx-success-color: #27ae60;
+    -fx-background-color: #f8f9fa;
+    -fx-text-color: #2c3e50;
+    -fx-card-background: white;
+    -fx-error-color: #e74c3c;
+}
+
+/* Barra superior */
+.top-bar {
+    -fx-background-color: -fx-primary-color;
+}
+
+.logo-title {
+    -fx-font-family: "System Bold";
+    -fx-font-size: 20px;
+    -fx-font-weight: bold;
+    -fx-text-fill: white;
+}
+
+.nav-button {
+    -fx-background-color: white;
+    -fx-text-fill: -fx-primary-color;
+    -fx-font-weight: bold;
+    -fx-cursor: hand;
+    -fx-background-radius: 4;
+    -fx-padding: 8 16;
+}
+
+.nav-button:hover {
+    -fx-background-color: #ecf0f1;
+}
+
+.user-info {
+    -fx-alignment: center-right;
+}
+
+.user-name {
+    -fx-text-fill: white;
+    -fx-font-size: 14px;
+}
+
+.logout-button {
+    -fx-background-color: transparent;
+    -fx-text-fill: white;
+    -fx-border-color: white;
+    -fx-border-radius: 3;
+    -fx-cursor: hand;
+    -fx-padding: 6 12;
+}
+
+.logout-button:hover {
+    -fx-background-color: rgba(255, 255, 255, 0.1);
+}
+
+/* Conteúdo principal */
+.main-scroll {
+    -fx-background-color: transparent;
+    -fx-background: transparent;
+}
+
+.main-scroll .viewport {
+    -fx-background-color: transparent;
+}
+
+.main-scroll .content {
+    -fx-background-color: transparent;
+}
+
+.main-content {
+    -fx-background-color: -fx-background-color;
+}
+
+/* Cabeçalho da página */
+.page-header {
+    -fx-alignment: center;
+    -fx-spacing: 10;
+    -fx-padding: 20;
+}
+
+.page-title-success {
+    -fx-font-family: "System Bold";
+    -fx-font-size: 28px;
+    -fx-font-weight: bold;
+    -fx-text-fill: -fx-success-color;
+}
+
+.page-subtitle {
+    -fx-font-family: "System";
+    -fx-font-size: 16px;
+    -fx-text-fill: -fx-text-color;
+}
+
+/* Container dos ingressos */
+.ingressos-container {
+    -fx-spacing: 20;
+}
+
+/* Cards dos ingressos */
+.ingresso-card {
+    -fx-background-color: -fx-card-background;
+    -fx-effect: dropshadow(three-pass-box, rgba(0, 0, 0, 0.1), 10, 0, 0, 0);
+    -fx-background-radius: 8;
+    -fx-spacing: 15;
+}
+
+.ingresso-card:hover {
+    -fx-effect: dropshadow(three-pass-box, rgba(0, 0, 0, 0.15), 15, 0, 0, 2);
+    -fx-scale-x: 1.02;
+    -fx-scale-y: 1.02;
+}
+
+/* Título do evento no card */
+.evento-title {
+    -fx-font-family: "System Bold";
+    -fx-font-size: 20px;
+    -fx-font-weight: bold;
+    -fx-text-fill: -fx-text-color;
+}
+
+/* Grid de informações */
+.info-grid {
+    -fx-hgap: 20;
+    -fx-vgap: 10;
+}
+
+.info-title {
+    -fx-font-family: "System Bold";
+    -fx-font-size: 14px;
+    -fx-font-weight: bold;
+    -fx-text-fill: -fx-text-color;
+}
+
+.info-value {
+    -fx-font-size: 14px;
+    -fx-text-fill: -fx-text-color;
+}
+
+/* Separador */
+.separator .line {
+    -fx-border-color: #e0e0e0;
+}
+
+/* Botão de imprimir do card */
+.imprimir-button {
+    -fx-background-color: -fx-success-color;
+    -fx-text-fill: white;
+    -fx-font-weight: bold;
+    -fx-padding: 10 20;
+    -fx-background-radius: 4;
+    -fx-cursor: hand;
+    -fx-font-size: 14px;
+}
+
+.imprimir-button:hover {
+    -fx-background-color: #229954;
+}
+
+.imprimir-button:pressed {
+    -fx-background-color: #1e8449;
+}
+
+/* Container vazio */
+.empty-container {
+    -fx-alignment: center;
+    -fx-spacing: 20;
+    -fx-padding: 60;
+    -fx-background-color: -fx-card-background;
+    -fx-background-radius: 8;
+    -fx-effect: dropshadow(three-pass-box, rgba(0, 0, 0, 0.1), 10, 0, 0, 0);
+}
+
+.empty-message {
+    -fx-font-family: "System Bold";
+    -fx-font-size: 18px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #7f8c8d;
+}
+
+.empty-subtitle {
+    -fx-font-size: 14px;
+    -fx-text-fill: #95a5a6;
+}
+
+/* Ações globais */
+.global-actions {
+    -fx-spacing: 15;
+    -fx-alignment: center;
+    -fx-padding: 20;
+}
+
+/* Botões de ação */
+.primary-button {
+    -fx-background-color: -fx-primary-color;
+    -fx-text-fill: white;
+    -fx-font-weight: bold;
+    -fx-padding: 12 24;
+    -fx-background-radius: 4;
+    -fx-cursor: hand;
+    -fx-font-size: 14px;
+}
+
+.primary-button:hover {
+    -fx-background-color: #217dbb;
+}
+
+.primary-button:pressed {
+    -fx-background-color: #1f6fa7;
+}
+
+.secondary-button {
+    -fx-background-color: -fx-success-color;
+    -fx-text-fill: white;
+    -fx-font-weight: bold;
+    -fx-padding: 12 24;
+    -fx-background-radius: 4;
+    -fx-cursor: hand;
+    -fx-font-size: 14px;
+}
+
+.secondary-button:hover {
+    -fx-background-color: #229954;
+}
+
+.secondary-button:pressed {
+    -fx-background-color: #1e8449;
+}
+
+/* Modal de impressão */
+.impressao-modal {
+    -fx-background-color: -fx-card-background;
+    -fx-spacing: 20;
+}
+
+.ingresso-texto {
+    -fx-font-family: "Courier New", monospace;
+    -fx-font-size: 12px;
+    -fx-background-color: white;
+    -fx-border-color: #e0e0e0;
+    -fx-border-radius: 4;
+    -fx-padding: 15;
+}
+
+.fechar-button {
+    -fx-background-color: -fx-success-color;
+    -fx-text-fill: white;
+    -fx-font-weight: bold;
+    -fx-padding: 10 20;
+    -fx-background-radius: 4;
+    -fx-cursor: hand;
+    -fx-font-size: 14px;
+}
+
+.fechar-button:hover {
+    -fx-background-color: #229954;
+}
+
+.fechar-button:pressed {
+    -fx-background-color: #1e8449;
+}
+
+/* Animações */
+.primary-button,
+.secondary-button,
+.imprimir-button,
+.fechar-button {
+    -fx-scale-x: 1;
+    -fx-scale-y: 1;
+}
+
+.primary-button:pressed,
+.secondary-button:pressed,
+.imprimir-button:pressed,
+.fechar-button:pressed {
+    -fx-scale-x: 0.98;
+    -fx-scale-y: 0.98;
+}
+
+/* Efeitos especiais */
+.ingresso-card.highlight {
+    -fx-border-color: -fx-success-color;
+    -fx-border-width: 2;
+    -fx-border-radius: 8;
+}
+
+.ingresso-card.new-purchase {
+    -fx-background-color: #e8f5e8;
+    -fx-border-color: -fx-success-color;
+    -fx-border-width: 1;
+}
+
+/* Estados de destaque */
+.info-value.highlight {
+    -fx-font-weight: bold;
+    -fx-text-fill: -fx-success-color;
+}
+
+.info-value.code {
+    -fx-font-family: "Courier New", monospace;
+    -fx-background-color: #f8f9fa;
+    -fx-padding: 2 6;
+    -fx-background-radius: 3;
+    -fx-border-color: #e0e0e0;
+    -fx-border-radius: 3;
+}
+
+/* Scroll pane customizado */
+.scroll-pane {
+    -fx-background-color: transparent;
+    -fx-background: transparent;
+}
+
+.scroll-pane .viewport {
+    -fx-background-color: transparent;
+}
+
+.scroll-pane .content {
+    -fx-background-color: transparent;
+}
+
+/* Responsividade */
+@media screen and (max-width: 768px) {
+    .ingresso-card {
+        -fx-padding: 15;
+        -fx-spacing: 12;
+    }
+
+    .page-title-success {
+        -fx-font-size: 24px;
+    }
+
+    .page-subtitle {
+        -fx-font-size: 14px;
+    }
+
+    .evento-title {
+        -fx-font-size: 18px;
+    }
+
+    .info-grid {
+        -fx-hgap: 15;
+        -fx-vgap: 8;
+    }
+
+    .global-actions {
+        -fx-alignment: center;
+        -fx-spacing: 10;
+    }
+
+    .primary-button,
+    .secondary-button {
+        -fx-padding: 10 20;
+        -fx-font-size: 13px;
+    }
+
+    .empty-container {
+        -fx-padding: 40;
+    }
+
+    .empty-message {
+        -fx-font-size: 16px;
+    }
+
+    .empty-subtitle {
+        -fx-font-size: 13px;
+    }
+}
+
+/* Impressão específica */
+@media print {
+    .top-bar,
+    .global-actions,
+    .imprimir-button {
+        -fx-opacity: 0;
+    }
+
+    .ingresso-card {
+        -fx-background-color: white;
+        -fx-effect: none;
+        -fx-border-color: black;
+        -fx-border-width: 1;
+    }
+
+    .page-title-success,
+    .page-subtitle {
+        -fx-opacity: 0;
+    }
+}

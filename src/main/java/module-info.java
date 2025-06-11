@@ -15,9 +15,11 @@ module com.teatro {
     exports com.teatro.database;
     exports com.teatro.util;
     exports com.teatro.model.builder;
+    exports com.teatro.view.util;
     
     opens com.teatro to javafx.fxml;
     opens com.teatro.controller to javafx.fxml;
     opens com.teatro.model to javafx.base;
     opens com.teatro.view to javafx.fxml;
+    opens com.teatro.view.util to javafx.fxml;
 }

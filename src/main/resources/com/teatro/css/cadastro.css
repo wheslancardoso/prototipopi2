@@ -1,0 +1,181 @@
+/* ===== CADASTRO STYLES ===== */
+
+/* Cores do tema */
+.root {
+    -fx-primary-color: #3498db;
+    -fx-secondary-color: #2ecc71;
+    -fx-background-color: #f8f9fa;
+    -fx-text-color: #2c3e50;
+    -fx-card-background: white;
+    -fx-error-color: #e74c3c;
+    -fx-success-color: #27ae60;
+}
+
+/* Container principal */
+.main-container {
+    -fx-background-color: -fx-background-color;
+}
+
+/* Scroll pane */
+.scroll-pane {
+    -fx-background-color: transparent;
+    -fx-background: transparent;
+}
+
+.scroll-pane .viewport {
+    -fx-background-color: transparent;
+}
+
+.scroll-pane .content {
+    -fx-background-color: transparent;
+}
+
+/* Card de cadastro */
+.cadastro-card {
+    -fx-background-color: -fx-card-background;
+    -fx-effect: dropshadow(three-pass-box, rgba(0, 0, 0, 0.1), 10, 0, 0, 0);
+    -fx-background-radius: 8;
+}
+
+/* Títulos */
+.title {
+    -fx-font-family: "System Bold";
+    -fx-font-size: 24px;
+    -fx-text-fill: -fx-primary-color;
+    -fx-font-weight: bold;
+}
+
+.subtitle {
+    -fx-font-family: "System";
+    -fx-font-size: 14px;
+    -fx-text-fill: -fx-text-color;
+}
+
+/* Labels dos campos */
+.field-label {
+    -fx-font-family: "System Bold";
+    -fx-font-size: 14px;
+    -fx-text-fill: -fx-text-color;
+    -fx-font-weight: bold;
+}
+
+/* Campos de entrada */
+.input-field {
+    -fx-background-color: white;
+    -fx-border-color: #e0e0e0;
+    -fx-border-radius: 4;
+    -fx-padding: 8;
+    -fx-font-size: 14px;
+    -fx-pref-width: 300;
+}
+
+.input-field:focused {
+    -fx-border-color: -fx-primary-color;
+    -fx-border-width: 2;
+}
+
+/* Validação de campos */
+.input-field.error {
+    -fx-border-color: -fx-error-color;
+    -fx-border-width: 2;
+}
+
+.input-field.success {
+    -fx-border-color: -fx-success-color;
+    -fx-border-width: 2;
+}
+
+/* Botões */
+.primary-button {
+    -fx-background-color: -fx-primary-color;
+    -fx-text-fill: white;
+    -fx-background-radius: 4;
+    -fx-cursor: hand;
+    -fx-font-size: 14px;
+    -fx-font-weight: bold;
+}
+
+.primary-button:hover {
+    -fx-background-color: #217dbb;
+}
+
+.primary-button:pressed {
+    -fx-background-color: #1f6fa7;
+}
+
+.primary-button:disabled {
+    -fx-background-color: #bdc3c7;
+    -fx-cursor: default;
+}
+
+.secondary-button {
+    -fx-background-color: #95a5a6;
+    -fx-text-fill: white;
+    -fx-background-radius: 4;
+    -fx-cursor: hand;
+    -fx-font-size: 14px;
+}
+
+.secondary-button:hover {
+    -fx-background-color: #7f8c8d;
+}
+
+.secondary-button:pressed {
+    -fx-background-color: #6c7b7d;
+}
+
+/* Mensagens */
+.error-label {
+    -fx-text-fill: -fx-error-color;
+    -fx-font-size: 12px;
+    -fx-font-weight: bold;
+}
+
+.success-label {
+    -fx-text-fill: -fx-success-color;
+    -fx-font-size: 12px;
+    -fx-font-weight: bold;
+}
+
+/* Separador */
+.separator .line {
+    -fx-border-color: #e0e0e0;
+}
+
+/* Efeitos de hover para campos */
+.input-field:hover {
+    -fx-border-color: #c0c0c0;
+}
+
+/* Animações */
+.primary-button,
+.secondary-button {
+    -fx-effect: null;
+    -fx-scale-y: 1;
+    -fx-scale-x: 1;
+}
+
+.primary-button:pressed,
+.secondary-button:pressed {
+    -fx-scale-y: 0.98;
+    -fx-scale-x: 0.98;
+}
+
+/* Responsividade */
+@media screen and (max-width: 768px) {
+    .cadastro-card {
+        -fx-max-width: 95%;
+    }
+
+    .input-field {
+        -fx-pref-width: 250;
+    }
+
+    .title {
+        -fx-font-size: 20px;
+    }
+
+    .subtitle {
+        -fx-font-size: 12px;
+    }
+}

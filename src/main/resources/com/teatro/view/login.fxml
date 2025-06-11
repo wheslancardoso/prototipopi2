@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.text.*?>
+
+<BorderPane xmlns="http://javafx.com/javafx/11.0.1" xmlns:fx="http://javafx.com/fxml/1" 
+            fx:controller="com.teatro.view.controllers.LoginController"
+            stylesheets="@../css/login.css">
+   
+   <center>
+      <VBox alignment="CENTER" spacing="30" styleClass="main-container">
+         <padding>
+            <Insets bottom="50.0" left="50.0" right="50.0" top="50.0" />
+         </padding>
+         
+         <!-- Card de Login -->
+         <VBox alignment="CENTER" spacing="25" styleClass="login-card" maxWidth="450">
+            <padding>
+               <Insets bottom="40.0" left="40.0" right="40.0" top="40.0" />
+            </padding>
+            
+            <!-- Título -->
+            <Label fx:id="login_lblTitulo" text="Ingresso Fácil" styleClass="title" />
+            <Label fx:id="login_lblSubtitulo" text="Faça login para continuar" styleClass="subtitle" />
+            
+            <!-- Separador -->
+            <Separator>
+               <VBox.margin>
+                  <Insets bottom="10.0" top="10.0" />
+               </VBox.margin>
+            </Separator>
+            
+            <!-- Formulário -->
+            <VBox spacing="15" alignment="CENTER">
+               
+               <!-- Campo Identificador -->
+               <VBox spacing="5">
+                  <Label text="CPF ou Email" styleClass="field-label" />
+                  <TextField fx:id="login_txtIdentificador" promptText="Digite seu CPF ou email" 
+                            styleClass="input-field" prefHeight="40" />
+               </VBox>
+               
+               <!-- Campo Senha -->
+               <VBox spacing="5">
+                  <Label text="Senha" styleClass="field-label" />
+                  <PasswordField fx:id="login_txtSenha" promptText="Digite sua senha" 
+                                styleClass="input-field" prefHeight="40" />
+               </VBox>
+               
+               <!-- Botão Login -->
+               <Button fx:id="login_btnEntrar" text="Entrar" onAction="#handleLogin" 
+                      styleClass="primary-button" prefHeight="40" maxWidth="Infinity" />
+               
+               <!-- Links -->
+               <Button fx:id="login_btnEsqueceuSenha" text="Esqueceu a senha?" 
+                      onAction="#handleEsqueceuSenha" styleClass="link-button" />
+               
+               <Button fx:id="login_btnCadastrar" text="Criar nova conta" 
+                      onAction="#handleCadastrar" styleClass="secondary-button" 
+                      prefHeight="40" prefWidth="200" />
+               
+               <!-- Mensagem de Erro -->
+               <Label fx:id="login_lblErro" styleClass="error-label" visible="false" />
+               
+            </VBox>
+            
+         </VBox>
+      </VBox>
+   </center>
+   
+</BorderPane>
