@@ -1,15 +1,21 @@
 package com.teatro.view.controllers;
 
 import com.teatro.model.*;
+import com.teatro.view.util.SceneManager;
 import javafx.fxml.FXML;
+import javafx.fxml.Initializable;
 import javafx.scene.control.*;
 import javafx.scene.layout.GridPane;
+import javafx.scene.paint.Color;
 
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.ResourceBundle;
+import java.io.IOException;
 
-public class SelecionarPoltronaController extends BaseController {
+public class SelecionarPoltronaController implements Initializable {
 
     @FXML private Label poltrona_lblUsuario;
     @FXML private Label poltrona_lblEvento;
@@ -22,161 +28,252 @@ public class SelecionarPoltronaController extends BaseController {
     @FXML private Label poltrona_lblErro;
     @FXML private Button poltrona_btnConfirmar;
 
+    private Teatro teatro;
+    private Usuario usuario;
+    private SceneManager sceneManager;
     private Sessao sessao;
     private Area area;
-    private List<Poltrona> poltronasSelecionadas;
+    private List<Integer> poltronasSelecionadas;
     private List<Integer> poltronasDisponiveis;
 
-    @Override
-    protected void inicializarComponentes() {
-        if (usuario != null) {
-            poltrona_lblUsuario.setText(usuario.getNome());
-        }
-        
-        poltronasSelecionadas = new ArrayList<>();
-        poltronasDisponiveis = new ArrayList<>();
-        
-        poltrona_lblErro.setVisible(false);
-        poltrona_btnConfirmar.setDisable(true);
-    }
+    // Cores das poltronas
+    private static final String COR_DISPONIVEL = "#2ecc71";
+    private static final String COR_OCUPADA = "#e74c3c";
+    private static final String COR_SELECIONADA = "#3498db";
 
     @Override
-    protected void configurarEventos() {
-        // Eventos serão configurados nas poltronas dinamicamente
-    }
-
-    @Override
-    protected void carregarDados() {
-        // Receber dados do SceneManager
-        Object sessaoData = sceneManager.getUserData("sessao");
-        Object areaData = sceneManager.getUserData("area");
+    public void initialize(URL location, ResourceBundle resources) {
+        sceneManager = SceneManager.getInstance();
+        teatro = sceneManager.getTeatro();
+        usuario = sceneManager.getUsuarioLogado();
+        
+        // Obter dados passados pela navegação
+        Object sessaoData = sceneManager.getUserData("sessao_selecionada");
+        Object areaData = sceneManager.getUserData("area_selecionada");
         
         if (sessaoData instanceof Sessao && areaData instanceof Area) {
             this.sessao = (Sessao) sessaoData;
             this.area = (Area) areaData;
-            
-            carregarInformacoesSessao();
-            carregarPoltronasDisponiveis();
-            criarGridPoltronas();
-            atualizarResumo();
-        } else {
-            mostrarErro("Erro", "Dados da sessão ou área não encontrados");
-            handleVoltar();
+            carregarDados();
         }
+
+        if (usuario != null) {
+            poltrona_lblUsuario.setText(usuario.getNome());
+        }
+
+        this.poltronasSelecionadas = new ArrayList<>();
+        poltrona_lblErro.setVisible(false);
+        poltrona_btnConfirmar.setDisable(true);
+
+        carregarPoltronasDisponiveis();
+        criarMapaPoltronas();
+        atualizarResumo();
     }
 
-    private void carregarInformacoesSessao() {
-        // Buscar o evento da sessão
-        Evento evento = teatro.getEventos().stream()
-            .filter(evt -> evt.getSessoes().contains(sessao))
-            .findFirst()
-            .orElse(null);
+    private void carregarDados() {
+        if (sessao != null && area != null) {
+            // Buscar o evento correspondente à sessão
+            Evento evento = teatro.getEventos().stream()
+                .filter(evt -> evt.getSessoes().contains(sessao))
+                .findFirst()
+                .orElse(null);
 
-        if (evento != null) {
-            poltrona_lblEvento.setText(evento.getNome());
+            if (evento != null) {
+                poltrona_lblEvento.setText(evento.getNome());
+            } else {
+                poltrona_lblEvento.setText("Evento desconhecido");
+            }
+            
+            poltrona_lblHorario.setText(sessao.getTipoSessao().getDescricao());
+            poltrona_lblArea.setText(area.getNome() + " - R$ " + String.format("%.2f", area.getPreco()));
+            poltrona_lblValorUnitario.setText("R$ " + String.format("%.2f", area.getPreco()));
         }
-        
-        poltrona_lblHorario.setText(sessao.getTipoSessao().getDescricao());
-        poltrona_lblArea.setText(area.getNome() + " - R$ " + String.format("%.2f", area.getPreco()));
-        poltrona_lblValorUnitario.setText("R$ " + String.format("%.2f", area.getPreco()));
     }
 
     private void carregarPoltronasDisponiveis() {
         try {
-            this.poltronasDisponiveis = teatro.getPoltronasDisponiveis(sessao, area);
-            
-            if (poltronasDisponiveis.isEmpty()) {
-                mostrarErro("Atenção", "Esta área não possui mais poltronas disponíveis.");
-                handleVoltar();
+            if (sessao != null && area != null) {
+                poltronasDisponiveis = teatro.getPoltronasDisponiveis(sessao, area);
+                
+                if (poltronasDisponiveis.isEmpty()) {
+                    showError("Esta área não possui poltronas disponíveis.");
+                }
             }
         } catch (Exception e) {
-            mostrarErro("Erro", "Erro ao carregar poltronas disponíveis: " + e.getMessage());
-            handleVoltar();
+            showError("Erro ao carregar poltronas disponíveis: " + e.getMessage());
         }
     }
 
-    private void criarGridPoltronas() {
+    private void criarMapaPoltronas() {
+        if (area == null) return;
+
         poltrona_gridPoltronas.getChildren().clear();
-        
+
         int numColunas = 10;
         int capacidade = area.getCapacidadeTotal();
         int numLinhas = (int) Math.ceil((double) capacidade / numColunas);
 
         for (int i = 0; i < numLinhas; i++) {
             for (int j = 0; j < numColunas; j++) {
-                int numero = i * numColunas + j + 1;
-                if (numero > capacidade) break;
+                int numeroPoltrona = i * numColunas + j + 1;
+                if (numeroPoltrona > capacidade) break;
 
-                Button poltrona = new Button(String.valueOf(numero));
-                poltrona.setPrefSize(50, 50);
-                poltrona.getStyleClass().add("poltrona-button");
+                Button btnPoltrona = new Button(String.valueOf(numeroPoltrona));
+                btnPoltrona.setPrefSize(50, 50);
+                btnPoltrona.setFont(javafx.scene.text.Font.font("System", 
+                    javafx.scene.text.FontWeight.BOLD, 14));
 
-                boolean disponivel = poltronasDisponiveis.contains(numero);
+                // Verificar se a poltrona está disponível
+                boolean disponivel = poltronasDisponiveis.contains(numeroPoltrona);
 
                 if (disponivel) {
-                    poltrona.getStyleClass().add("poltrona-disponivel");
-                    poltrona.setOnAction(e -> handlePoltronaClick(numero, poltrona));
+                    configurarPoltronaDisponivel(btnPoltrona, numeroPoltrona);
                 } else {
-                    poltrona.getStyleClass().add("poltrona-ocupada");
-                    poltrona.setDisable(true);
+                    configurarPoltronaOcupada(btnPoltrona);
                 }
 
-                poltrona_gridPoltronas.add(poltrona, j, i);
+                poltrona_gridPoltronas.add(btnPoltrona, j, i);
             }
         }
     }
 
-    private void handlePoltronaClick(int numero, Button poltrona) {
-        try {
-            // Verificar se ainda está disponível
-            if (!teatro.verificarPoltronaDisponivel(sessao, area, numero)) {
-                mostrarErro("Atenção", "Esta poltrona acabou de ser ocupada.");
-                poltrona.getStyleClass().remove("poltrona-disponivel");
-                poltrona.getStyleClass().add("poltrona-ocupada");
-                poltrona.setDisable(true);
-                poltronasDisponiveis.remove(Integer.valueOf(numero));
-                poltronasSelecionadas.removeIf(p -> p.getNumero() == numero);
+    private void configurarPoltronaDisponivel(Button btnPoltrona, int numeroPoltrona) {
+        btnPoltrona.setStyle(String.format(
+            "-fx-background-color: %s; -fx-text-fill: white; -fx-background-radius: 5;",
+            COR_DISPONIVEL
+        ));
+
+        btnPoltrona.setOnAction(e -> {
+            try {
+                // Verificar se a poltrona ainda está disponível
+                if (!teatro.verificarPoltronaDisponivel(sessao, area, numeroPoltrona)) {
+                    showError("Esta poltrona acabou de ser ocupada. Selecione outra.");
+                    criarMapaPoltronas(); // Recriar mapa
+                    return;
+                }
+
+                if (poltronasSelecionadas.contains(numeroPoltrona)) {
+                    // Desselecionar
+                    poltronasSelecionadas.remove(Integer.valueOf(numeroPoltrona));
+                    btnPoltrona.setStyle(String.format(
+                        "-fx-background-color: %s; -fx-text-fill: white; -fx-background-radius: 5;",
+                        COR_DISPONIVEL
+                    ));
+                } else {
+                    // Selecionar
+                    poltronasSelecionadas.add(numeroPoltrona);
+                    btnPoltrona.setStyle(String.format(
+                        "-fx-background-color: %s; -fx-text-fill: white; -fx-background-radius: 5;",
+                        COR_SELECIONADA
+                    ));
+                }
+                
                 atualizarResumo();
-                return;
+                poltrona_lblErro.setVisible(false);
+                
+            } catch (Exception ex) {
+                showError("Erro ao selecionar poltrona: " + ex.getMessage());
             }
-            
-            if (poltrona.getStyleClass().contains("poltrona-selecionada")) {
-                // Desselecionar
-                poltrona.getStyleClass().remove("poltrona-selecionada");
-                poltrona.getStyleClass().add("poltrona-disponivel");
-                poltronasSelecionadas.removeIf(p -> p.getNumero() == numero);
-            } else {
-                // Selecionar
-                poltrona.getStyleClass().remove("poltrona-disponivel");
-                poltrona.getStyleClass().add("poltrona-selecionada");
-                poltronasSelecionadas.add(new Poltrona(numero, area));
-            }
-            
-            atualizarResumo();
-            ocultarErro();
-            
-        } catch (Exception e) {
-            mostrarError("Erro ao verificar poltrona: " + e.getMessage());
-        }
+        });
+    }
+
+    private void configurarPoltronaOcupada(Button btnPoltrona) {
+        btnPoltrona.setStyle(String.format(
+            "-fx-background-color: %s; -fx-text-fill: white; -fx-background-radius: 5;",
+            COR_OCUPADA
+        ));
+        btnPoltrona.setDisable(true);
     }
 
     private void atualizarResumo() {
         int quantidade = poltronasSelecionadas.size();
         double valorTotal = quantidade * area.getPreco();
-        
+
         poltrona_lblQuantidade.setText(String.valueOf(quantidade));
         poltrona_lblValorTotal.setText("R$ " + String.format("%.2f", valorTotal));
-        
+
         poltrona_btnConfirmar.setDisable(quantidade == 0);
     }
 
-    private void mostrarError(String mensagem) {
-        poltrona_lblErro.setText(mensagem);
-        poltrona_lblErro.setVisible(true);
+    @FXML
+    private void handleConfirmar() {
+        if (poltronasSelecionadas.isEmpty()) {
+            showError("Selecione pelo menos uma poltrona.");
+            return;
+        }
+
+        try {
+            // Verificar se todas as poltronas ainda estão disponíveis
+            for (Integer numeroPoltrona : poltronasSelecionadas) {
+                if (!teatro.verificarPoltronaDisponivel(sessao, area, numeroPoltrona)) {
+                    showError("Algumas poltronas foram ocupadas. Selecione outras.");
+                    criarMapaPoltronas();
+                    poltronasSelecionadas.clear();
+                    atualizarResumo();
+                    return;
+                }
+            }
+
+            // Processar compra dos ingressos
+            List<IngressoModerno> ingressosComprados = new ArrayList<>();
+            
+            // Buscar o evento da sessão
+            Evento evento = teatro.getEventos().stream()
+                .filter(evt -> evt.getSessoes().contains(sessao))
+                .findFirst()
+                .orElse(null);
+            
+            if (evento == null) {
+                showError("Erro: Não foi possível encontrar o evento.");
+                return;
+            }
+
+            boolean todasComprasSucesso = true;
+            
+            for (Integer numeroPoltrona : poltronasSelecionadas) {
+                try {
+                    Optional<IngressoModerno> ingressoOpt = teatro.comprarIngresso(
+                        usuario.getCpf(), evento, sessao, area, numeroPoltrona
+                    );
+                    
+                    if (ingressoOpt.isPresent()) {
+                        ingressosComprados.add(ingressoOpt.get());
+                    } else {
+                        todasComprasSucesso = false;
+                        showError("Erro ao comprar ingresso para poltrona " + numeroPoltrona);
+                        break;
+                    }
+                } catch (Exception e) {
+                    todasComprasSucesso = false;
+                    showError("Erro ao processar compra: " + e.getMessage());
+                    break;
+                }
+            }
+
+            if (todasComprasSucesso && !ingressosComprados.isEmpty()) {
+                // Adicionar ingressos ao usuário
+                usuario.adicionarIngressos(ingressosComprados);
+                
+                // Passar dados para a tela de impressão
+                sceneManager.setUserData("ingressos_comprados", ingressosComprados);
+                
+                sceneManager.loadScene("/com/teatro/view/fxml/impressao-ingresso.fxml",
+                                     "Sistema de Teatro - Impressão de Ingressos");
+            }
+            
+        } catch (Exception e) {
+            showError("Erro ao processar compra: " + e.getMessage());
+        }
     }
 
-    private void ocultarErro() {
-        poltrona_lblErro.setVisible(false);
+    @FXML
+    private void handleCancelar() {
+        try {
+            sceneManager.loadScene("/com/teatro/view/fxml/compra-ingresso.fxml",
+                                 "Sistema de Teatro - Compra de Ingressos");
+        } catch (IOException e) {
+            showError("Erro ao voltar: " + e.getMessage());
+        }
     }
 
     @FXML
@@ -185,80 +282,17 @@ public class SelecionarPoltronaController extends BaseController {
             sceneManager.loadScene("/com/teatro/view/fxml/compra-ingresso.fxml",
                                  "Sistema de Teatro - Compra de Ingressos");
         } catch (Exception e) {
-            mostrarErro("Erro", "Erro ao voltar: " + e.getMessage());
+            showError("Erro ao voltar: " + e.getMessage());
         }
     }
 
     @FXML
-    private void handleCancelar() {
-        handleVoltar();
+    private void handleSair() {
+        sceneManager.goToLogin();
     }
 
-    @FXML
-    private void handleConfirmar() {
-        if (poltronasSelecionadas.isEmpty()) {
-            mostrarError("Selecione pelo menos uma poltrona.");
-            return;
-        }
-
-        try {
-            // Verificar disponibilidade de todas as poltronas
-            for (Poltrona poltrona : new ArrayList<>(poltronasSelecionadas)) {
-                if (!teatro.verificarPoltronaDisponivel(sessao, area, poltrona.getNumero())) {
-                    mostrarError("A poltrona " + poltrona.getNumero() + " acabou de ser ocupada.");
-                    poltronasSelecionadas.remove(poltrona);
-                    atualizarResumo();
-                    return;
-                }
-            }
-
-            // Criar ingressos
-            List<IngressoModerno> ingressos = new ArrayList<>();
-            boolean todosSalvos = true;
-
-            for (Poltrona poltrona : poltronasSelecionadas) {
-                try {
-                    // Buscar o evento da sessão
-                    Evento evento = teatro.getEventos().stream()
-                        .filter(evt -> evt.getSessoes().contains(sessao))
-                        .findFirst()
-                        .orElse(null);
-
-                    if (evento == null) {
-                        throw new Exception("Evento não encontrado");
-                    }
-
-                    Optional<IngressoModerno> ingressoOpt = teatro.comprarIngresso(
-                        usuario.getCpf(), evento, sessao, area, poltrona.getNumero()
-                    );
-
-                    if (ingressoOpt.isPresent()) {
-                        ingressos.add(ingressoOpt.get());
-                    } else {
-                        throw new Exception("Erro ao comprar ingresso para poltrona " + poltrona.getNumero());
-                    }
-
-                } catch (Exception ex) {
-                    todosSalvos = false;
-                    mostrarErro("Erro", ex.getMessage());
-                    break;
-                }
-            }
-
-            if (todosSalvos && !ingressos.isEmpty()) {
-                // Adicionar ingressos ao usuário
-                usuario.adicionarIngressos(ingressos);
-
-                // Passar dados para tela de impressão
-                sceneManager.setUserData("ingressos", ingressos);
-
-                // Navegar para tela de impressão
-                sceneManager.loadScene("/com/teatro/view/fxml/impressao-ingresso.fxml",
-                                     "Sistema de Teatro - Impressão de Ingressos");
-            }
-
-        } catch (Exception e) {
-            mostrarErro("Erro", "Erro ao processar compra: " + e.getMessage());
-        }
+    private void showError(String mensagem) {
+        poltrona_lblErro.setText(mensagem);
+        poltrona_lblErro.setVisible(true);
     }
 }

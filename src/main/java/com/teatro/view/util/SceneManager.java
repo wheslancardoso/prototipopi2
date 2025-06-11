@@ -9,6 +9,8 @@ import javafx.stage.Modality;
 import javafx.stage.Stage;
 
 import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * Gerenciador de cenas e navegação da aplicação.
@@ -20,9 +22,11 @@ public class SceneManager {
     private Stage primaryStage;
     private Usuario usuarioLogado;
     private Teatro teatro;
+    private Map<String, Object> userData;
     
     private SceneManager() {
         this.teatro = Teatro.getInstance();
+        this.userData = new HashMap<>();
     }
     
     /**
@@ -218,5 +222,30 @@ public class SceneManager {
             primaryStage.close();
         }
         System.exit(0);
+    }
+    
+    /**
+     * Armazena um dado para ser usado entre telas.
+     */
+    public void setUserData(String key, Object value) {
+        if (value == null) {
+            userData.remove(key);
+        } else {
+            userData.put(key, value);
+        }
+    }
+    
+    /**
+     * Recupera um dado armazenado entre telas.
+     */
+    public Object getUserData(String key) {
+        return userData.get(key);
+    }
+    
+    /**
+     * Limpa todos os dados armazenados.
+     */
+    public void clearUserData() {
+        userData.clear();
     }
 }
