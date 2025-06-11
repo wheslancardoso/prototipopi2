@@ -1,177 +1,114 @@
 package com.teatro.view.controllers;
 
-import com.teatro.model.*;
-import com.teatro.view.util.*;
+import com.teatro.model.Area;
+import com.teatro.model.Evento;
+import com.teatro.model.Sessao;
 import javafx.fxml.FXML;
-import javafx.fxml.Initializable;
 import javafx.scene.control.*;
 import javafx.scene.layout.VBox;
-import javafx.stage.Stage;
 
-import java.net.URL;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
-import java.util.ResourceBundle;
 
-/**
- * Controller para a tela de compra de ingressos.
- */
-public class CompraIngressoController implements Initializable {
-    
-    @FXML
-    private Label compra_lblLogo;
-    
-    @FXML
-    private Label compra_lblUsuario;
-    
-    @FXML
-    private Label compra_lblTitulo;
-    
-    @FXML
-    private Label compra_lblEventoNome;
-    
-    @FXML
-    private Label compra_lblHorario;
-    
-    @FXML
-    private ComboBox<Area> compra_cmbAreas;
-    
-    @FXML
-    private VBox compra_containerInfoArea;
-    
-    @FXML
-    private Label compra_lblPreco;
-    
-    @FXML
-    private Label compra_lblDisponibilidade;
-    
-    @FXML
-    private Button compra_btnVoltar;
-    
-    @FXML
-    private Button compra_btnSair;
-    
-    @FXML
-    private Button compra_btnCancelar;
-    
-    @FXML
-    private Button compra_btnContinuar;
-    
-    @FXML
-    private Label compra_lblErro;
-    
-    private Teatro teatro;
-    private Usuario usuario;
+public class CompraIngressoController extends BaseController {
+
+    @FXML private Label compra_lblUsuario;
+    @FXML private Label compra_lblEventoNome;
+    @FXML private Label compra_lblHorario;
+    @FXML private ComboBox<Area> compra_cmbAreas;
+    @FXML private VBox compra_containerInfoArea;
+    @FXML private Label compra_lblPreco;
+    @FXML private Label compra_lblDisponibilidade;
+    @FXML private Label compra_lblErro;
+    @FXML private Button compra_btnContinuar;
+
     private Sessao sessao;
-    private Evento evento;
     private Area areaSelecionada;
     private List<Area> areasDisponiveis;
-    private SceneManager sceneManager;
-    
+
     @Override
-    public void initialize(URL location, ResourceBundle resources) {
-        sceneManager = SceneManager.getInstance();
-        teatro = sceneManager.getTeatro();
-        usuario = sceneManager.getUsuarioLogado();
-        
-        // Configurar interface
+    protected void inicializarComponentes() {
         if (usuario != null) {
             compra_lblUsuario.setText(usuario.getNome());
         }
         
-        // Inicializar estado dos botões
-        compra_btnContinuar.setDisable(true);
+        // Ocultar inicialmente
+        compra_containerInfoArea.setVisible(false);
+        compra_containerInfoArea.setManaged(false);
         compra_lblErro.setVisible(false);
+        compra_btnContinuar.setDisable(true);
         
         // Configurar ComboBox
-        setupAreaComboBox();
+        compra_cmbAreas.setConverter(new StringConverter<Area>() {
+            @Override
+            public String toString(Area area) {
+                return area != null ? area.toString() : "";
+            }
+
+            @Override
+            public Area fromString(String string) {
+                return null;
+            }
+        });
     }
-    
-    /**
-     * Define a sessão selecionada.
-     */
-    public void setSessao(Sessao sessao) {
-        this.sessao = sessao;
-        
-        // Buscar o evento correspondente
-        this.evento = teatro.getEventos().stream()
+
+    @Override
+    protected void configurarEventos() {
+        compra_cmbAreas.setOnAction(e -> handleAreaSelecionada());
+    }
+
+    @Override
+    protected void carregarDados() {
+        // Receber sessão do SceneManager
+        Object sessaoData = sceneManager.getUserData("sessao");
+        if (sessaoData instanceof Sessao) {
+            this.sessao = (Sessao) sessaoData;
+            carregarInformacoesSessao();
+            carregarAreasDisponiveis();
+        } else {
+            mostrarErro("Erro", "Sessão não encontrada");
+            handleVoltar();
+        }
+    }
+
+    private void carregarInformacoesSessao() {
+        // Buscar o evento da sessão
+        Evento evento = teatro.getEventos().stream()
             .filter(evt -> evt.getSessoes().contains(sessao))
             .findFirst()
             .orElse(null);
-        
-        if (evento != null && sessao != null) {
-            carregarInformacoesSessao();
-            carregarAreasDisponiveis();
-        }
-    }
-    
-    /**
-     * Configura o ComboBox de áreas.
-     */
-    private void setupAreaComboBox() {
-        // Configurar como as áreas são exibidas no ComboBox
-        compra_cmbAreas.setCellFactory(listView -> new ListCell<Area>() {
-            @Override
-            protected void updateItem(Area item, boolean empty) {
-                super.updateItem(item, empty);
-                if (empty || item == null) {
-                    setText(null);
-                } else {
-                    setText(item.toString()); // Usa o método toString() da Area
-                }
-            }
-        });
-        
-        compra_cmbAreas.setButtonCell(new ListCell<Area>() {
-            @Override
-            protected void updateItem(Area item, boolean empty) {
-                super.updateItem(item, empty);
-                if (empty || item == null) {
-                    setText("Selecione uma área");
-                } else {
-                    setText(item.toString());
-                }
-            }
-        });
-    }
-    
-    /**
-     * Carrega as informações da sessão.
-     */
-    private void carregarInformacoesSessao() {
+
         if (evento != null) {
             compra_lblEventoNome.setText(evento.getNome());
         }
         
-        if (sessao != null) {
-            compra_lblHorario.setText(sessao.getHorario());
-        }
+        compra_lblHorario.setText(sessao.getTipoSessao().getDescricao());
     }
-    
-    /**
-     * Carrega as áreas disponíveis para a sessão.
-     */
+
     private void carregarAreasDisponiveis() {
         try {
-            areasDisponiveis = teatro.getAreasDisponiveis(sessao);
+            this.areasDisponiveis = teatro.getAreasDisponiveis(sessao);
             
             if (areasDisponiveis.isEmpty()) {
-                mostrarErro("Não há áreas disponíveis para esta sessão.");
-                compra_btnContinuar.setDisable(true);
+                mostrarErro("Atenção", "Não há áreas disponíveis para esta sessão.");
+                handleVoltar();
                 return;
             }
             
-            // Limpar e popular ComboBox
+            // Ordenar áreas
+            List<Area> areasOrdenadas = new ArrayList<>(areasDisponiveis);
+            Collections.sort(areasOrdenadas);
+            
             compra_cmbAreas.getItems().clear();
-            compra_cmbAreas.getItems().addAll(areasDisponiveis);
+            compra_cmbAreas.getItems().addAll(areasOrdenadas);
             
         } catch (Exception e) {
-            mostrarErro("Erro ao carregar áreas disponíveis: " + e.getMessage());
+            mostrarErro("Erro", "Erro ao carregar áreas disponíveis: " + e.getMessage());
+            handleVoltar();
         }
     }
-    
-    /**
-     * Manipula a seleção de área.
-     */
+
     @FXML
     private void handleAreaSelecionada() {
         areaSelecionada = compra_cmbAreas.getValue();
@@ -181,133 +118,84 @@ public class CompraIngressoController implements Initializable {
                 // Atualizar informações da área
                 Area areaAtualizada = teatro.getAreaAtualizada(sessao.getId(), areaSelecionada.getId());
                 
-                if (areaAtualizada != null) {
-                    compra_lblPreco.setText(String.format("R$ %.2f", areaAtualizada.getPreco()));
-                    compra_lblDisponibilidade.setText(
-                        areaAtualizada.getPoltronasDisponiveis() + " de " + areaAtualizada.getCapacidadeTotal()
-                    );
-                    
-                    // Mostrar informações da área
-                    compra_containerInfoArea.setVisible(true);
-                    compra_containerInfoArea.setManaged(true);
-                    
-                    // Verificar se ainda há poltronas disponíveis
-                    if (areaAtualizada.getPoltronasDisponiveis() == 0) {
-                        mostrarErro("Esta área não possui mais poltronas disponíveis. Selecione outra área.");
-                        compra_btnContinuar.setDisable(true);
-                    } else {
-                        ocultarErro();
-                        compra_btnContinuar.setDisable(false);
-                    }
-                    
-                    // Atualizar referência
-                    areaSelecionada = areaAtualizada;
-                } else {
-                    mostrarErro("Erro ao obter informações atualizadas da área.");
-                    compra_btnContinuar.setDisable(true);
+                if (areaAtualizada.getPoltronasDisponiveis() == 0) {
+                    mostrarErro("Atenção", "Esta área não possui mais poltronas disponíveis.");
+                    compra_cmbAreas.setValue(null);
+                    areaSelecionada = null;
+                    ocultarInfoArea();
+                    return;
                 }
                 
+                // Mostrar informações da área
+                compra_lblPreco.setText(String.format("R$ %.2f", areaAtualizada.getPreco()));
+                compra_lblDisponibilidade.setText(areaAtualizada.getPoltronasDisponiveis() + 
+                                                 " de " + areaAtualizada.getCapacidadeTotal());
+                
+                mostrarInfoArea();
+                compra_btnContinuar.setDisable(false);
+                ocultarErro();
+                
             } catch (Exception e) {
-                mostrarErro("Erro ao carregar informações da área: " + e.getMessage());
-                compra_btnContinuar.setDisable(true);
+                mostrarError("Erro ao atualizar informações da área: " + e.getMessage());
+                compra_cmbAreas.setValue(null);
+                areaSelecionada = null;
+                ocultarInfoArea();
             }
         } else {
-            // Nenhuma área selecionada
-            compra_containerInfoArea.setVisible(false);
-            compra_containerInfoArea.setManaged(false);
-            compra_btnContinuar.setDisable(true);
-            ocultarErro();
+            ocultarInfoArea();
         }
     }
-    
-    /**
-     * Manipula o botão voltar.
-     */
+
+    private void mostrarInfoArea() {
+        compra_containerInfoArea.setVisible(true);
+        compra_containerInfoArea.setManaged(true);
+    }
+
+    private void ocultarInfoArea() {
+        compra_containerInfoArea.setVisible(false);
+        compra_containerInfoArea.setManaged(false);
+        compra_btnContinuar.setDisable(true);
+    }
+
+    private void mostrarError(String mensagem) {
+        compra_lblErro.setText(mensagem);
+        compra_lblErro.setVisible(true);
+    }
+
+    private void ocultarErro() {
+        compra_lblErro.setVisible(false);
+    }
+
     @FXML
     private void handleVoltar() {
         try {
-            sceneManager.goToSessoes();
+            sceneManager.loadScene("/com/teatro/view/fxml/sessoes.fxml",
+                                 "Sistema de Teatro - Sessões");
         } catch (Exception e) {
-            mostrarErro("Erro ao voltar para sessões: " + e.getMessage());
+            mostrarErro("Erro", "Erro ao voltar para sessões: " + e.getMessage());
         }
     }
-    
-    /**
-     * Manipula o botão sair.
-     */
-    @FXML
-    private void handleSair() {
-        try {
-            sceneManager.goToLogin();
-        } catch (Exception e) {
-            mostrarErro("Erro ao fazer logout: " + e.getMessage());
-        }
-    }
-    
-    /**
-     * Manipula o botão cancelar.
-     */
+
     @FXML
     private void handleCancelar() {
         handleVoltar();
     }
-    
-    /**
-     * Manipula o botão continuar.
-     */
+
     @FXML
     private void handleContinuar() {
-        if (areaSelecionada == null) {
-            mostrarErro("Por favor, selecione uma área.");
-            return;
-        }
-        
-        try {
-            // Carregar tela de seleção de poltronas
-            sceneManager.loadScene("/com/teatro/view/fxml/selecionar-poltrona.fxml", 
-                                 "Sistema de Teatro - Seleção de Poltronas");
+        if (areaSelecionada != null) {
+            // Passar dados para próxima tela
+            sceneManager.setUserData("sessao", sessao);
+            sceneManager.setUserData("area", areaSelecionada);
             
-            // TODO: Passar sessão e área para o próximo controller
-            // Isso pode ser feito através do SceneManager ou através de um controlador global
-            
-        } catch (Exception e) {
-            mostrarErro("Erro ao abrir tela de seleção de poltronas: " + e.getMessage());
+            try {
+                sceneManager.loadScene("/com/teatro/view/fxml/selecionar-poltrona.fxml",
+                                     "Sistema de Teatro - Seleção de Poltronas");
+            } catch (Exception e) {
+                mostrarErro("Erro", "Erro ao navegar para seleção de poltronas: " + e.getMessage());
+            }
+        } else {
+            mostrarError("Por favor, selecione uma área.");
         }
-    }
-    
-    /**
-     * Exibe uma mensagem de erro.
-     */
-    private void mostrarErro(String mensagem) {
-        compra_lblErro.setText(mensagem);
-        compra_lblErro.setVisible(true);
-    }
-    
-    /**
-     * Oculta a mensagem de erro.
-     */
-    private void ocultarErro() {
-        compra_lblErro.setVisible(false);
-    }
-    
-    /**
-     * Obtém a sessão selecionada.
-     */
-    public Sessao getSessao() {
-        return sessao;
-    }
-    
-    /**
-     * Obtém a área selecionada.
-     */
-    public Area getAreaSelecionada() {
-        return areaSelecionada;
-    }
-    
-    /**
-     * Obtém o evento.
-     */
-    public Evento getEvento() {
-        return evento;
     }
 }

@@ -1,12 +1,15 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
 <?import javafx.geometry.Insets?>
-<?import javafx.scene.control.*?>
-<?import javafx.scene.layout.*?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.ScrollPane?>
+<?import javafx.scene.layout.BorderPane?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.Region?>
+<?import javafx.scene.layout.VBox?>
 
-<BorderPane xmlns="http://javafx.com/javafx/11.0.1" xmlns:fx="http://javafx.com/fxml/1" 
-            fx:controller="com.teatro.view.controllers.ImpressaoIngressoController"
-            stylesheets="@../css/impressao-ingresso.css">
+<BorderPane stylesheets="@../css/impressao_ingreso.css" xmlns="http://javafx.com/javafx/23.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.teatro.view.controllers.ImpressaoIngressoController">
    
    <!-- Barra Superior -->
    <top>
@@ -16,18 +19,18 @@
          </padding>
          
          <!-- Logo/Título -->
-         <Label fx:id="impressao_lblLogo" text="Sistema de Teatro" styleClass="logo-title" />
+         <Label fx:id="impressao_lblLogo" styleClass="logo-title" text="Sistema de Teatro" />
          
          <!-- Botão Dashboard -->
-         <Button fx:id="impressao_btnDashboard" text="Dashboard" onAction="#handleDashboard" styleClass="nav-button" />
+         <Button fx:id="impressao_btnDashboard" onAction="#handleDashboard" styleClass="nav-button" text="Dashboard" />
          
          <!-- Spacer -->
          <Region HBox.hgrow="ALWAYS" />
          
          <!-- Informações do Usuário -->
          <HBox alignment="CENTER_RIGHT" spacing="10" styleClass="user-info">
-            <Label fx:id="impressao_lblUsuario" text="Usuário" styleClass="user-name" />
-            <Button fx:id="impressao_btnSair" text="Sair" onAction="#handleSair" styleClass="logout-button" />
+            <Label fx:id="impressao_lblUsuario" styleClass="user-name" text="Usuário" />
+            <Button fx:id="impressao_btnSair" onAction="#handleSair" styleClass="logout-button" text="Sair" />
          </HBox>
       </HBox>
    </top>
@@ -42,8 +45,8 @@
             
             <!-- Título da Página -->
             <VBox alignment="CENTER" spacing="10" styleClass="page-header">
-               <Label fx:id="impressao_lblTitulo" text="Compra Realizada com Sucesso!" styleClass="page-title-success" />
-               <Label fx:id="impressao_lblSubtitulo" text="Seus ingressos estão prontos para impressão." styleClass="page-subtitle" />
+               <Label fx:id="impressao_lblTitulo" styleClass="page-title-success" text="Compra Realizada com Sucesso!" />
+               <Label fx:id="impressao_lblSubtitulo" styleClass="page-subtitle" text="Seus ingressos estão prontos para impressão." />
             </VBox>
             
             <!-- Container dos Ingressos -->
@@ -52,24 +55,19 @@
             </VBox>
             
             <!-- Mensagem quando não há ingressos -->
-            <VBox fx:id="impressao_containerVazio" alignment="CENTER" spacing="20" 
-                  styleClass="empty-container" visible="false" managed="false">
-               <Label text="Nenhum ingresso encontrado" styleClass="empty-message" />
-               <Label text="Você ainda não possui ingressos comprados." styleClass="empty-subtitle" />
+            <VBox fx:id="impressao_containerVazio" alignment="CENTER" managed="false" spacing="20" styleClass="empty-container" visible="false">
+               <Label styleClass="empty-message" text="Nenhum ingresso encontrado" />
+               <Label styleClass="empty-subtitle" text="Você ainda não possui ingressos comprados." />
                
-               <Button fx:id="impressao_btnComprarNovo" text="Comprar Ingressos" 
-                      onAction="#handleComprarNovo" styleClass="primary-button" />
+               <Button fx:id="impressao_btnComprarNovo" onAction="#handleComprarNovo" styleClass="primary-button" text="Comprar Ingressos" />
             </VBox>
             
             <!-- Botões de Ação Global -->
-            <HBox fx:id="impressao_containerBotoes" spacing="15" alignment="CENTER" 
-                  styleClass="global-actions" visible="false" managed="false">
+            <HBox fx:id="impressao_containerBotoes" alignment="CENTER" managed="false" spacing="15" styleClass="global-actions" visible="false">
                
-               <Button fx:id="impressao_btnImprimirTodos" text="Imprimir Todos" 
-                      onAction="#handleImprimirTodos" styleClass="secondary-button" />
+               <Button fx:id="impressao_btnImprimirTodos" onAction="#handleImprimirTodos" styleClass="secondary-button" text="Imprimir Todos" />
                
-               <Button fx:id="impressao_btnNovaCompra" text="Comprar Mais Ingressos" 
-                      onAction="#handleNovaCompra" styleClass="primary-button" />
+               <Button fx:id="impressao_btnNovaCompra" onAction="#handleNovaCompra" styleClass="primary-button" text="Comprar Mais Ingressos" />
                
             </HBox>
             
