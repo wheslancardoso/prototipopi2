@@ -107,7 +107,7 @@ public class ImpressaoIngressoView {
         systemTitle.setTextFill(Color.WHITE);
         
         // Botão Dashboard
-        Button dashboardButton = new Button("Dashboard");
+        Button dashboardButton = new Button("Inicio");
         dashboardButton.setStyle("-fx-background-color: white; -fx-text-fill: " + PRIMARY_COLOR + "; -fx-font-weight: bold; -fx-cursor: hand;");
         dashboardButton.setOnAction(e -> {
             new DashboardView(teatro, usuario, stage).show();

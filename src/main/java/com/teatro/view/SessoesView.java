@@ -117,7 +117,7 @@ public class SessoesView {
         userInfo.getChildren().addAll(userName, logoutButton);
         
         // Botão voltar para o dashboard
-        Button homeButton = new Button("Dashboard");
+        Button homeButton = new Button("Inicio");
         homeButton.setStyle("-fx-background-color: white; -fx-text-fill: " + PRIMARY_COLOR + "; -fx-font-weight: bold; -fx-cursor: hand;");
         
         homeButton.setOnAction(e -> {
