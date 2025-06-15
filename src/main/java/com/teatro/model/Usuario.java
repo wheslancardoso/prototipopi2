@@ -119,39 +119,4 @@ public class Usuario {
         }
         this.ingressos.addAll(ingressos);
     }
-
-    public boolean validarCPF() {
-        // Remove caracteres não numéricos
-        String cpfNumerico = cpf.replaceAll("[^0-9]", "");
-
-        // Verifica se tem 11 dígitos
-        if (cpfNumerico.length() != 11) {
-            return false;
-        }
-
-        // Verifica se todos os dígitos são iguais
-        if (cpfNumerico.matches("(\\d)\\1{10}")) {
-            return false;
-        }
-
-        // Calcula primeiro dígito verificador
-        int soma = 0;
-        for (int i = 0; i < 9; i++) {
-            soma += Character.getNumericValue(cpfNumerico.charAt(i)) * (10 - i);
-        }
-        int primeiroDigito = 11 - (soma % 11);
-        if (primeiroDigito > 9) primeiroDigito = 0;
-
-        // Calcula segundo dígito verificador
-        soma = 0;
-        for (int i = 0; i < 10; i++) {
-            soma += Character.getNumericValue(cpfNumerico.charAt(i)) * (11 - i);
-        }
-        int segundoDigito = 11 - (soma % 11);
-        if (segundoDigito > 9) segundoDigito = 0;
-
-        // Verifica se os dígitos calculados são iguais aos dígitos informados
-        return (Character.getNumericValue(cpfNumerico.charAt(9)) == primeiroDigito &&
-                Character.getNumericValue(cpfNumerico.charAt(10)) == segundoDigito);
-    }
 } 

@@ -1,10 +1,5 @@
 package com.teatro.view;
 
-import com.teatro.model.Teatro;
-import com.teatro.model.Usuario;
-import javafx.geometry.Insets;
-import java.util.Optional;
-import javafx.geometry.Pos;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.layout.*;
@@ -12,8 +7,15 @@ import javafx.scene.paint.Color;
 import javafx.scene.text.Font;
 import javafx.scene.text.FontWeight;
 import javafx.stage.Stage;
+import javafx.geometry.Pos;
+import javafx.geometry.Insets;
+import java.util.Optional;
+import com.teatro.model.Usuario;
+import com.teatro.model.Teatro;
 import com.teatro.model.factory.UsuarioFactory;
 import com.teatro.model.factory.UsuarioComumFactory;
+import com.teatro.exception.TeatroException;
+import com.teatro.util.Validator;
 
 /**
  * Versão modernizada da tela de login.
@@ -395,25 +397,27 @@ public class LoginView {
                 telefoneField.getText()
             );
 
-            if (!novoUsuario.validarCPF()) {
-                errorLabel.setText("CPF inválido");
-                errorLabel.setVisible(true);
-                return;
-            }
-
-            if (teatro.cadastrarUsuario(novoUsuario)) {
-                cadastroStage.close();
-                errorLabel.setText("");
-                errorLabel.setVisible(false);
+            try {
+                // Valida o CPF usando o Validator
+                Validator.validarCpf(novoUsuario.getCpf());
                 
-                // Mostrar mensagem de sucesso
-                Alert alert = new Alert(Alert.AlertType.INFORMATION);
-                alert.setTitle("Cadastro realizado");
-                alert.setHeaderText(null);
-                alert.setContentText("Cadastro realizado com sucesso! Agora você pode fazer login.");
-                alert.showAndWait();
-            } else {
-                errorLabel.setText("CPF já cadastrado");
+                if (teatro.cadastrarUsuario(novoUsuario)) {
+                    cadastroStage.close();
+                    errorLabel.setText("");
+                    errorLabel.setVisible(false);
+                    
+                    // Mostrar mensagem de sucesso
+                    Alert alert = new Alert(Alert.AlertType.INFORMATION);
+                    alert.setTitle("Cadastro realizado");
+                    alert.setHeaderText(null);
+                    alert.setContentText("Cadastro realizado com sucesso! Agora você pode fazer login.");
+                    alert.showAndWait();
+                } else {
+                    errorLabel.setText("Erro ao cadastrar usuário");
+                    errorLabel.setVisible(true);
+                }
+            } catch (TeatroException ex) {
+                errorLabel.setText(ex.getMessage());
                 errorLabel.setVisible(true);
             }
         });

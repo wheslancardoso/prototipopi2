@@ -11,8 +11,9 @@ public class Validator {
         "^[A-Za-z0-9+_.-]+@(.+)$"
     );
     
+    // Aceita CPF nos formatos: 12345678901, 123.456.789-01, 123456789-01
     private static final Pattern CPF_PATTERN = Pattern.compile(
-        "^\\d{3}\\.?\\d{3}\\.?\\d{3}-?\\d{2}$"
+        "^(\\d{3}[.-]?\\d{3}[.-]?\\d{3}[.-]?\\d{2}|\\d{11})$"
     );
     
     private static final Pattern TELEFONE_PATTERN = Pattern.compile(
@@ -36,8 +37,8 @@ public class Validator {
      * @throws TeatroException Se o CPF for inválido
      */
     public static void validarCpf(String cpf) {
-        if (cpf == null || !CPF_PATTERN.matcher(cpf).matches()) {
-            throw new TeatroException("CPF inválido: " + cpf);
+        if (cpf == null || cpf.trim().isEmpty()) {
+            throw new TeatroException("CPF não pode ser nulo ou vazio");
         }
         
         // Remove caracteres não numéricos
@@ -45,34 +46,38 @@ public class Validator {
         
         // Verifica se tem 11 dígitos
         if (cpfNumerico.length() != 11) {
-            throw new TeatroException("CPF deve conter 11 dígitos: " + cpf);
+            throw new TeatroException("CPF deve conter 11 dígitos");
         }
         
         // Verifica se todos os dígitos são iguais
         if (cpfNumerico.matches("(\\d)\\1{10}")) {
-            throw new TeatroException("CPF não pode ter todos os dígitos iguais: " + cpf);
+            throw new TeatroException("CPF não pode ter todos os dígitos iguais");
         }
         
-        // Calcula primeiro dígito verificador
-        int soma = 0;
-        for (int i = 0; i < 9; i++) {
-            soma += Character.getNumericValue(cpfNumerico.charAt(i)) * (10 - i);
-        }
-        int primeiroDigito = 11 - (soma % 11);
-        if (primeiroDigito > 9) primeiroDigito = 0;
-        
-        // Calcula segundo dígito verificador
-        soma = 0;
-        for (int i = 0; i < 10; i++) {
-            soma += Character.getNumericValue(cpfNumerico.charAt(i)) * (11 - i);
-        }
-        int segundoDigito = 11 - (soma % 11);
-        if (segundoDigito > 9) segundoDigito = 0;
-        
-        // Verifica se os dígitos calculados são iguais aos dígitos informados
-        if (Character.getNumericValue(cpfNumerico.charAt(9)) != primeiroDigito ||
-            Character.getNumericValue(cpfNumerico.charAt(10)) != segundoDigito) {
-            throw new TeatroException("CPF inválido (dígitos verificadores incorretos): " + cpf);
+        try {
+            // Calcula primeiro dígito verificador
+            int soma = 0;
+            for (int i = 0; i < 9; i++) {
+                soma += Character.getNumericValue(cpfNumerico.charAt(i)) * (10 - i);
+            }
+            int primeiroDigito = 11 - (soma % 11);
+            if (primeiroDigito > 9) primeiroDigito = 0;
+            
+            // Calcula segundo dígito verificador
+            soma = 0;
+            for (int i = 0; i < 10; i++) {
+                soma += Character.getNumericValue(cpfNumerico.charAt(i)) * (11 - i);
+            }
+            int segundoDigito = 11 - (soma % 11);
+            if (segundoDigito > 9) segundoDigito = 0;
+            
+            // Verifica se os dígitos calculados são iguais aos dígitos informados
+            if (Character.getNumericValue(cpfNumerico.charAt(9)) != primeiroDigito ||
+                Character.getNumericValue(cpfNumerico.charAt(10)) != segundoDigito) {
+                throw new TeatroException("CPF inválido (dígitos verificadores incorretos)");
+            }
+        } catch (NumberFormatException e) {
+            throw new TeatroException("CPF contém caracteres inválidos");
         }
     }
     
