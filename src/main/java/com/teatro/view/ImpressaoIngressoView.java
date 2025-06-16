@@ -1,8 +1,7 @@
 package com.teatro.view;
 
-import com.teatro.model.IngressoModerno;
-import com.teatro.model.Teatro;
-import com.teatro.model.Usuario;
+import com.teatro.model.*;
+import com.teatro.util.ViewManager;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
@@ -13,6 +12,8 @@ import javafx.scene.text.Font;
 import javafx.scene.text.FontWeight;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
+import javafx.print.*;
+import javafx.scene.Node;
 
 import java.time.format.DateTimeFormatter;
 import java.util.List;

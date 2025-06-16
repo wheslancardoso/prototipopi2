@@ -110,4 +110,11 @@ public class TeatroLogger {
             System.err.println("\tat " + element);
         }
     }
+    
+    /**
+     * Log para limpeza de recursos do JavaFX
+     */
+    public static void logLimpezaRecursos(String operacao) {
+        getInstance().info("Limpeza de recursos: " + operacao);
+    }
 } 

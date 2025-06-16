@@ -16,6 +16,7 @@ import com.teatro.model.factory.UsuarioFactory;
 import com.teatro.model.factory.UsuarioComumFactory;
 import com.teatro.exception.TeatroException;
 import com.teatro.util.Validator;
+import com.teatro.util.ViewManager;
 
 /**
  * Versão modernizada da tela de login.
@@ -41,9 +42,14 @@ public class LoginView {
     
     public LoginView(Stage stage) {
         this.stage = stage;
+        // Inicializa o teatro para garantir que esteja disponível
+        this.teatro = Teatro.getInstance();
     }
 
     public void show() {
+        // Usa o ViewManager para limpar recursos antes de mostrar a nova tela
+        ViewManager.prepararStageParaNovaCena(stage);
+        
         stage.setTitle("Sistema de Teatro - Login");
 
         // Container principal
@@ -181,11 +187,6 @@ public class LoginView {
                 errorLabel.setText("Por favor, preencha todos os campos.");
                 errorLabel.setVisible(true);
                 return;
-            }
-            
-            // Inicializa o teatro se necessário
-            if (teatro == null) {
-                teatro = Teatro.getInstance();
             }
             
             // Tenta autenticar o usuário
@@ -549,11 +550,6 @@ public class LoginView {
             }
 
             try {
-                // Inicializa o teatro se necessário
-                if (teatro == null) {
-                    teatro = Teatro.getInstance();
-                }
-
                 // Verifica se o usuário existe
                 Optional<Usuario> usuarioOpt = teatro.verificarUsuarioParaRecuperacao(cpf, email);
                 

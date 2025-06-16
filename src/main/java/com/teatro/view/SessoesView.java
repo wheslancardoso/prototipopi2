@@ -1,6 +1,7 @@
 package com.teatro.view;
 
 import com.teatro.model.*;
+import com.teatro.util.ViewManager;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
@@ -47,6 +48,9 @@ public class SessoesView {
     }
 
     public void show() {
+        // Usa o ViewManager para limpar recursos antes de mostrar a nova tela
+        ViewManager.prepararStageParaNovaCena(stage);
+        
         stage.setTitle("Sistema de Teatro - Sessões Disponíveis");
 
         // Container principal
