@@ -1,7 +1,6 @@
 package com.teatro.view;
 
 import com.teatro.model.*;
-import com.teatro.util.ViewManager;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
@@ -46,6 +45,9 @@ public class ImpressaoIngressoView {
     }
 
     public void show() {
+        // Temporariamente removido o ViewManager para teste
+        // ViewManager.prepararStageParaNovaCena(stage);
+        
         stage.setTitle("Sistema de Teatro - Impressão de Ingressos");
 
         // Container principal

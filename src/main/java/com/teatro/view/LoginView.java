@@ -47,8 +47,8 @@ public class LoginView {
     }
 
     public void show() {
-        // Usa o ViewManager para limpar recursos antes de mostrar a nova tela
-        ViewManager.prepararStageParaNovaCena(stage);
+        // Temporariamente removido o ViewManager para teste
+        // ViewManager.prepararStageParaNovaCena(stage);
         
         stage.setTitle("Sistema de Teatro - Login");
 

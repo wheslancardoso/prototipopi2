@@ -7,7 +7,6 @@ import com.teatro.model.Poltrona;
 import com.teatro.model.Sessao;
 import com.teatro.model.Teatro;
 import com.teatro.model.Usuario;
-import com.teatro.util.ViewManager;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
@@ -88,8 +87,8 @@ public class SelecionarPoltronaView {
     }
 
     public void show() {
-        // Usa o ViewManager para limpar recursos antes de mostrar a nova tela
-        ViewManager.prepararStageParaNovaCena(stage);
+        // Temporariamente removido o ViewManager para teste
+        // ViewManager.prepararStageParaNovaCena(stage);
         
         stage.setTitle("Sistema de Teatro - Seleção de Poltronas");
 

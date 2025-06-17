@@ -2,7 +2,6 @@ package com.teatro.view;
 
 import com.teatro.model.*;
 import com.teatro.service.IngressoService;
-import com.teatro.util.ViewManager;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
@@ -44,8 +43,8 @@ public class DashboardView {
     }
 
     public void show() {
-        // Usa o ViewManager para limpar recursos antes de mostrar a nova tela
-        ViewManager.prepararStageParaNovaCena(stage);
+        // Temporariamente removido o ViewManager para teste
+        // ViewManager.prepararStageParaNovaCena(stage);
         
         stage.setTitle("Sistema de Teatro - Dashboard");
 

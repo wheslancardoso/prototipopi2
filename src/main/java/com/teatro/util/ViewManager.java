@@ -1,38 +1,34 @@
 package com.teatro.util;
 
-import javafx.scene.Scene;
 import javafx.stage.Stage;
 
 /**
  * Gerenciador de transições de tela para evitar problemas de recursos do JavaFX
+ * 
+ * ATENÇÃO: Esta classe está temporariamente desabilitada para resolver problemas de estabilidade.
+ * Para reativar, descomente as linhas nas views que chamam ViewManager.prepararStageParaNovaCena(stage)
  */
 public class ViewManager {
     
     /**
      * Limpa recursos do JavaFX de forma segura
+     * ATENÇÃO: Método temporariamente simplificado para evitar problemas
      */
     public static void limparRecursosJavaFX(Stage stage) {
         try {
-            TeatroLogger.logLimpezaRecursos("Iniciando limpeza de recursos");
+            TeatroLogger.logLimpezaRecursos("Iniciando limpeza de recursos (modo seguro)");
             
-            // Limpa a cena atual se existir
-            if (stage.getScene() != null) {
-                Scene sceneAtual = stage.getScene();
-                sceneAtual.setRoot(null);
-                TeatroLogger.logLimpezaRecursos("Cena anterior limpa");
+            // Verifica se o stage existe
+            if (stage == null) {
+                TeatroLogger.logLimpezaRecursos("Stage é null, pulando limpeza");
+                return;
             }
             
-            // Força a coleta de lixo
+            // Apenas força a coleta de lixo de forma suave
             System.gc();
             
-            // Aguarda um pouco para permitir que a coleta seja executada
-            Thread.sleep(50);
+            TeatroLogger.logLimpezaRecursos("Limpeza concluída com sucesso (modo seguro)");
             
-            TeatroLogger.logLimpezaRecursos("Limpeza concluída com sucesso");
-            
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-            TeatroLogger.getInstance().error("Interrupção durante limpeza de recursos", e);
         } catch (Exception e) {
             TeatroLogger.getInstance().error("Erro durante limpeza de recursos", e);
         }
@@ -40,12 +36,23 @@ public class ViewManager {
     
     /**
      * Prepara o stage para uma nova cena
+     * ATENÇÃO: Método temporariamente simplificado para evitar problemas
      */
     public static void prepararStageParaNovaCena(Stage stage) {
-        limparRecursosJavaFX(stage);
+        if (stage == null) {
+            TeatroLogger.getInstance().warn("Stage é null, pulando preparação");
+            return;
+        }
+        
+        // Temporariamente desabilitado para resolver problemas de estabilidade
+        // limparRecursosJavaFX(stage);
         
         // Reseta propriedades do stage se necessário
-        stage.setResizable(true);
-        stage.setMaximized(false);
+        try {
+            stage.setResizable(true);
+            stage.setMaximized(false);
+        } catch (Exception e) {
+            TeatroLogger.getInstance().warn("Erro ao resetar propriedades do stage: " + e.getMessage());
+        }
     }
 } 
