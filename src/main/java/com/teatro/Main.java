@@ -3,6 +3,7 @@ package com.teatro;
 import com.teatro.database.DatabaseConnection;
 import com.teatro.model.Teatro;
 import com.teatro.view.LoginView;
+import com.teatro.util.PasswordMigration;
 import javafx.application.Application;
 import javafx.application.Platform;
 import javafx.stage.Stage;
@@ -33,6 +34,18 @@ public class Main extends Application {
         try {
             DatabaseConnection.getInstance().getConnection();
             System.out.println("Conexão com o banco de dados estabelecida com sucesso.");
+            
+            // Executa migração de senhas se necessário
+            try {
+                boolean migracaoExecutada = PasswordMigration.executarMigracaoSeNecessario();
+                if (migracaoExecutada) {
+                    System.out.println("Migração de senhas executada com sucesso.");
+                }
+            } catch (Exception e) {
+                System.err.println("Aviso: Erro durante a migração de senhas: " + e.getMessage());
+                // Não interrompe a execução do sistema se a migração falhar
+            }
+            
         } catch (Exception e) {
             System.err.println("Erro ao conectar ao banco de dados: " + e.getMessage());
             Platform.exit();

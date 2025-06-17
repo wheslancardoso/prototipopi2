@@ -2,6 +2,7 @@ package com.teatro.dao;
 
 import com.teatro.model.Usuario;
 import com.teatro.util.TeatroLogger;
+import com.teatro.util.PasswordHasher;
 import com.teatro.database.DatabaseConnection;
 import com.teatro.exception.TeatroException;
 import java.sql.*;
@@ -61,17 +62,23 @@ public class UsuarioDAOImpl implements UsuarioDAO {
 
     @Override
     public Optional<Usuario> autenticar(String identificador, String senha) {
-        String sql = "SELECT * FROM usuarios WHERE (cpf = ? OR email = ?) AND senha = ?";
+        // Primeiro, buscar o usuário pelo identificador
+        String sql = "SELECT * FROM usuarios WHERE cpf = ? OR email = ?";
         try (Connection conn = dbConnection.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
             
             stmt.setString(1, identificador);
             stmt.setString(2, identificador);
-            stmt.setString(3, senha);
             ResultSet rs = stmt.executeQuery();
             
             if (rs.next()) {
-                return Optional.of(montarUsuario(rs));
+                Usuario usuario = montarUsuario(rs);
+                String storedPassword = rs.getString("senha");
+                
+                // Verificar a senha usando o PasswordHasher
+                if (PasswordHasher.verifyPassword(senha, storedPassword)) {
+                    return Optional.of(usuario);
+                }
             }
             return Optional.empty();
         } catch (SQLException e) {
@@ -82,16 +89,21 @@ public class UsuarioDAOImpl implements UsuarioDAO {
 
     @Override
     public Optional<Usuario> autenticarPorEmail(String email, String senha) {
-        String sql = "SELECT * FROM usuarios WHERE email = ? AND senha = ?";
+        String sql = "SELECT * FROM usuarios WHERE email = ?";
         try (Connection conn = dbConnection.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
             
             stmt.setString(1, email);
-            stmt.setString(2, senha);
             ResultSet rs = stmt.executeQuery();
             
             if (rs.next()) {
-                return Optional.of(montarUsuario(rs));
+                Usuario usuario = montarUsuario(rs);
+                String storedPassword = rs.getString("senha");
+                
+                // Verificar a senha usando o PasswordHasher
+                if (PasswordHasher.verifyPassword(senha, storedPassword)) {
+                    return Optional.of(usuario);
+                }
             }
             return Optional.empty();
         } catch (SQLException e) {
@@ -122,11 +134,14 @@ public class UsuarioDAOImpl implements UsuarioDAO {
 
     @Override
     public void atualizarSenha(Long id, String novaSenha) {
+        // Hash da nova senha antes de salvar
+        String senhaHasheada = PasswordHasher.hashPassword(novaSenha);
+        
         String sql = "UPDATE usuarios SET senha = ? WHERE id = ?";
         try (Connection conn = dbConnection.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
             
-            stmt.setString(1, novaSenha);
+            stmt.setString(1, senhaHasheada);
             stmt.setLong(2, id);
             stmt.executeUpdate();
         } catch (SQLException e) {
@@ -138,6 +153,9 @@ public class UsuarioDAOImpl implements UsuarioDAO {
     // Implementação dos métodos da interface DAO
     @Override
     public void salvar(Usuario usuario) {
+        // Hash da senha antes de salvar
+        String senhaHasheada = PasswordHasher.hashPassword(usuario.getSenha());
+        
         String sql = "INSERT INTO usuarios (nome, cpf, endereco, telefone, email, senha, tipo_usuario) " +
                     "VALUES (?, ?, ?, ?, ?, ?, ?)";
         try (Connection conn = dbConnection.getConnection();
@@ -148,7 +166,7 @@ public class UsuarioDAOImpl implements UsuarioDAO {
             stmt.setString(3, usuario.getEndereco());
             stmt.setString(4, usuario.getTelefone());
             stmt.setString(5, usuario.getEmail());
-            stmt.setString(6, usuario.getSenha());
+            stmt.setString(6, senhaHasheada);
             stmt.setString(7, usuario.getTipoUsuario());
             
             stmt.executeUpdate();
@@ -165,6 +183,12 @@ public class UsuarioDAOImpl implements UsuarioDAO {
 
     @Override
     public void atualizar(Usuario usuario) {
+        // Se a senha foi modificada, fazer hash dela
+        String senhaParaSalvar = usuario.getSenha();
+        if (!PasswordHasher.isHashed(senhaParaSalvar)) {
+            senhaParaSalvar = PasswordHasher.hashPassword(usuario.getSenha());
+        }
+        
         String sql = "UPDATE usuarios SET nome = ?, cpf = ?, endereco = ?, telefone = ?, " +
                     "email = ?, senha = ?, tipo_usuario = ? WHERE id = ?";
         try (Connection conn = dbConnection.getConnection();
@@ -175,7 +199,7 @@ public class UsuarioDAOImpl implements UsuarioDAO {
             stmt.setString(3, usuario.getEndereco());
             stmt.setString(4, usuario.getTelefone());
             stmt.setString(5, usuario.getEmail());
-            stmt.setString(6, usuario.getSenha());
+            stmt.setString(6, senhaParaSalvar);
             stmt.setString(7, usuario.getTipoUsuario());
             stmt.setLong(8, usuario.getId());
             
