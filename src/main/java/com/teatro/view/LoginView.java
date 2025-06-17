@@ -189,22 +189,33 @@ public class LoginView {
                 return;
             }
             
-            // Tenta autenticar o usuário
-            Optional<Usuario> usuarioOpt = teatro.autenticarUsuario(identificador, senha);
-            
-            if (usuarioOpt.isPresent()) {
-                Usuario usuario = usuarioOpt.get();
-                errorLabel.setVisible(false);
+            try {
+                // Tenta autenticar o usuário
+                Optional<Usuario> usuarioOpt = teatro.autenticarUsuario(identificador, senha);
                 
-                // Redireciona para a tela apropriada com base no tipo de usuário
-                if ("ADMIN".equals(usuario.getTipoUsuario())) {
-                    new DashboardView(teatro, usuario, stage).show();
+                if (usuarioOpt.isPresent()) {
+                    Usuario usuario = usuarioOpt.get();
+                    errorLabel.setVisible(false);
+                    
+                    // Redireciona para a tela apropriada com base no tipo de usuário
+                    if ("ADMIN".equals(usuario.getTipoUsuario())) {
+                        new DashboardView(teatro, usuario, stage).show();
+                    } else {
+                        new SessoesView(teatro, usuario, stage).show();
+                    }
                 } else {
-                    new SessoesView(teatro, usuario, stage).show();
+                    errorLabel.setText("CPF/Email ou senha incorretos.");
+                    errorLabel.setVisible(true);
                 }
-            } else {
-                errorLabel.setText("CPF/Email ou senha incorretos.");
+            } catch (TeatroException ex) {
+                // Captura exceções de validação (CPF inválido, email inválido, etc.)
+                errorLabel.setText("Dados incorretos: " + ex.getMessage());
                 errorLabel.setVisible(true);
+            } catch (Exception ex) {
+                // Captura outras exceções inesperadas
+                errorLabel.setText("Erro ao fazer login. Tente novamente.");
+                errorLabel.setVisible(true);
+                System.err.println("Erro inesperado no login: " + ex.getMessage());
             }
         });
         

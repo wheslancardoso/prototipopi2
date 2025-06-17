@@ -2,6 +2,7 @@ package com.teatro.view;
 
 import com.teatro.model.*;
 import com.teatro.service.IngressoService;
+import com.teatro.service.EstatisticasService;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
@@ -24,6 +25,7 @@ public class DashboardView {
     private Usuario usuarioLogado;
     private Stage stage;
     private IngressoService ingressoService;
+    private EstatisticasService estatisticasService;
     
     private static final double WINDOW_WIDTH = 1024;
     private static final double WINDOW_HEIGHT = 768;
@@ -40,6 +42,7 @@ public class DashboardView {
         this.usuarioLogado = usuarioLogado;
         this.stage = stage;
         this.ingressoService = IngressoService.getInstance();
+        this.estatisticasService = EstatisticasService.getInstance();
     }
 
     public void show() {
@@ -226,16 +229,8 @@ public class DashboardView {
         VBox area = new VBox(20);
         area.setPadding(new Insets(20));
 
-        // Estatísticas padrão
-        Map<String, Object> estatisticas = Map.of(
-            "pecaMaisVendida", Map.of("nome", "N/A", "totalVendas", 0),
-            "pecaMenosVendida", Map.of("nome", "N/A", "totalVendas", 0),
-            "sessaoMaiorOcupacao", Map.of("nome", "N/A", "data", "N/A", "horario", "N/A", "ocupacao", "0%"),
-            "sessaoMenorOcupacao", Map.of("nome", "N/A", "data", "N/A", "horario", "N/A", "ocupacao", "0%"),
-            "pecaMaisLucrativa", Map.of("nome", "N/A", "faturamento", "R$ 0,00"),
-            "pecaMenosLucrativa", Map.of("nome", "N/A", "faturamento", "R$ 0,00"),
-            "lucroMedioPorPeca", List.of()
-        );
+        // Buscar estatísticas reais do banco de dados
+        Map<String, Object> estatisticas = estatisticasService.buscarEstatisticas();
 
         // Seção de Vendas
         VBox secaoVendas = criarCardSecao(
